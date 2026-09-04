@@ -27,6 +27,7 @@ export default function DevScreenTester() {
     { name: 'Add Places', route: 'AddPlaces', params: { tripId: '1' } },
     { name: 'Itinerary View', route: 'ItineraryView', params: { tripId: '1' } },
     { name: 'Itinerary Map', route: 'ItineraryMap', params: { tripId: '1' } },
+    { name: 'UGC Posting', route: 'UGCPosting', params: { destination: 'Paris, France', tripId: '1' } },
   ];
 
   const packingScreens = [

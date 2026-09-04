@@ -33,6 +33,7 @@ export type AppStackParamList = {
   HelpSupport: undefined;
   PrivacyPolicy: undefined;
   Terms: undefined;
+  UGCPosting: { destination?: string; tripId?: string; placeName?: string } | undefined;
 };
 
 export type RootStackParamList = {

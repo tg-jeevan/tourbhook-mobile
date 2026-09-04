@@ -21,6 +21,7 @@ import PaymentDetailsScreen from '../../features/profile/screens/PaymentDetailsS
 import HelpSupportScreen from '../../features/profile/screens/HelpSupportScreen';
 import PrivacyPolicyScreen from '../../features/profile/screens/PrivacyPolicyScreen';
 import TermsScreen from '../../features/profile/screens/TermsScreen';
+import UGCPostingScreen from '../../features/ugc/screens/UGCPostingScreen';
 import DevScreenTester from './DevScreenNavigator';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -48,6 +49,7 @@ export const AppNavigator = () => {
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="UGCPosting" component={UGCPostingScreen} />
       <Stack.Screen name="DevScreenTester" component={DevScreenTester} />
     </Stack.Navigator>
   );

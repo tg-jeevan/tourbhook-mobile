@@ -33,6 +33,14 @@ export default function TripDetailsScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.gap12} />
+        <TouchableOpacity
+          style={styles.shareUgcBtn}
+          onPress={() => navigation.navigate('UGCPosting', { destination: 'Paris, France', tripId })}
+        >
+          <Text style={styles.shareUgcBtnText}>📹 Share Travel Video (UGC)</Text>
+        </TouchableOpacity>
+
         <View style={styles.gap24} />
         <Text style={styles.sectionTitle}>Quick Itinerary Overview</Text>
         <View style={styles.dayCard}>
@@ -56,9 +64,12 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: 12 },
   actionBtn: { flex: 1, height: 50, borderRadius: 25, borderWidth: 1.5, borderColor: '#E91E63', justifyContent: 'center', alignItems: 'center' },
   actionBtnText: { color: '#E91E63', fontWeight: '600' },
+  shareUgcBtn: { width: '100%', height: 48, borderRadius: 24, backgroundColor: '#FCE4EC', borderWidth: 1, borderColor: '#F8BBD0', justifyContent: 'center', alignItems: 'center' },
+  shareUgcBtnText: { color: '#E91E63', fontWeight: '700', fontSize: 14 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 12 },
   dayCard: { padding: 16, backgroundColor: '#F5F5F7', borderRadius: 12 },
   dayTitle: { fontSize: 16, fontWeight: '600', color: '#1A1A2E', marginBottom: 8 },
   dayActivity: { fontSize: 14, color: 'rgba(26,26,46,0.8)', marginTop: 4 },
+  gap12: { height: 12 },
   gap24: { height: 24 }
 });
