@@ -22,8 +22,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithMock = () => {
     setUser({
       id: 'mock-user-001',
-      name: 'Jeevan Test',
-      email: 'jeevan.test@example.com',
+      name: 'Mani Test',
+      email: 'mani.test@example.com',
     });
     setIsAuthenticated(true);
   };

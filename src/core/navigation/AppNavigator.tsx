@@ -8,10 +8,6 @@ import TripSummaryScreen from '../../features/trips/screens/TripSummaryScreen';
 import TripDetailsScreen from '../../features/trips/screens/TripDetailsScreen';
 import PlaceDetailsScreen from '../../features/trips/screens/PlaceDetailsScreen';
 import AddPlacesScreen from '../../features/trips/screens/AddPlacesScreen';
-import ItineraryViewScreen from '../../features/trips/screens/ItineraryViewScreen';
-import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen';
-import PackingListScreen from '../../features/trips/screens/PackingListScreen';
-import CheckingPackingScreen from '../../features/trips/screens/CheckingPackingScreen';
 import ProfileMenuScreen from '../../features/profile/screens/ProfileMenuScreen';
 import ProfileSettingsScreen from '../../features/profile/screens/ProfileSettingsScreen';
 import UserLevelsScreen from '../../features/profile/screens/UserLevelsScreen';
@@ -22,7 +18,14 @@ import HelpSupportScreen from '../../features/profile/screens/HelpSupportScreen'
 import PrivacyPolicyScreen from '../../features/profile/screens/PrivacyPolicyScreen';
 import TermsScreen from '../../features/profile/screens/TermsScreen';
 import UGCPostingScreen from '../../features/ugc/screens/UGCPostingScreen';
+import GroupMatchingScreen from '../../features/groups/screens/GroupMatchingScreen';
+import ImportDataScreen from '../../features/imports/screens/ImportDataScreen';
+import ImportReviewScreen from '../../features/imports/screens/ImportReviewScreen';
+import ReviewsScreen from '../../features/reviews/screens/ReviewsScreen';
 import DevScreenTester from './DevScreenNavigator';
+import ItineraryPackingScreen from '../../features/trips/screens/ItineraryPackingScreen';
+import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen';
+import CheckingPackingScreen from '../../features/trips/screens/CheckingPackingScreen';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -36,9 +39,9 @@ export const AppNavigator = () => {
       <Stack.Screen name="TripDetails" component={TripDetailsScreen} />
       <Stack.Screen name="PlaceDetails" component={PlaceDetailsScreen} />
       <Stack.Screen name="AddPlaces" component={AddPlacesScreen} />
-      <Stack.Screen name="ItineraryView" component={ItineraryViewScreen} />
+      <Stack.Screen name="ItineraryView" component={ItineraryPackingScreen} />
       <Stack.Screen name="ItineraryMap" component={ItineraryMapScreen} />
-      <Stack.Screen name="PackingList" component={PackingListScreen} />
+      <Stack.Screen name="PackingList" component={ItineraryPackingScreen} />
       <Stack.Screen name="CheckingPacking" component={CheckingPackingScreen} />
       <Stack.Screen name="ProfileMenu" component={ProfileMenuScreen} />
       <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
@@ -50,6 +53,10 @@ export const AppNavigator = () => {
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="UGCPosting" component={UGCPostingScreen} />
+      <Stack.Screen name="GroupMatching" component={GroupMatchingScreen} />
+      <Stack.Screen name="ImportData" component={ImportDataScreen} />
+      <Stack.Screen name="ImportReview" component={ImportReviewScreen} />
+      <Stack.Screen name="Reviews" component={ReviewsScreen} />
       <Stack.Screen name="DevScreenTester" component={DevScreenTester} />
     </Stack.Navigator>
   );
