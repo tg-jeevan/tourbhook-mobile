@@ -13,6 +13,7 @@ export default function ProfileMenuScreen() {
 
   const menuItems = [
     { title: 'Profile Settings', route: 'ProfileSettings' as const },
+    { title: 'Import Data (Beta)', route: 'ImportData' as const },
     { title: 'User Levels', route: 'UserLevels' as const },
     { title: 'Upgrade Plan', route: 'UpgradePlan' as const },
     { title: 'Payment Methods', route: 'PaymentMethods' as const, params: { planId: 'pro' } },

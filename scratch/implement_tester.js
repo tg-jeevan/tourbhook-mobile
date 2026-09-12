@@ -20,8 +20,8 @@ export default function DevScreenTester() {
     { name: 'Sign In', route: 'SignIn', params: undefined },
     { name: 'Sign Up', route: 'SignUp', params: undefined },
     { name: 'Forgot Password', route: 'ForgotPassword', params: undefined },
-    { name: 'OTP Verification', route: 'OTPVerification', params: { email: 'jeevan.test@example.com' } },
-    { name: 'Reset Password', route: 'ResetPassword', params: { email: 'jeevan.test@example.com', otp: '1234' } },
+    { name: 'OTP Verification', route: 'OTPVerification', params: { email: 'mani.test@example.com' } },
+    { name: 'Reset Password', route: 'ResetPassword', params: { email: 'mani.test@example.com', otp: '1234' } },
   ];
 
   const tripScreens = [

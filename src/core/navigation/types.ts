@@ -1,4 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
+import { ImportedTripDraft } from '../../features/imports/types/importTypes';
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -34,6 +35,10 @@ export type AppStackParamList = {
   PrivacyPolicy: undefined;
   Terms: undefined;
   UGCPosting: { destination?: string; tripId?: string; placeName?: string } | undefined;
+  GroupMatching: undefined;
+  ImportData: undefined;
+  ImportReview: { draft: ImportedTripDraft };
+  Reviews: { placeId: string; placeName: string };
 };
 
 export type RootStackParamList = {

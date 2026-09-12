@@ -13,8 +13,8 @@ export default function DevScreenTester() {
     { name: 'Sign In', route: 'SignIn', params: undefined },
     { name: 'Sign Up', route: 'SignUp', params: undefined },
     { name: 'Forgot Password', route: 'ForgotPassword', params: undefined },
-    { name: 'OTP Verification', route: 'OTPVerification', params: { email: 'jeevan.test@example.com' } },
-    { name: 'Reset Password', route: 'ResetPassword', params: { email: 'jeevan.test@example.com', otp: '1234' } },
+    { name: 'OTP Verification', route: 'OTPVerification', params: { email: 'mani.test@example.com' } },
+    { name: 'Reset Password', route: 'ResetPassword', params: { email: 'mani.test@example.com', otp: '1234' } },
   ];
 
   const tripScreens = [
@@ -33,6 +33,18 @@ export default function DevScreenTester() {
   const packingScreens = [
     { name: 'Packing List', route: 'PackingList', params: { tripId: '1' } },
     { name: 'Checking Packing', route: 'CheckingPacking', params: { tripId: '1' } },
+  ];
+
+    const groupScreens = [
+    { name: 'Group Matching', route: 'GroupMatching', params: undefined },
+  ];
+
+    const importScreens = [
+    { name: 'Import Data', route: 'ImportData', params: undefined },
+  ];
+
+    const reviewScreens = [
+    { name: 'Reviews', route: 'Reviews', params: { placeId: '1', placeName: 'Eiffel Tower' } },
   ];
 
   const profileScreens = [
@@ -76,6 +88,9 @@ export default function DevScreenTester() {
         {renderGroup('Authentication Flow', authScreens)}
         {renderGroup('Trips & Itinerary Flow', tripScreens)}
         {renderGroup('Packing Flow', packingScreens)}
+        {renderGroup('Groups & Verification Flow', groupScreens)}
+        {renderGroup('Data Import Flow', importScreens)}
+        {renderGroup('Reviews Flow', reviewScreens)}
         {renderGroup('Profile & Settings Flow', profileScreens)}
       </ScrollView>
     </SafeAreaView>

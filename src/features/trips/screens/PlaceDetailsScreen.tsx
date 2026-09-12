@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,7 +21,16 @@ export default function PlaceDetailsScreen() {
         <Image source={require('../../../../assets/images/welcomeImage.jpg')} style={styles.image} />
         <View style={styles.gap16} />
         <Text style={styles.title}>{route.params?.placeName || 'Eiffel Tower'}</Text>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('Reviews', {
+              placeId: route.params?.placeId ?? '',
+              placeName: route.params?.placeName ?? 'Eiffel Tower',
+            })
+          }
+        >
         <Text style={styles.rating}>⭐ 4.8 (1,250 reviews)</Text>
+        </TouchableOpacity>
         <View style={styles.gap16} />
         <Text style={styles.desc}>
           The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France. It is named after the engineer Gustave Eiffel, whose company designed and built the tower.
