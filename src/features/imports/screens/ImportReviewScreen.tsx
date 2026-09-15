@@ -8,13 +8,15 @@ import { BackButton } from '../../../core/components/BackButton';
 import { CustomTextField } from '../../../core/components/CustomTextField';
 import { PrimaryButton } from '../../../core/components/PrimaryButton';
 import { DraftPlace } from '../types/importTypes';
+import { Typography } from '../../../core/theme/typography';
+import { AppColors } from '../../../core/theme/colors';
 
-const GREEN = '#1FAE5D';
-const GREEN_LIGHT = '#E6F7EC';
-const TEXT_DARK = '#1A1A2E';
-const TEXT_MUTED = '#8E8E93';
-const PURPLE = '#7C5CFC';
-const PURPLE_LIGHT = '#F1EDFF';
+const PRIMARY = AppColors.primary;
+const PRIMARY_LIGHT = AppColors.primaryLight;
+const TEXT_DARK = AppColors.textDark;
+const TEXT_MUTED = AppColors.textMuted;
+const PURPLE = AppColors.purple;
+const PURPLE_LIGHT = AppColors.purpleLight;
 
 const SOURCE_LABELS: Record<string, string> = {
   google_maps: 'Google Maps',
@@ -137,18 +139,18 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
   headerTitleRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: TEXT_DARK },
+  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
   betaBadge: { backgroundColor: PURPLE_LIGHT, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
   betaBadgeText: { fontSize: 11, fontWeight: '700', color: PURPLE },
   headerPlaceholder: { width: 44 },
 
   content: { padding: 24, paddingBottom: 32 },
-  sourceNotice: { backgroundColor: GREEN_LIGHT, borderRadius: 14, padding: 14, marginBottom: 24 },
+  sourceNotice: { backgroundColor: PRIMARY_LIGHT, borderRadius: 14, padding: 14, marginBottom: 24 },
   sourceNoticeText: { fontSize: 13, color: TEXT_DARK, lineHeight: 18 },
 
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: TEXT_DARK, marginBottom: 12 },
+  sectionTitle: { ...Typography.sectionHeading, color: TEXT_DARK, marginBottom: 12 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-  addPlaceText: { fontSize: 13, fontWeight: '700', color: GREEN },
+  addPlaceText: { fontSize: 13, fontWeight: '700', color: PRIMARY },
 
   field: { marginBottom: 16 },
   row: { flexDirection: 'row', gap: 12, marginBottom: 16 },
