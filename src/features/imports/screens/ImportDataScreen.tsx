@@ -14,13 +14,15 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
+import { Typography } from '../../../core/theme/typography';
 import { buildDraftFromSource, IMPORT_SOURCES, ImportSourceId } from '../types/importTypes';
+import { AppColors } from '../../../core/theme/colors';
 
-const GREEN = '#1FAE5D';
-const TEXT_DARK = '#1A1A2E';
-const TEXT_MUTED = '#8E8E93';
-const PURPLE = '#7C5CFC';
-const PURPLE_LIGHT = '#F1EDFF';
+const PRIMARY = AppColors.primary;
+const TEXT_DARK = AppColors.textDark;
+const TEXT_MUTED = AppColors.textMuted;
+const PURPLE = AppColors.purple;
+const PURPLE_LIGHT = AppColors.purpleLight;
 const INFO_BG = '#EAF3FB';
 const INFO_TEXT = '#3A6EA5';
 
@@ -89,7 +91,7 @@ export default function ImportDataScreen() {
                   <Text style={styles.sourceDescription}>{sourceOption.description}</Text>
                 </View>
                 {isProcessing ? (
-                  <ActivityIndicator color={GREEN} />
+                  <ActivityIndicator color={PRIMARY} />
                 ) : (
                   <Text style={styles.chevron}>{'>'}</Text>
                 )}
@@ -144,13 +146,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   headerTitleRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: TEXT_DARK },
+  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
   betaBadge: { backgroundColor: PURPLE_LIGHT, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
   betaBadgeText: { fontSize: 11, fontWeight: '700', color: PURPLE },
   headerPlaceholder: { width: 44 },
 
   content: { padding: 24, paddingBottom: 24 },
-  subtitle: { fontSize: 14, fontWeight: '600', color: GREEN, marginBottom: 20 },
+  subtitle: { fontSize: 14, fontWeight: '600', color: PRIMARY, marginBottom: 20 },
 
   sourceCard: {
     flexDirection: 'row',
@@ -179,8 +181,8 @@ const styles = StyleSheet.create({
   },
   sourceIconEmoji: { fontSize: 20 },
   sourceTextBlock: { flex: 1 },
-  sourceTitle: { fontSize: 15, fontWeight: '700', color: TEXT_DARK },
-  sourceDescription: { fontSize: 12, color: TEXT_MUTED, marginTop: 2 },
+  sourceTitle: { ...Typography.contentName, color: TEXT_DARK },
+  sourceDescription: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
   chevron: { fontSize: 16, color: TEXT_MUTED },
 
   csvPanel: {
@@ -203,7 +205,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   csvImportButton: {
-    backgroundColor: GREEN,
+    backgroundColor: PRIMARY,
     borderRadius: 20,
     paddingVertical: 10,
     alignItems: 'center',

@@ -4,11 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Home, Compass, Users, Backpack, User, LucideIcon } from 'lucide-react-native';
 import { AppStackParamList } from '../navigation/types';
+import { AppColors } from '../theme/colors';
 
 export type BottomNavTab = 'home' | 'explore' | 'groups' | 'trips' | 'profile';
-
-const GREEN = '#1FAE5D';
-const TEXT_MUTED = '#8E8E93';
 
 interface TabConfig {
   key: BottomNavTab;
@@ -73,7 +71,7 @@ export function BottomNavBar({ active }: BottomNavBarProps) {
                 <tab.Icon size={18} color="#FFFFFF" strokeWidth={2.25} />
               </View>
             ) : (
-              <tab.Icon size={20} color={TEXT_MUTED} strokeWidth={1.75} />
+              <tab.Icon size={20} color={AppColors.textMuted} strokeWidth={1.75} />
             )}
             <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
           </TouchableOpacity>
@@ -97,11 +95,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: GREEN,
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 2,
   },
-  label: { fontSize: 11, color: TEXT_MUTED },
-  labelActive: { color: GREEN, fontWeight: '700' },
+  label: { fontSize: 11, color: AppColors.textMuted},
+  labelActive: { color: AppColors.primary, fontWeight: '700' },
 });
