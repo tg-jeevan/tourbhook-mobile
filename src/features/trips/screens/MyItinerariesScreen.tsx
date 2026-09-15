@@ -5,6 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 
+import { Bell } from 'lucide-react-native';
+
 export default function MyItinerariesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'MyItineraries'>>();
 
@@ -13,7 +15,6 @@ export default function MyItinerariesScreen() {
     { id: '2', destination: 'Tokyo Explorer', dates: 'Oct 05 - Oct 12, 2026', image: require('../../../../assets/images/welcomeImage.jpg') },
     { id: '3', destination: 'Kerala Weekend', dates: 'Nov 20 - Nov 23, 2026', image: require('../../../../assets/images/welcomeImage.jpg') },
   ];
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -26,9 +27,21 @@ export default function MyItinerariesScreen() {
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate('ProfileMenu')}>
-          <View style={styles.profileBadge} />
-        </TouchableOpacity>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            style={styles.notifBtn}
+            onPress={() => navigation.navigate('Notifications')}
+            activeOpacity={0.7}
+          >
+            <Bell size={22} color="#1A1A2E" />
+            <View style={styles.notifBadge}>
+              <Text style={styles.notifBadgeText}>2</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileMenu')}>
+            <View style={styles.profileBadge} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {dummyTrips.length === 0 ? (
@@ -71,6 +84,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 24 },
   title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
+  headerRightActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  notifBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5F5F7', justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  notifBadge: { position: 'absolute', top: -2, right: -2, width: 18, height: 18, borderRadius: 9, backgroundColor: '#1FAE5D', justifyContent: 'center', alignItems: 'center' },
+  notifBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   profileBadge: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5F5F7', borderWidth: 1.5, borderColor: '#E8E8E8' },
   list: { padding: 24 },
   card: { height: 180, borderRadius: 16, overflow: 'hidden', marginBottom: 20 },

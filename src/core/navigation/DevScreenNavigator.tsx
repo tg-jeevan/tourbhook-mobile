@@ -27,7 +27,22 @@ export default function DevScreenTester() {
     { name: 'Add Places', route: 'AddPlaces', params: { tripId: '1' } },
     { name: 'Itinerary View', route: 'ItineraryView', params: { tripId: '1' } },
     { name: 'Itinerary Map', route: 'ItineraryMap', params: { tripId: '1' } },
-    { name: 'UGC Posting', route: 'UGCPosting', params: { destination: 'Paris, France', tripId: '1' } },
+  ];
+
+  const instagramAndReelsScreens = [
+    { name: 'Connect Instagram (Profile)', route: 'InstagramConnect', params: undefined },
+    { name: 'Destination Reels (Paris Trip)', route: 'TripDetails', params: { tripId: '1' } },
+    { name: 'Destination Reels (Eiffel Tower)', route: 'PlaceDetails', params: { placeId: '1', placeName: 'Eiffel Tower' } },
+    { name: 'Destination Reels (Tokyo - Empty / Mod Proof)', route: 'PlaceDetails', params: { placeId: '3', placeName: 'Tokyo, Japan' } },
+    { name: 'Reels / Shorts Submission Pipeline', route: 'UGCPosting', params: { destination: 'Paris, France', tripId: '1' } },
+  ];
+
+  const ugcScreens = [
+    { name: 'UGC Display (Paris - Instagram+YT)', route: 'TripDetails', params: { tripId: '1' } },
+    { name: 'UGC Display (Eiffel Tower)', route: 'PlaceDetails', params: { placeId: '1', placeName: 'Eiffel Tower' } },
+    { name: 'UGC Display (Bali - YouTube)', route: 'PlaceDetails', params: { placeId: '2', placeName: 'Bali, Indonesia' } },
+    { name: 'UGC Display (Tokyo - Empty State)', route: 'PlaceDetails', params: { placeId: '3', placeName: 'Tokyo, Japan' } },
+    { name: 'UGC Posting Screen', route: 'UGCPosting', params: { destination: 'Paris, France', tripId: '1' } },
   ];
 
   const packingScreens = [
@@ -45,6 +60,15 @@ export default function DevScreenTester() {
 
     const reviewScreens = [
     { name: 'Reviews', route: 'Reviews', params: { placeId: '1', placeName: 'Eiffel Tower' } },
+  ];
+
+  const eventsScreens = [
+    { name: 'Events Feed (Paris)', route: 'EventsFeed', params: { destinationId: 'paris', destinationName: 'Paris, France' } },
+    { name: 'Events Feed (Tokyo)', route: 'EventsFeed', params: { destinationId: 'tokyo', destinationName: 'Tokyo, Japan' } },
+    { name: 'Events Feed (Bali)', route: 'EventsFeed', params: { destinationId: 'bali', destinationName: 'Bali, Indonesia' } },
+    { name: 'Events Feed (Empty State - Kyoto)', route: 'EventsFeed', params: { destinationId: 'kyoto', destinationName: 'Kyoto, Japan' } },
+    { name: 'Event Details (Paris Jazz Festival)', route: 'EventDetails', params: { eventId: 'evt-paris-1' } },
+    { name: 'Notifications (Travel News & 365d)', route: 'Notifications', params: undefined },
   ];
 
   const profileScreens = [
@@ -86,11 +110,14 @@ export default function DevScreenTester() {
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         {renderGroup('Authentication Flow', authScreens)}
+        {renderGroup('Instagram Profile & Destination Reels (SCRUM-35)', instagramAndReelsScreens)}
         {renderGroup('Trips & Itinerary Flow', tripScreens)}
+        {renderGroup('UGC Content Display Flow (SCRUM-27)', ugcScreens)}
         {renderGroup('Packing Flow', packingScreens)}
         {renderGroup('Groups & Verification Flow', groupScreens)}
         {renderGroup('Data Import Flow', importScreens)}
         {renderGroup('Reviews Flow', reviewScreens)}
+        {renderGroup('Events & Notifications Flow (SCRUM-34)', eventsScreens)}
         {renderGroup('Profile & Settings Flow', profileScreens)}
       </ScrollView>
     </SafeAreaView>

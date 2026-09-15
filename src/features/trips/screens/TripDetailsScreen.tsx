@@ -6,10 +6,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 
+import { UGCContentDisplay } from '../../ugc/components/UGCContentDisplay';
+
 export default function TripDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'TripDetails'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'TripDetails'>>();
   const tripId = route.params?.tripId || '1';
+  const destination = 'Paris, France';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,8 +22,8 @@ export default function TripDetailsScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.destTitle}>Paris, France</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.destTitle}>{destination}</Text>
         <Text style={styles.destDates}>Sept 10 - Sept 17, 2026</Text>
         <View style={styles.gap24} />
 
@@ -33,12 +36,18 @@ export default function TripDetailsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.gap12} />
         <TouchableOpacity
-          style={styles.shareUgcBtn}
-          onPress={() => navigation.navigate('UGCPosting', { destination: 'Paris, France', tripId })}
+          style={styles.eventsBannerBtn}
+          onPress={() =>
+            navigation.navigate('EventsFeed', {
+              destinationId: 'paris',
+              destinationName: destination,
+            })
+          }
+          activeOpacity={0.85}
         >
-          <Text style={styles.shareUgcBtnText}>📹 Share Travel Video (UGC)</Text>
+          <Text style={styles.eventsBannerTitle}>🎉 Explore {destination} Events & Activities</Text>
+          <Text style={styles.eventsBannerSubtitle}>Browse live festivals, food walks & concerts</Text>
         </TouchableOpacity>
 
         <View style={styles.gap24} />
@@ -48,6 +57,13 @@ export default function TripDetailsScreen() {
           <Text style={styles.dayActivity}>10:00 AM - Eiffel Tower Visit</Text>
           <Text style={styles.dayActivity}>02:00 PM - Seine River Cruise</Text>
         </View>
+
+        <View style={styles.gap24} />
+        {/* Destination UGC / Traveler Stories Display */}
+        <UGCContentDisplay
+          destination={destination}
+          tripId={tripId}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -64,6 +80,9 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: 12 },
   actionBtn: { flex: 1, height: 50, borderRadius: 25, borderWidth: 1.5, borderColor: '#E91E63', justifyContent: 'center', alignItems: 'center' },
   actionBtnText: { color: '#E91E63', fontWeight: '600' },
+  eventsBannerBtn: { marginTop: 12, padding: 14, backgroundColor: '#E8F7EE', borderRadius: 14, borderWidth: 1, borderColor: '#C2EAD0' },
+  eventsBannerTitle: { fontSize: 14, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
+  eventsBannerSubtitle: { fontSize: 12, color: '#1FAE5D', fontWeight: '500' },
   shareUgcBtn: { width: '100%', height: 48, borderRadius: 24, backgroundColor: '#FCE4EC', borderWidth: 1, borderColor: '#F8BBD0', justifyContent: 'center', alignItems: 'center' },
   shareUgcBtnText: { color: '#E91E63', fontWeight: '700', fontSize: 14 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 12 },

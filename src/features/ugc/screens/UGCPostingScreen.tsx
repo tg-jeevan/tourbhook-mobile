@@ -8,49 +8,38 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+  Link2,
+  MapPin,
+  ShieldCheck,
+  ShieldAlert,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  Info,
+  Layers,
+  AlertCircle,
+} from 'lucide-react-native';
+import { InstagramIcon, YouTubeIcon } from '../components/SocialIcons';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
-import { PrimaryButton } from '../../../core/components/PrimaryButton';
 
 type UGCPostingNavProp = NativeStackNavigationProp<AppStackParamList, 'UGCPosting'>;
 type UGCPostingRouteProp = RouteProp<AppStackParamList, 'UGCPosting'>;
 
-// ── CUSTOM INLINE ICONS ──────────────────────────────────────
-const LinkIcon = () => (
-  <View style={styles.iconBox}>
-    <View style={styles.linkCircle1} />
-    <View style={styles.linkCircle2} />
-  </View>
-);
+const PRIMARY_GREEN = '#2E7D32';
 
-const LocationPinIcon = () => (
-  <View style={styles.iconBox}>
-    <View style={styles.pinHead} />
-    <View style={styles.pinPoint} />
-  </View>
-);
-
-const ShieldIcon = () => (
-  <View style={styles.iconBox}>
-    <View style={styles.shieldBody} />
-  </View>
-);
-
-const CheckCircleIcon = () => (
-  <View style={styles.checkCircle}>
-    <Text style={styles.checkMark}>✓</Text>
-  </View>
-);
-
-// ── URL VALIDATION HELPER ────────────────────────────────────
 export type DetectedPlatform = 'instagram' | 'youtube' | null;
 
-export const validateUGCLink = (url: string): { isValid: boolean; error?: string; platform: DetectedPlatform } => {
+export const validateUGCLink = (
+  url: string
+): { isValid: boolean; error?: string; platform: DetectedPlatform } => {
   const trimmed = url.trim();
 
   if (!trimmed) {
@@ -62,12 +51,10 @@ export const validateUGCLink = (url: string): { isValid: boolean; error?: string
   }
 
   // Instagram Reel URL regex
-  // Matches: https://www.instagram.com/reel/..., https://instagram.com/reels/..., https://www.instagram.com/p/...
   const instagramReelRegex =
-    /^(https?:\/\/)?(www\.)?instagram\.com\/(reel|reels|p)\/[A-Za-z0-9_-]+/i;
+    /^(https?:\/\/)?(www\.)?(instagr\.am|instagram\.com)\/(reel|reels|p)\/[A-Za-z0-9_-]+/i;
 
-  // YouTube video / Shorts URL regex
-  // Matches: https://www.youtube.com/watch?v=..., https://youtu.be/..., https://youtube.com/shorts/...
+  // YouTube Shorts / video URL regex
   const youtubeRegex =
     /^(https?:\/\/)?((www|m)\.)?(youtube\.com\/(watch\?v=[A-Za-z0-9_-]+|shorts\/[A-Za-z0-9_-]+|v\/[A-Za-z0-9_-]+|embed\/[A-Za-z0-9_-]+)|youtu\.be\/[A-Za-z0-9_-]+)/i;
 
@@ -81,7 +68,7 @@ export const validateUGCLink = (url: string): { isValid: boolean; error?: string
 
   return {
     isValid: false,
-    error: 'Please enter a valid Instagram Reel or YouTube link.',
+    error: 'Please enter a valid Instagram Reel or YouTube Shorts URL.',
     platform: null,
   };
 };
@@ -91,14 +78,19 @@ export default function UGCPostingScreen() {
   const route = useRoute<UGCPostingRouteProp>();
 
   const destination = route.params?.destination || route.params?.placeName || 'Paris, France';
+  const tripId = route.params?.tripId;
 
   const [link, setLink] = useState('');
   const [caption, setCaption] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Pipeline execution state
+  const [pipelineStep, setPipelineStep] = useState<number>(0); // 0: Idle, 1: Ingesting, 2: AI Analysis, 3: Moderation, 4: Done
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<'approved' | 'rejected' | null>(null);
+
+  const detectedPlatform = link.trim() ? validateUGCLink(link).platform : null;
 
   const handleLinkChange = (text: string) => {
     setLink(text);
@@ -108,16 +100,13 @@ export default function UGCPostingScreen() {
     }
   };
 
-  const handleBlur = () => {
-    setIsFocused(false);
+  const handleQuickPaste = (sampleUrl: string) => {
+    setLink(sampleUrl);
+    setErrorMessage(null);
     setTouched(true);
-    if (link.trim()) {
-      const validation = validateUGCLink(link);
-      setErrorMessage(validation.isValid ? null : validation.error || null);
-    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setTouched(true);
     const validation = validateUGCLink(link);
 
@@ -127,94 +116,86 @@ export default function UGCPostingScreen() {
     }
 
     setErrorMessage(null);
-    setIsSubmitting(true);
+    setIsProcessing(true);
+    setPipelineStep(1);
 
-    // Simulate submission for UI verification
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 1000);
+    // Simulate backend pipeline steps
+    await new Promise((r) => setTimeout(() => r(undefined), 600));
+    setPipelineStep(2); // AI Analysis
+
+    await new Promise((r) => setTimeout(() => r(undefined), 700));
+    setPipelineStep(3); // Moderation check
+
+    await new Promise((r) => setTimeout(() => r(undefined), 600));
+    setPipelineStep(4); // Finalize
+
+    // Check if test link is a rejection sample
+    const isRejectedSample = link.toLowerCase().includes('spam') || link.toLowerCase().includes('reject');
+    setSubmissionResult(isRejectedSample ? 'rejected' : 'approved');
+    setIsProcessing(false);
   };
 
   const handleReset = () => {
     setLink('');
     setCaption('');
+    setPipelineStep(0);
+    setSubmissionResult(null);
     setTouched(false);
     setErrorMessage(null);
-    setIsSuccess(false);
   };
 
-  const validationResult = link ? validateUGCLink(link) : { isValid: false, platform: null };
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        style={styles.flex1}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex1}
       >
+        {/* Header */}
         <View style={styles.header}>
           <BackButton onPress={() => navigation.goBack()} />
-          <Text style={styles.headerTitle}>Share Travel Content</Text>
-          <View style={styles.headerPlaceholder} />
+          <Text style={styles.headerTitle}>Submit Reel / Video</Text>
+          <View style={styles.placeholder} />
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {isSuccess ? (
-            <View style={styles.successContainer}>
-              <View style={styles.successBadge}>
-                <Text style={styles.successBadgeIcon}>✓</Text>
-              </View>
-              <Text style={styles.successTitle}>Content Submitted!</Text>
-              <Text style={styles.successSubtitle}>
-                Your travel video for <Text style={styles.boldText}>{destination}</Text> has been submitted for review according to our content policy.
-              </Text>
-              <View style={styles.successCard}>
-                <Text style={styles.successCardLabel}>Submitted Link</Text>
-                <Text style={styles.successCardLink} numberOfLines={2}>{link}</Text>
-              </View>
-              <View style={styles.gap24} />
-              <PrimaryButton text="Submit Another Link" onPressed={handleReset} />
-              <View style={styles.gap12} />
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => navigation.goBack()}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.secondaryButtonText}>Back to Trips</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Destination Association Banner */}
+          <View style={styles.destBanner}>
+            <MapPin size={16} color={PRIMARY_GREEN} />
+            <Text style={styles.destLabel}>Associating with:</Text>
+            <Text style={styles.destName} numberOfLines={1}>
+              {destination}
+            </Text>
+          </View>
+
+          {/* Submission Form (when not processed) */}
+          {pipelineStep === 0 && (
             <>
-              {/* Destination Context Card */}
-              <View style={styles.destinationCard}>
-                <View style={styles.destinationHeader}>
-                  <View style={styles.pinCircle}>
-                    <LocationPinIcon />
-                  </View>
-                  <View style={styles.destinationInfo}>
-                    <Text style={styles.destinationLabel}>DESTINATION</Text>
-                    <Text style={styles.destinationName}>{destination}</Text>
-                  </View>
-                </View>
-                <Text style={styles.destinationDesc}>
-                  Share your favorite Reel or YouTube video from your visit to inspire fellow travelers.
-                </Text>
-              </View>
+              <Text style={styles.sectionHeading}>Share Travel Story</Text>
+              <Text style={styles.sectionSub}>
+                Paste an Instagram Reel or YouTube Shorts URL. The video will be analyzed by AI and verified under zero-tolerance moderation before appearing in {destination}.
+              </Text>
 
-              <View style={styles.gap20} />
-
-              {/* UGC Link Input Section */}
-              <View style={styles.inputSection}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.inputLabel}>Video or Reel Link</Text>
-                  {validationResult.platform && (
-                    <View style={styles.platformBadge}>
+              {/* URL Input */}
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputLabelRow}>
+                  <Text style={styles.inputLabel}>Reel or Shorts Link</Text>
+                  {detectedPlatform && (
+                    <View
+                      style={[
+                        styles.platformBadge,
+                        {
+                          backgroundColor:
+                            detectedPlatform === 'instagram' ? '#C13584' : '#FF0000',
+                        },
+                      ]}
+                    >
+                      {detectedPlatform === 'instagram' ? (
+                        <InstagramIcon size={11} color="#FFFFFF" />
+                      ) : (
+                        <YouTubeIcon size={11} color="#FFFFFF" />
+                      )}
                       <Text style={styles.platformBadgeText}>
-                        {validationResult.platform === 'instagram' ? '📷 Instagram Reel' : '▶ YouTube Video'}
+                        {detectedPlatform === 'instagram' ? 'Instagram Reel' : 'YouTube Shorts'}
                       </Text>
                     </View>
                   )}
@@ -222,129 +203,203 @@ export default function UGCPostingScreen() {
 
                 <View
                   style={[
-                    styles.inputWrapper,
-                    isFocused && styles.inputWrapperFocused,
-                    errorMessage ? styles.inputWrapperError : null,
+                    styles.inputBox,
+                    errorMessage ? styles.inputBoxError : null,
                   ]}
                 >
-                  <View style={styles.inputPrefix}>
-                    <LinkIcon />
-                  </View>
+                  <Link2 size={18} color="#8E8E93" />
                   <TextInput
-                    style={styles.textInput}
-                    placeholder="https://www.instagram.com/reel/... or YouTube URL"
-                    placeholderTextColor="#B0B0B8"
+                    style={styles.input}
+                    placeholder="https://www.instagram.com/reel/..."
+                    placeholderTextColor="#8E8E93"
                     value={link}
                     onChangeText={handleLinkChange}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={handleBlur}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    keyboardType="url"
                   />
-                  {link.length > 0 && (
-                    <TouchableOpacity
-                      onPress={() => handleLinkChange('')}
-                      style={styles.clearBtn}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.clearBtnText}>✕</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
-
-                {/* Inline Validation Error Message */}
-                {errorMessage ? (
+                {errorMessage && (
                   <View style={styles.errorRow}>
-                    <Text style={styles.errorIcon}>⚠</Text>
+                    <AlertCircle size={13} color="#E91E63" />
                     <Text style={styles.errorText}>{errorMessage}</Text>
                   </View>
-                ) : null}
-
-                {/* Supported Platforms Helper */}
-                <View style={styles.supportedRow}>
-                  <Text style={styles.supportedLabel}>Supported platforms:</Text>
-                  <View style={styles.tag}>
-                    <Text style={styles.tagText}>Instagram Reels</Text>
-                  </View>
-                  <View style={styles.tag}>
-                    <Text style={styles.tagText}>YouTube</Text>
-                  </View>
-                </View>
+                )}
               </View>
 
-              <View style={styles.gap20} />
+              {/* Quick Sample Links for Demo / Testing */}
+              <View style={styles.samplesCard}>
+                <Text style={styles.samplesTitle}>Quick Fill Sample URLs:</Text>
+                <TouchableOpacity
+                  style={styles.sampleItem}
+                  onPress={() =>
+                    handleQuickPaste('https://www.instagram.com/reel/C3_ParisSunset')
+                  }
+                >
+                  <InstagramIcon size={13} color="#C13584" />
+                  <Text style={styles.sampleText} numberOfLines={1}>
+                    Valid Instagram Reel (Paris Sunset)
+                  </Text>
+                </TouchableOpacity>
 
-              {/* Optional Caption Field */}
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Notes or Description <Text style={styles.optionalText}>(Optional)</Text></Text>
-                <View style={[styles.captionWrapper]}>
-                  <TextInput
-                    style={styles.captionInput}
-                    placeholder="Tell us what makes this video special..."
-                    placeholderTextColor="#B0B0B8"
-                    value={caption}
-                    onChangeText={setCaption}
-                    multiline
-                    numberOfLines={3}
-                    maxLength={200}
-                  />
-                </View>
+                <TouchableOpacity
+                  style={styles.sampleItem}
+                  onPress={() =>
+                    handleQuickPaste('https://youtube.com/shorts/ParisFoodGuide2026')
+                  }
+                >
+                  <YouTubeIcon size={13} color="#FF0000" />
+                  <Text style={styles.sampleText} numberOfLines={1}>
+                    Valid YouTube Shorts (Croissant Tour)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.sampleItem}
+                  onPress={() =>
+                    handleQuickPaste('https://www.youtube.com/shorts/SpamVideoParis')
+                  }
+                >
+                  <ShieldAlert size={13} color="#E91E63" />
+                  <Text style={styles.sampleText} numberOfLines={1}>
+                    Sample Triggering Moderation Policy Rejection
+                  </Text>
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.gap24} />
-
-              {/* Clear, Unambiguous Content Policy Section */}
-              <View style={styles.policyCard}>
-                <View style={styles.policyHeader}>
-                  <View style={styles.shieldCircle}>
-                    <ShieldIcon />
-                  </View>
-                  <Text style={styles.policyTitle}>Content Policy & Community Rules</Text>
-                </View>
-
-                <View style={styles.policyDivider} />
-
-                <View style={styles.policyItem}>
-                  <Text style={styles.policyBullet}>•</Text>
-                  <Text style={styles.policyText}>
-                    <Text style={styles.boldText}>Destination Relevant:</Text> Content must depict or relate directly to travel experiences in {destination}.
-                  </Text>
-                </View>
-
-                <View style={styles.policyItem}>
-                  <Text style={styles.policyBullet}>•</Text>
-                  <Text style={styles.policyText}>
-                    <Text style={styles.boldText}>Originality & Rights:</Text> You must have the right or authorization to share the submitted video.
-                  </Text>
-                </View>
-
-                <View style={styles.policyItem}>
-                  <Text style={styles.policyBullet}>•</Text>
-                  <Text style={styles.policyText}>
-                    <Text style={styles.boldText}>Prohibited Content:</Text> Inappropriate, misleading, abusive, defamatory, or infringing content is strictly prohibited.
-                  </Text>
-                </View>
-
-                <View style={styles.policyItem}>
-                  <Text style={styles.policyBullet}>•</Text>
-                  <Text style={styles.policyText}>
-                    <Text style={styles.boldText}>Moderation:</Text> Submitted content may be reviewed, rejected, or removed at any time in accordance with community guidelines.
-                  </Text>
-                </View>
+              {/* Optional Caption */}
+              <View style={styles.inputWrapper}>
+                <Text style={styles.inputLabel}>Personal Note or Tip (Optional)</Text>
+                <TextInput
+                  style={[styles.inputBox, styles.captionBox]}
+                  placeholder="e.g. Best visited right at 7 PM for golden hour..."
+                  placeholderTextColor="#8E8E93"
+                  value={caption}
+                  onChangeText={setCaption}
+                  multiline
+                />
               </View>
 
-              <View style={styles.gap32} />
+              {/* Pipeline Overview Box */}
+              <View style={styles.pipelineInfoBox}>
+                <View style={styles.pipelineHeader}>
+                  <Sparkles size={16} color={PRIMARY_GREEN} />
+                  <Text style={styles.pipelineTitle}>Automated Processing Pipeline</Text>
+                </View>
+                <Text style={styles.pipelineDesc}>
+                  1. Server validates URL → 2. Video ingestion & transcription → 3. AI highlights extraction → 4. Zero-tolerance moderation check → 5. Surface to travelers.
+                </Text>
+              </View>
 
               {/* Submit Button */}
-              <PrimaryButton
-                text="Submit Content"
-                onPressed={handleSubmit}
-                isLoading={isSubmitting}
-              />
-
-              <View style={styles.gap24} />
+              <TouchableOpacity
+                style={styles.submitBtn}
+                onPress={handleSubmit}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.submitBtnText}>Submit for AI Verification</Text>
+                <ArrowRight size={18} color="#FFFFFF" />
+              </TouchableOpacity>
             </>
+          )}
+
+          {/* Processing Pipeline Animation State */}
+          {isProcessing && (
+            <View style={styles.processingCard}>
+              <ActivityIndicator size="large" color={PRIMARY_GREEN} style={styles.spinner} />
+              <Text style={styles.processingHeading}>Processing Travel Video</Text>
+              <Text style={styles.processingSub}>Executing automated backend pipeline</Text>
+
+              <View style={styles.stepsList}>
+                <View style={styles.stepRow}>
+                  <CheckCircle2
+                    size={18}
+                    color={pipelineStep >= 1 ? PRIMARY_GREEN : '#D1D1D6'}
+                  />
+                  <Text style={[styles.stepText, pipelineStep >= 1 && styles.stepTextActive]}>
+                    1. Ingesting video & metadata
+                  </Text>
+                </View>
+
+                <View style={styles.stepRow}>
+                  <CheckCircle2
+                    size={18}
+                    color={pipelineStep >= 2 ? PRIMARY_GREEN : '#D1D1D6'}
+                  />
+                  <Text style={[styles.stepText, pipelineStep >= 2 && styles.stepTextActive]}>
+                    2. AI Analysis & destination association
+                  </Text>
+                </View>
+
+                <View style={styles.stepRow}>
+                  <CheckCircle2
+                    size={18}
+                    color={pipelineStep >= 3 ? PRIMARY_GREEN : '#D1D1D6'}
+                  />
+                  <Text style={[styles.stepText, pipelineStep >= 3 && styles.stepTextActive]}>
+                    3. Zero-tolerance moderation safety check
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Finished State: APPROVED or REJECTED */}
+          {!isProcessing && pipelineStep === 4 && (
+            <View style={styles.resultContainer}>
+              {submissionResult === 'approved' ? (
+                <View style={styles.approvedCard}>
+                  <View style={styles.approvedIconBg}>
+                    <ShieldCheck size={36} color={PRIMARY_GREEN} />
+                  </View>
+                  <Text style={styles.resultTitle}>Moderation Approved! 🎉</Text>
+                  <Text style={styles.resultSub}>
+                    Your Reel passed zero-tolerance safety checks and has been linked to{' '}
+                    <Text style={styles.boldText}>{destination}</Text>.
+                  </Text>
+
+                  {/* AI Generated Preview */}
+                  <View style={styles.aiGeneratedBox}>
+                    <View style={styles.aiGenHeader}>
+                      <Sparkles size={14} color={PRIMARY_GREEN} />
+                      <Text style={styles.aiGenTitle}>AI Analysis Generated</Text>
+                    </View>
+                    <Text style={styles.aiGenText}>
+                      "Scenic photography viewpoints around Trocadéro and Bir-Hakeim bridge during golden hour."
+                    </Text>
+                    <View style={styles.tagWrap}>
+                      <Text style={styles.tagChip}>#Sunset</Text>
+                      <Text style={styles.tagChip}>#PhotoSpot</Text>
+                      <Text style={styles.tagChip}>#Romantic</Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.actionPrimaryBtn}
+                    onPress={() => navigation.goBack()}
+                  >
+                    <Text style={styles.actionPrimaryText}>View in {destination}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.actionSecondaryBtn} onPress={handleReset}>
+                    <Text style={styles.actionSecondaryText}>Submit Another Reel</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.rejectedCard}>
+                  <View style={styles.rejectedIconBg}>
+                    <ShieldAlert size={36} color="#E91E63" />
+                  </View>
+                  <Text style={styles.resultTitle}>Moderation Policy Notice</Text>
+                  <Text style={styles.resultSub}>
+                    This submission could not be approved due to zero-tolerance content policy restrictions (spam/unverified source). Under our strict safety rules, unapproved content is never displayed.
+                  </Text>
+
+                  <TouchableOpacity style={styles.actionSecondaryBtn} onPress={handleReset}>
+                    <Text style={styles.actionSecondaryText}>Try Another Link</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -353,407 +408,210 @@ export default function UGCPostingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  flex1: {
-    flex: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex1: { flex: 1 },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: '#F0F0F2',
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
-  },
-  headerPlaceholder: {
-    width: 44,
-  },
-  scrollContent: {
-    padding: 20,
-  },
-
-  // Destination Context Card
-  destinationCard: {
-    backgroundColor: '#FCE4EC', // Soft pink background matching Flutter theme
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#F8BBD0',
-  },
-  destinationHeader: {
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E' },
+  placeholder: { width: 44 },
+  content: { padding: 20, paddingBottom: 36 },
+  destBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 6,
+    backgroundColor: '#E8F7EE',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#C2EAD0',
   },
-  pinCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E91E63',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  destinationInfo: {
-    flex: 1,
-  },
-  destinationLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#E91E63',
-    letterSpacing: 0.8,
-  },
-  destinationName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
-  },
-  destinationDesc: {
-    fontSize: 13,
-    color: 'rgba(26, 26, 46, 0.75)',
-    lineHeight: 18,
-  },
-
-  // Input Sections
-  inputSection: {
-    width: '100%',
-  },
-  labelRow: {
+  destLabel: { fontSize: 12, color: '#555555', fontWeight: '500' },
+  destName: { fontSize: 13, fontWeight: '700', color: PRIMARY_GREEN, flex: 1 },
+  sectionHeading: { fontSize: 20, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
+  sectionSub: { fontSize: 13, color: '#666666', lineHeight: 18, marginBottom: 20 },
+  inputWrapper: { marginBottom: 16 },
+  inputLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
-  },
-  optionalText: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#8E8E93',
-  },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#1A1A2E' },
   platformBadge: {
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  platformBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#2E7D32',
-  },
-  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F7',
-    borderRadius: 16,
-    height: 56,
-    paddingHorizontal: 16,
-    borderWidth: 1.5,
-    borderColor: '#E8E8E8',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
-  inputWrapperFocused: {
-    borderColor: '#E91E63',
-    backgroundColor: '#FFFFFF',
-  },
-  inputWrapperError: {
-    borderColor: '#E53935',
-    backgroundColor: '#FFF5F5',
-  },
-  inputPrefix: {
-    marginRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    height: '100%',
-    color: '#1A1A2E',
-    fontSize: 14,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
-    padding: 0,
-  },
-  clearBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  clearBtnText: {
-    fontSize: 12,
-    color: '#666666',
-    fontWeight: 'bold',
-  },
-
-  // Validation Error
-  errorRow: {
+  platformBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-    paddingHorizontal: 4,
-  },
-  errorIcon: {
-    fontSize: 13,
-    color: '#E53935',
-    marginRight: 6,
-  },
-  errorText: {
-    fontSize: 13,
-    color: '#E53935',
-    fontWeight: '500',
-    flex: 1,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Medium' : undefined,
-  },
-
-  // Supported Platforms
-  supportedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  supportedLabel: {
-    fontSize: 12,
-    color: '#8E8E93',
-  },
-  tag: {
-    backgroundColor: '#F5F5F7',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E8E8E8',
+    paddingHorizontal: 12,
+    height: 48,
+    gap: 8,
   },
-  tagText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1A1A2E',
-  },
-
-  // Caption Field
-  captionWrapper: {
-    backgroundColor: '#F5F5F7',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1.5,
-    borderColor: '#E8E8E8',
-    height: 90,
-  },
-  captionInput: {
-    color: '#1A1A2E',
-    fontSize: 14,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
-    textAlignVertical: 'top',
-    height: '100%',
-    padding: 0,
-  },
-
-  // Content Policy Card
-  policyCard: {
-    backgroundColor: '#FAFAFC',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-  },
-  policyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  shieldCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#1B2A4A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  policyTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
-  },
-  policyDivider: {
-    height: 1,
-    backgroundColor: '#EEEEEE',
-    marginVertical: 12,
-  },
-  policyItem: {
-    flexDirection: 'row',
+  captionBox: {
+    height: 80,
     alignItems: 'flex-start',
-    marginBottom: 8,
+    paddingTop: 10,
   },
-  policyBullet: {
-    fontSize: 16,
-    color: '#E91E63',
-    marginRight: 8,
-    lineHeight: 18,
+  inputBoxError: { borderColor: '#E91E63', backgroundColor: '#FFF5F7' },
+  input: { flex: 1, fontSize: 14, color: '#1A1A2E' },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  errorText: { fontSize: 12, color: '#E91E63' },
+  samplesCard: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+    marginBottom: 16,
+    gap: 8,
   },
-  policyText: {
-    fontSize: 13,
-    color: 'rgba(26, 26, 46, 0.8)',
-    lineHeight: 18,
-    flex: 1,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
-  },
-  boldText: {
-    fontWeight: '700',
-    color: '#1A1A2E',
-  },
-
-  // Success View
-  successContainer: {
+  samplesTitle: { fontSize: 11, fontWeight: '700', color: '#8E8E93', textTransform: 'uppercase' },
+  sampleItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
-  successBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  successBadgeIcon: {
-    fontSize: 36,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  successTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    marginBottom: 8,
-  },
-  successSubtitle: {
-    fontSize: 14,
-    color: '#8E8E93',
-    textAlign: 'center',
-    lineHeight: 20,
+  sampleText: { fontSize: 12, color: '#333333', flex: 1 },
+  pipelineInfoBox: {
+    backgroundColor: '#F0FBF5',
+    borderRadius: 12,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: PRIMARY_GREEN,
     marginBottom: 24,
   },
-  successCard: {
-    width: '100%',
-    backgroundColor: '#F5F5F7',
-    borderRadius: 16,
-    padding: 16,
+  pipelineHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  pipelineTitle: { fontSize: 12, fontWeight: '700', color: PRIMARY_GREEN },
+  pipelineDesc: { fontSize: 11, color: '#444444', lineHeight: 16 },
+  submitBtn: {
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: PRIMARY_GREEN,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  submitBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  processingCard: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 18,
+    padding: 24,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: '#EEEEEE',
+    marginTop: 20,
   },
-  successCardLabel: {
-    fontSize: 12,
-    color: '#8E8E93',
-    fontWeight: '600',
-    marginBottom: 4,
+  spinner: { marginBottom: 16 },
+  processingHeading: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
+  processingSub: { fontSize: 13, color: '#8E8E93', marginBottom: 20 },
+  stepsList: { width: '100%', gap: 12 },
+  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  stepText: { fontSize: 13, color: '#8E8E93' },
+  stepTextActive: { color: '#1A1A2E', fontWeight: '600' },
+  resultContainer: { marginTop: 16 },
+  approvedCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#C2EAD0',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  successCardLink: {
-    fontSize: 13,
-    color: '#1A1A2E',
-    fontWeight: '500',
+  approvedIconBg: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#E8F7EE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  secondaryButton: {
+  rejectedCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#F8BBD0',
+  },
+  rejectedIconBg: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FCE4EC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  resultTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 6 },
+  resultSub: { fontSize: 13, color: '#666666', textAlign: 'center', lineHeight: 18, marginBottom: 16 },
+  boldText: { fontWeight: '700', color: '#1A1A2E' },
+  aiGeneratedBox: {
     width: '100%',
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 1.5,
-    borderColor: '#E8E8E8',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#F0FBF5',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#C2EAD0',
+    marginBottom: 20,
   },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A2E',
-  },
-
-  // Simple Shapes for Icons
-  iconBox: {
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  linkCircle1: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#8E8E93',
-    position: 'absolute',
-    left: 1,
-    top: 2,
-  },
-  linkCircle2: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#8E8E93',
-    position: 'absolute',
-    right: 1,
-    bottom: 2,
-  },
-  pinHead: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FFFFFF',
-  },
-  pinPoint: {
-    width: 4,
-    height: 4,
-    backgroundColor: '#FFFFFF',
-    transform: [{ rotate: '45deg' }],
-    marginTop: -2,
-  },
-  shieldBody: {
-    width: 12,
-    height: 14,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-    borderBottomLeftRadius: 6,
-    borderBottomRightRadius: 6,
-  },
-  checkCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkMark: {
-    color: '#FFFFFF',
+  aiGenHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  aiGenTitle: { fontSize: 12, fontWeight: '700', color: PRIMARY_GREEN },
+  aiGenText: { fontSize: 12, color: '#333333', fontStyle: 'italic', marginBottom: 8 },
+  tagWrap: { flexDirection: 'row', gap: 6 },
+  tagChip: {
     fontSize: 10,
-    fontWeight: 'bold',
+    color: PRIMARY_GREEN,
+    fontWeight: '700',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#C2EAD0',
   },
-
-  // Spacing Helpers
-  gap12: { height: 12 },
-  gap20: { height: 20 },
-  gap24: { height: 24 },
-  gap32: { height: 32 },
+  actionPrimaryBtn: {
+    width: '100%',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: PRIMARY_GREEN,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  actionPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  actionSecondaryBtn: {
+    paddingVertical: 8,
+  },
+  actionSecondaryText: { color: '#666666', fontWeight: '600', fontSize: 13 },
 });
