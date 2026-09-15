@@ -39,6 +39,10 @@ export type AppStackParamList = {
   ImportData: undefined;
   ImportReview: { draft: ImportedTripDraft };
   Reviews: { placeId: string; placeName: string };
+  EventsFeed: { destinationId?: string; destinationName?: string } | undefined;
+  EventDetails: { eventId: string };
+  Notifications: undefined;
+  InstagramConnect: undefined;
 };
 
 export type RootStackParamList = {

@@ -12,6 +12,8 @@ export default function ProfileMenuScreen() {
   const { user, logout } = useAuth();
 
   const menuItems = [
+    { title: 'Connected Instagram Profile', route: 'InstagramConnect' as const },
+    { title: 'Notifications & Travel Alerts', route: 'Notifications' as const },
     { title: 'Profile Settings', route: 'ProfileSettings' as const },
     { title: 'Import Data (Beta)', route: 'ImportData' as const },
     { title: 'User Levels', route: 'UserLevels' as const },

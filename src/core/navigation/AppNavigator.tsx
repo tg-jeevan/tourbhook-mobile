@@ -22,6 +22,10 @@ import GroupMatchingScreen from '../../features/groups/screens/GroupMatchingScre
 import ImportDataScreen from '../../features/imports/screens/ImportDataScreen';
 import ImportReviewScreen from '../../features/imports/screens/ImportReviewScreen';
 import ReviewsScreen from '../../features/reviews/screens/ReviewsScreen';
+import EventsFeedScreen from '../../features/events/screens/EventsFeedScreen';
+import EventDetailsScreen from '../../features/events/screens/EventDetailsScreen';
+import NotificationsScreen from '../../features/notifications/screens/NotificationsScreen';
+import InstagramConnectScreen from '../../features/ugc/screens/InstagramConnectScreen';
 import DevScreenTester from './DevScreenNavigator';
 import ItineraryPackingScreen from '../../features/trips/screens/ItineraryPackingScreen';
 import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen';
@@ -31,7 +35,7 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export const AppNavigator = () => {
   return (
-    <Stack.Navigator initialRouteName="MyItineraries" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="DevScreenTester" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MyItineraries" component={MyItinerariesScreen} />
       <Stack.Screen name="PlanTrip" component={PlanTripScreen} />
       <Stack.Screen name="TripPreferences" component={TripPreferencesScreen} />
@@ -53,10 +57,14 @@ export const AppNavigator = () => {
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="UGCPosting" component={UGCPostingScreen} />
+      <Stack.Screen name="InstagramConnect" component={InstagramConnectScreen} />
       <Stack.Screen name="GroupMatching" component={GroupMatchingScreen} />
       <Stack.Screen name="ImportData" component={ImportDataScreen} />
       <Stack.Screen name="ImportReview" component={ImportReviewScreen} />
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
+      <Stack.Screen name="EventsFeed" component={EventsFeedScreen} />
+      <Stack.Screen name="EventDetails" component={EventDetailsScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="DevScreenTester" component={DevScreenTester} />
     </Stack.Navigator>
   );

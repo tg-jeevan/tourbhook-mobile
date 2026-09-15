@@ -6,9 +6,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 
+import { UGCContentDisplay } from '../../ugc/components/UGCContentDisplay';
+
 export default function PlaceDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'PlaceDetails'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'PlaceDetails'>>();
+  const placeName = route.params?.placeName || 'Eiffel Tower';
+  const placeId = route.params?.placeId || '1';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -17,24 +21,45 @@ export default function PlaceDetailsScreen() {
         <Text style={styles.headerTitle}>Place Details</Text>
         <View style={styles.placeholder} />
       </View>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Image source={require('../../../../assets/images/welcomeImage.jpg')} style={styles.image} />
         <View style={styles.gap16} />
-        <Text style={styles.title}>{route.params?.placeName || 'Eiffel Tower'}</Text>
+        <Text style={styles.title}>{placeName}</Text>
         <TouchableOpacity
           onPress={() =>
             navigation.navigate('Reviews', {
-              placeId: route.params?.placeId ?? '',
-              placeName: route.params?.placeName ?? 'Eiffel Tower',
+              placeId,
+              placeName,
             })
           }
         >
-        <Text style={styles.rating}>⭐ 4.8 (1,250 reviews)</Text>
+          <Text style={styles.rating}>⭐ 4.8 (1,250 reviews)</Text>
         </TouchableOpacity>
         <View style={styles.gap16} />
         <Text style={styles.desc}>
           The Eiffel Tower is a wrought-iron lattice tower on the Champ de Mars in Paris, France. It is named after the engineer Gustave Eiffel, whose company designed and built the tower.
         </Text>
+        <View style={styles.gap16} />
+
+        <TouchableOpacity
+          style={styles.nearbyEventsBtn}
+          onPress={() =>
+            navigation.navigate('EventsFeed', {
+              destinationId: 'paris',
+              destinationName: 'Paris, France',
+            })
+          }
+          activeOpacity={0.85}
+        >
+          <Text style={styles.nearbyEventsText}>🎪 Browse Events & Activities in Paris</Text>
+        </TouchableOpacity>
+        <View style={styles.gap16} />
+
+        {/* UGC Content Display */}
+        <UGCContentDisplay
+          destination={placeName}
+          placeId={placeId}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -50,5 +75,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
   rating: { fontSize: 14, color: '#8E8E93', marginTop: 4 },
   desc: { fontSize: 14, color: 'rgba(26,26,46,0.8)', lineHeight: 21, marginTop: 12 },
+  nearbyEventsBtn: { padding: 14, backgroundColor: '#E8F7EE', borderRadius: 12, borderWidth: 1, borderColor: '#C2EAD0', alignItems: 'center' },
+  nearbyEventsText: { fontSize: 14, fontWeight: '700', color: '#1FAE5D' },
   gap16: { height: 16 }
 });
