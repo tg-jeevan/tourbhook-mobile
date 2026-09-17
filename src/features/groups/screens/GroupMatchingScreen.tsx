@@ -6,26 +6,52 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
+import { SkeletonBlock } from '../../../core/components/SkeletonBlock';
+import { EmptyState } from '../../../core/components/EmptyState';
+import { ErrorState } from '../../../core/components/ErrorState';
+import { Typography } from '../../../core/theme/typography';
+import { AppColors } from '../../../core/theme/colors';
 import { CATEGORY_FILTERS, CategoryFilter, TravelGroup } from '../types/groupTypes';
 import { useGroupMatches } from '../hooks/useGroupMatches';
 import { useVerificationStatus } from '../hooks/useVerificationStatus';
 
 
-const GREEN = '#1FAE5D';
-const GREEN_LIGHT = '#E6F7EC';
-const TEXT_DARK = '#1A1A2E';
-const TEXT_MUTED = '#8E8E93';
-const RED = '#E53935';
-const RED_LIGHT = '#FDECEA';
-const AMBER = '#F2A93B';
-const AMBER_LIGHT = '#FEF6E7';
+const PRIMARY = AppColors.primary;
+const PRIMARY_LIGHT = AppColors.primaryLight;
+const TEXT_DARK = AppColors.textDark;
+const TEXT_MUTED = AppColors.textMuted;
+
+const SUCCESS = AppColors.success;
+const SUCCESS_LIGHT = AppColors.successLight;
+const RED = AppColors.error;
+const RED_LIGHT = AppColors.errorLight;
+const AMBER = AppColors.warning;
+const AMBER_LIGHT = AppColors.warningLight;
+
+function SkeletonGroupCard() {
+  return (
+    <View style={styles.groupCard}>
+      <View style={styles.groupCardTop}>
+        <View style={styles.groupInfo}>
+          <SkeletonBlock style={styles.skeletonTitle} />
+          <SkeletonBlock style={styles.skeletonSubtitle} />
+          <View style={styles.skeletonTagRow}>
+            <SkeletonBlock style={styles.skeletonTagSmall} />
+            <SkeletonBlock style={styles.skeletonTagLarge} />
+          </View>
+        </View>
+        <SkeletonBlock style={styles.skeletonButton} />
+      </View>
+    </View>
+  );
+}
 
 export default function GroupMatchingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'GroupMatching'>>();
 
   const [searchText, setSearchText] = useState('');
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
-  const { groups, isLoading, joinedGroupIds, joinGroup } = useGroupMatches(activeCategory);
+  const { groups, isLoading, isError, retry, joinedGroupIds, joinGroup } = useGroupMatches(activeCategory);
   const verificationStatus = useVerificationStatus();
 
   const visibleGroups = groups.filter(group =>
@@ -81,14 +107,14 @@ export default function GroupMatchingScreen() {
 
   const verificationCardStyle =
     verificationStatus === 'verified'
-      ? { backgroundColor: GREEN_LIGHT }
+      ? { backgroundColor: SUCCESS_LIGHT }
       : verificationStatus === 'rejected'
         ? { backgroundColor: RED_LIGHT }
         : { backgroundColor: AMBER_LIGHT };
 
   const verificationIconStyle =
     verificationStatus === 'verified'
-      ? { backgroundColor: GREEN }
+      ? { backgroundColor: SUCCESS }
       : verificationStatus === 'rejected'
         ? { backgroundColor: RED }
         : { backgroundColor: AMBER };
@@ -101,7 +127,7 @@ export default function GroupMatchingScreen() {
         : 'Pending';
 
   const verificationLabelColor =
-    verificationStatus === 'verified' ? GREEN : verificationStatus === 'rejected' ? RED : AMBER;
+    verificationStatus === 'verified' ? SUCCESS : verificationStatus === 'rejected' ? RED : AMBER;
 
   const verificationMessage =
     verificationStatus === 'verified'
@@ -155,10 +181,17 @@ export default function GroupMatchingScreen() {
           })}
         </ScrollView>
 
-        {isLoading ? (
-          <Text style={styles.loadingText}>Finding groups that match your interests...</Text>
+        {isError ? (
+          <ErrorState message="We couldn't load groups. Try again." onRetry={retry} />
+        ) : isLoading ? (
+          <>
+            <SkeletonGroupCard />
+            <SkeletonGroupCard />
+            <SkeletonGroupCard />
+          </>
+
         ) : visibleGroups.length === 0 ? (
-          <Text style={styles.loadingText}>No groups match your search yet.</Text>
+            <EmptyState icon="🧭" message="No travel groups found. Try another destination." />
         ) : (
           visibleGroups.map(renderGroupCard)
         )}
@@ -192,8 +225,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   headerTextBlock: { flex: 1, alignItems: 'center', paddingTop: 8 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: TEXT_DARK },
-  headerSubtitle: { fontSize: 12, color: TEXT_MUTED, marginTop: 2 },
+  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
+  headerSubtitle: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
   headerPlaceholder: { width: 44 },
 
   content: { padding: 24, paddingBottom: 24 },
@@ -210,7 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   searchIcon: { fontSize: 14, marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 14, color: TEXT_DARK },
+  searchInput: { flex: 1, ...Typography.body, color: TEXT_DARK },
 
   filterRow: { gap: 8, paddingBottom: 20 },
   filterChip: {
@@ -221,11 +254,9 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
     backgroundColor: '#FFFFFF',
   },
-  filterChipActive: { backgroundColor: GREEN, borderColor: GREEN },
+  filterChipActive: { backgroundColor: PRIMARY, borderColor: PRIMARY },
   filterChipText: { fontSize: 13, fontWeight: '600', color: TEXT_MUTED },
   filterChipTextActive: { color: '#FFFFFF' },
-
-  loadingText: { fontSize: 13, color: TEXT_MUTED, textAlign: 'center', paddingVertical: 24 },
 
   groupCard: {
     backgroundColor: '#FFFFFF',
@@ -242,14 +273,14 @@ const styles = StyleSheet.create({
   },
   groupCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   groupInfo: { flex: 1, paddingRight: 12 },
-  groupName: { fontSize: 15, fontWeight: '700', color: TEXT_DARK, marginBottom: 6 },
+  groupName: { ...Typography.contentName, color: TEXT_DARK, marginBottom: 6 },
   groupMetaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   avatarStack: { flexDirection: 'row', marginRight: 8 },
   avatarCircle: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: GREEN_LIGHT,
+    backgroundColor: PRIMARY_LIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
@@ -257,7 +288,7 @@ const styles = StyleSheet.create({
   },
   avatarOverlap: { marginLeft: -8 },
   avatarEmoji: { fontSize: 12 },
-  memberCountText: { fontSize: 12, color: TEXT_MUTED },
+  memberCountText: { ...Typography.smallDetail, color: TEXT_MUTED },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   tagChip: {
     backgroundColor: '#F5F5F7',
@@ -265,10 +296,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  tagChipText: { fontSize: 11, color: TEXT_MUTED, fontWeight: '500' },
+  tagChipText: { ...Typography.smallDetail, fontSize: 11, color: TEXT_MUTED, fontWeight: '500' },
 
   joinButton: {
-    backgroundColor: GREEN,
+    backgroundColor: PRIMARY,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
@@ -279,7 +310,7 @@ const styles = StyleSheet.create({
   joinedButtonText: { color: TEXT_MUTED },
 
   verificationCard: { borderRadius: 16, padding: 16, marginTop: 8 },
-  verificationTitle: { fontSize: 14, fontWeight: '700', color: TEXT_DARK, marginBottom: 10 },
+  verificationTitle: { ...Typography.sectionHeading, color: TEXT_DARK, marginBottom: 10 },
   verificationStatusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   verificationIcon: {
     width: 22,
@@ -290,6 +321,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   verificationIconText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
-  verificationLabel: { fontSize: 14, fontWeight: '700' },
-  verificationMessage: { fontSize: 12, color: TEXT_MUTED, lineHeight: 17 },
+  verificationLabel: { ...Typography.contentName },
+  verificationMessage: { ...Typography.body, color: TEXT_MUTED, lineHeight: 19 },
+
+  skeletonTitle: { width: '60%', height: 15, marginBottom: 10 },
+  skeletonSubtitle: { width: '40%', height: 11, marginBottom: 10 },
+  skeletonTagRow: { flexDirection: 'row', gap: 6 },
+  skeletonTagSmall: { width: 56, height: 20, borderRadius: 8 },
+  skeletonTagLarge: { width: 70, height: 20, borderRadius: 8 },
+  skeletonButton: { width: 64, height: 34, borderRadius: 20 },
 });

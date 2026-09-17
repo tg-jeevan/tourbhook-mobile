@@ -4,17 +4,31 @@ import { CategoryFilter, getMockTravelGroups, TravelGroup } from '../types/group
 export function useGroupMatches(category: CategoryFilter) {
   const [allGroups, setAllGroups] = useState<TravelGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>([]);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     setIsLoading(true);
+    setIsError(false);
     const timer = setTimeout(() => {
-      setAllGroups(getMockTravelGroups());
-      setIsLoading(false);
+            if (cancelled) return;
+      try {
+        setAllGroups(getMockTravelGroups());
+        } catch {
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
+      }
+
     }, 600);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [reloadToken]);
 
   const groups = useMemo(() => {
     if (category === 'All') return allGroups;
@@ -25,5 +39,7 @@ export function useGroupMatches(category: CategoryFilter) {
     setJoinedGroupIds(prev => (prev.includes(groupId) ? prev : [...prev, groupId]));
   };
 
-  return { groups, isLoading, joinedGroupIds, joinGroup };
+  const retry = () => setReloadToken(token => token + 1);
+
+  return { groups, isLoading, isError, retry, joinedGroupIds, joinGroup };
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,19 +15,24 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
-import { getMockItineraryDays, TimelineItem } from '../types/itineraryPackingTypes';
+import { SkeletonBlock } from '../../../core/components/SkeletonBlock';
+import { EmptyState } from '../../../core/components/EmptyState';
+import { ErrorState } from '../../../core/components/ErrorState';
+import { Typography } from '../../../core/theme/typography';
+import { TimelineItem } from '../types/itineraryPackingTypes';
+import { useItineraryDays } from '../hooks/useItineraryDays';
 import { PackingItem, usePackingRecommendations } from '../hooks/usePackingRecommendations';
-
+import { AppColors } from '../../../core/theme/colors';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 
-const GREEN = '#1FAE5D';
-const GREEN_LIGHT = '#E6F7EC';
-const TEXT_DARK = '#1A1A2E';
-const TEXT_MUTED = '#8E8E93';
+const PRIMARY = AppColors.primary;
+const PRIMARY_LIGHT = AppColors.primaryLight;
+const TEXT_DARK = AppColors.textDark;
+const TEXT_MUTED = AppColors.textMuted;
 
 const BASE_PACKING_ITEMS: PackingItem[] = [
   { id: '1', name: 'Passport', checked: true, source: 'base' },
@@ -40,6 +45,21 @@ const BASE_PACKING_ITEMS: PackingItem[] = [
 
 type TabKey = 'itinerary' | 'packing';
 
+function SkeletonTimelineItem() {
+  return (
+    <View style={styles.timelineRow}>
+      <View style={styles.timelineRail}>
+        <SkeletonBlock style={styles.skeletonDot} />
+      </View>
+      <View style={styles.skeletonTextBlock}>
+        <SkeletonBlock style={styles.skeletonTime} />
+        <SkeletonBlock style={styles.skeletonTitle} />
+        <SkeletonBlock style={styles.skeletonSubtitle} />
+      </View>
+    </View>
+  );
+}
+
 export default function ItineraryPackingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'ItineraryView'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'ItineraryView' | 'PackingList'>>();
@@ -49,7 +69,7 @@ export default function ItineraryPackingScreen() {
     route.name === 'PackingList' ? 'packing' : 'itinerary',
   );
 
-  const days = useMemo(() => getMockItineraryDays(), []);
+  const { days, isLoading: isDaysLoading, isError: isDaysError, retry: retryDays } = useItineraryDays(tripId);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const selectedDay = days[selectedDayIndex];
 
@@ -126,31 +146,26 @@ export default function ItineraryPackingScreen() {
       </View>
     );
   };
+    const renderItineraryTab = () => {
+    if (isDaysError) {
+      return <ErrorState message="We couldn't load your itinerary. Try again." onRetry={retryDays} />;
+    }
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>My Itinerary</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
+    if (isDaysLoading) {
 
-      <View style={styles.tabRow}>
-        <TouchableOpacity style={styles.tabButton} onPress={() => switchTab('itinerary')}>
-          <Text style={[styles.tabLabel, activeTab === 'itinerary' && styles.tabLabelActive]}>
-            Itinerary
-          </Text>
-          {activeTab === 'itinerary' && <View style={styles.tabUnderline} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton} onPress={() => switchTab('packing')}>
-          <Text style={[styles.tabLabel, activeTab === 'packing' && styles.tabLabelActive]}>
-            Packing List
-          </Text>
-          {activeTab === 'packing' && <View style={styles.tabUnderline} />}
-        </TouchableOpacity>
-      </View>
+      return (
+        <ScrollView contentContainerStyle={styles.timelineContent}>
+          <SkeletonTimelineItem />
+          <SkeletonTimelineItem />
+          <SkeletonTimelineItem />
+        </ScrollView>
+      );
+    }
+       if (days.length === 0) {
+      return <EmptyState icon="🗺️" message="Your itinerary is empty. Start planning your trip." />;
+    }
 
-      {activeTab === 'itinerary' ? (
+      return (
         <>
           <ScrollView
             horizontal
@@ -178,10 +193,14 @@ export default function ItineraryPackingScreen() {
           </ScrollView>
 
           <ScrollView contentContainerStyle={styles.timelineContent}>
-            {selectedDay.items.map((item, index) =>
+          {selectedDay.items.length === 0 ? (
+            <EmptyState icon="🗺️" message="Your itinerary is empty. Start planning your trip." />
+          ) : (
+            selectedDay.items.map((item, index) =>
               renderTimelineItem(item, index, index === selectedDay.items.length - 1),
-            )}
-          </ScrollView>
+         )
+          )}
+        </ScrollView>
 
           <TouchableOpacity
             style={styles.addActivityButton}
@@ -191,6 +210,34 @@ export default function ItineraryPackingScreen() {
             <Text style={styles.addActivityButtonText}>+ Add Activity</Text>
           </TouchableOpacity>
         </>
+         );
+  };
+  return (
+
+      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <BackButton onPress={() => navigation.goBack()} />
+        <Text style={styles.headerTitle}>My Itinerary</Text>
+        <View style={styles.headerPlaceholder} />
+      </View>
+
+      <View style={styles.tabRow}>
+        <TouchableOpacity style={styles.tabButton} onPress={() => switchTab('itinerary')}>
+          <Text style={[styles.tabLabel, activeTab === 'itinerary' && styles.tabLabelActive]}>
+            Itinerary
+          </Text>
+          {activeTab === 'itinerary' && <View style={styles.tabUnderline} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tabButton} onPress={() => switchTab('packing')}>
+          <Text style={[styles.tabLabel, activeTab === 'packing' && styles.tabLabelActive]}>
+            Packing List
+          </Text>
+          {activeTab === 'packing' && <View style={styles.tabUnderline} />}
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'itinerary' ? (
+        renderItineraryTab()
       ) : (
         <ScrollView contentContainerStyle={styles.packingContent}>
           <Text style={styles.packingHint}>AI is adding suggestions as they come in</Text>
@@ -229,7 +276,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: TEXT_DARK },
+  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
   headerPlaceholder: { width: 44 },
 
   tabRow: {
@@ -240,13 +287,13 @@ const styles = StyleSheet.create({
   },
   tabButton: { flex: 1, alignItems: 'center', paddingBottom: 12 },
   tabLabel: { fontSize: 14, fontWeight: '600', color: TEXT_MUTED },
-  tabLabelActive: { color: GREEN },
+  tabLabelActive: { color: PRIMARY },
   tabUnderline: {
     position: 'absolute',
     bottom: 0,
     height: 2,
     width: '60%',
-    backgroundColor: GREEN,
+    backgroundColor: PRIMARY,
     borderRadius: 1,
   },
 
@@ -260,11 +307,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
   },
-  dayChipActive: { backgroundColor: GREEN_LIGHT, borderColor: GREEN },
+  dayChipActive: { backgroundColor: PRIMARY_LIGHT, borderColor: PRIMARY },
   dayChipLabel: { fontSize: 13, fontWeight: '700', color: TEXT_DARK },
-  dayChipLabelActive: { color: GREEN },
-  dayChipDate: { fontSize: 11, color: TEXT_MUTED, marginTop: 2 },
-  dayChipDateActive: { color: GREEN },
+  dayChipLabelActive: { color: PRIMARY },
+  dayChipDate: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
+  dayChipDateActive: { color: PRIMARY },
 
   timelineContent: { paddingHorizontal: 24, paddingBottom: 100 },
   timelineRow: { flexDirection: 'row' },
@@ -273,7 +320,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: GREEN,
+    backgroundColor: PRIMARY,
     marginTop: 6,
   },
   breakDot: {
@@ -285,7 +332,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginTop: 6,
   },
-  railLine: { width: 2, flex: 1, backgroundColor: GREEN_LIGHT, marginTop: 2 },
+  railLine: { width: 2, flex: 1, backgroundColor: PRIMARY_LIGHT, marginTop: 2 },
   railLineDashed: {
     width: 2,
     flex: 1,
@@ -301,14 +348,14 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   activityTextBlock: { flex: 1, paddingRight: 12 },
-  activityTime: { fontSize: 12, color: TEXT_MUTED, marginBottom: 2 },
-  activityTitle: { fontSize: 15, fontWeight: '700', color: TEXT_DARK },
-  activitySubtitle: { fontSize: 12, color: TEXT_MUTED, marginTop: 2 },
+  activityTime: { ...Typography.smallDetail, color: TEXT_MUTED, marginBottom: 2 },
+  activityTitle: { ...Typography.contentName, color: TEXT_DARK },
+  activitySubtitle: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
   thumbnail: {
     width: 52,
     height: 52,
     borderRadius: 12,
-    backgroundColor: GREEN_LIGHT,
+    backgroundColor: PRIMARY_LIGHT,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -325,15 +372,15 @@ const styles = StyleSheet.create({
     borderColor: '#D5D5DA',
     backgroundColor: '#F7F7F9',
   },
-  breakTime: { fontSize: 12, color: TEXT_MUTED, marginBottom: 2 },
-  breakTitle: { fontSize: 14, fontWeight: '700', color: '#5B5B66' },
-  breakSubtitle: { fontSize: 12, color: TEXT_MUTED, marginTop: 2 },
+  breakTime: { ...Typography.smallDetail, color: TEXT_MUTED, marginBottom: 2 },
+  breakTitle: { fontSize: 14, fontWeight: '600', color: '#5B5B66' },
+  breakSubtitle: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
 
   addActivityButton: {
     position: 'absolute',
     right: 24,
     bottom: 96,
-    backgroundColor: GREEN,
+    backgroundColor: PRIMARY,
     paddingVertical: 14,
     paddingHorizontal: 22,
     borderRadius: 28,
@@ -346,7 +393,7 @@ const styles = StyleSheet.create({
   addActivityButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
 
   packingContent: { padding: 24, paddingBottom: 100 },
-  packingHint: { fontSize: 12, color: TEXT_MUTED, marginBottom: 12 },
+  packingHint: { ...Typography.smallDetail, color: TEXT_MUTED, marginBottom: 12 },
   packingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -362,15 +409,21 @@ const styles = StyleSheet.create({
     borderColor: TEXT_MUTED,
     marginRight: 12,
   },
-  checkboxChecked: { backgroundColor: GREEN, borderColor: GREEN },
-  packingItemName: { fontSize: 16, color: TEXT_DARK, flex: 1 },
+  checkboxChecked: { backgroundColor: PRIMARY, borderColor: PRIMARY },
+  packingItemName: { ...Typography.contentName, color: TEXT_DARK, flex: 1 },
   packingItemChecked: { textDecorationLine: 'line-through', color: TEXT_MUTED },
   aiBadge: {
-    backgroundColor: GREEN_LIGHT,
+    backgroundColor: PRIMARY_LIGHT,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
     marginLeft: 8,
   },
-  aiBadgeText: { fontSize: 10, fontWeight: '700', color: GREEN, letterSpacing: 0.5 },
+  aiBadgeText: { fontSize: 10, fontWeight: '700', color: PRIMARY, letterSpacing: 0.5 },
+  
+  skeletonDot: { width: 12, height: 12, borderRadius: 6, marginTop: 6 },
+  skeletonTextBlock: { flex: 1, paddingVertical: 14, paddingRight: 4 },
+  skeletonTime: { width: 60, height: 11, marginBottom: 6 },
+  skeletonTitle: { width: '70%', height: 14, marginBottom: 6 },
+  skeletonSubtitle: { width: '50%', height: 11 },
 });

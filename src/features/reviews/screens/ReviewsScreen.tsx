@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -6,16 +6,22 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
-import { getMockReviewData, Review } from '../types/reviewTypes';
+import { SkeletonBlock } from '../../../core/components/SkeletonBlock';
+import { EmptyState } from '../../../core/components/EmptyState';
+import { ErrorState } from '../../../core/components/ErrorState';
+import { Typography } from '../../../core/theme/typography';
+import { Review } from '../types/reviewTypes';
+import { useReviewData } from '../hooks/useReviewData';
+import { AppColors } from '../../../core/theme/colors';
 
-const GREEN = '#1FAE5D';
-const GREEN_LIGHT = '#E6F7EC';
-const TEXT_DARK = '#1A1A2E';
-const TEXT_MUTED = '#8E8E93';
-const GOLD = '#F5A623';
-const PURPLE = '#7C5CFC';
-const PURPLE_LIGHT = '#F1EDFF';
-const AMBER = '#E8871E';
+const PRIMARY = AppColors.primary;
+const PRIMARY_LIGHT = AppColors.primaryLight;
+const TEXT_DARK = AppColors.textDark;
+const TEXT_MUTED = AppColors.textMuted;
+const GOLD = AppColors.gold;
+const PURPLE = AppColors.purple;
+const PURPLE_LIGHT = AppColors.purpleLight;
+const AMBER = AppColors.warning;
 
 function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
   return (
@@ -52,12 +58,29 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
+function SkeletonReviewCard() {
+  return (
+    <View style={styles.reviewCard}>
+      <View style={styles.reviewHeaderRow}>
+        <SkeletonBlock style={styles.skeletonAvatar} />
+        <View style={styles.skeletonAuthorBlock}>
+          <SkeletonBlock style={styles.skeletonName} />
+          <SkeletonBlock style={styles.skeletonTime} />
+        </View>
+      </View>
+      <SkeletonBlock style={styles.skeletonStars} />
+      <SkeletonBlock style={styles.skeletonLineFull} />
+      <SkeletonBlock style={styles.skeletonLineShort} />
+    </View>
+  );
+}
+
 export default function ReviewsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'Reviews'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'Reviews'>>();
   const placeId = route.params?.placeId ?? '';
 
-  const data = useMemo(() => getMockReviewData(placeId), [placeId]);
+  const { data, isLoading, isError, retry } = useReviewData(placeId);
 
   const handleWriteReview = () => {
     console.log('Write a review tapped for place:', placeId);
@@ -74,6 +97,19 @@ export default function ReviewsScreen() {
         <Text style={styles.headerTitle}>Reviews</Text>
         <View style={styles.headerPlaceholder} />
       </View>
+
+      {isError ? (
+        <ErrorState message="Reviews couldn't be loaded. Try again." onRetry={retry} />
+      ) : isLoading || !data ? (
+        <ScrollView contentContainerStyle={styles.content}>
+          <SkeletonBlock style={styles.skeletonRatingNumber} />
+          <SkeletonBlock style={styles.skeletonRatingLabel} />
+          <SkeletonBlock style={styles.skeletonWriteButton} />
+          <SkeletonBlock style={styles.skeletonSummaryCard} />
+          <SkeletonReviewCard />
+          <SkeletonReviewCard />
+        </ScrollView>
+      ) : (
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.ratingNumber}>{data.averageRating.toFixed(1)}</Text>
@@ -110,11 +146,13 @@ export default function ReviewsScreen() {
             <Text style={styles.filtersText}>Filters</Text>
           </TouchableOpacity>
         </View>
-
-        {data.reviews.map(review => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
-      </ScrollView>
+          {data.reviews.length === 0 ? (
+            <EmptyState icon="✍️" message="No reviews yet. Be the first to share your experience!" />
+          ) : (
+            data.reviews.map(review => <ReviewCard key={review.id} review={review} />)
+          )}
+        </ScrollView>
+        )}
         <BottomNavBar active="explore" />
     </SafeAreaView>
   );
@@ -123,7 +161,7 @@ export default function ReviewsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: TEXT_DARK },
+  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
   headerPlaceholder: { width: 44 },
 
   content: { padding: 24, paddingBottom: 24 },
@@ -135,10 +173,10 @@ const styles = StyleSheet.create({
 
   ratingNumber: { fontSize: 40, fontWeight: '800', color: TEXT_DARK },
   ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 20, gap: 8 },
-  ratingCount: { fontSize: 13, color: TEXT_MUTED },
+  ratingCount: { ...Typography.smallDetail, color: TEXT_MUTED },
 
   writeReviewButton: {
-    backgroundColor: GREEN,
+    backgroundColor: PRIMARY,
     borderRadius: 26,
     paddingVertical: 15,
     alignItems: 'center',
@@ -160,16 +198,16 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   aiSummaryHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  aiSummaryTitle: { fontSize: 15, fontWeight: '700', color: TEXT_DARK },
+  aiSummaryTitle: { ...Typography.sectionHeading, color: TEXT_DARK },
   betaBadge: { backgroundColor: PURPLE_LIGHT, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
   betaBadgeText: { fontSize: 11, fontWeight: '700', color: PURPLE },
-  aiSummaryParagraph: { fontSize: 13, color: TEXT_MUTED, lineHeight: 19, marginBottom: 12 },
+  aiSummaryParagraph: { ...Typography.body, color: TEXT_MUTED, lineHeight: 19, marginBottom: 12 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tagChip: { backgroundColor: GREEN_LIGHT, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
-  tagChipText: { fontSize: 12, fontWeight: '600', color: GREEN },
+  tagChip: { backgroundColor: PRIMARY_LIGHT, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 6 },
+  tagChipText: { ...Typography.smallDetail, fontWeight: '600', color: PRIMARY },
 
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: TEXT_DARK },
+  sectionTitle: { ...Typography.sectionHeading, color: TEXT_DARK },
   filtersButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   filtersIcon: { fontSize: 13, color: AMBER },
   filtersText: { fontSize: 13, fontWeight: '600', color: AMBER },
@@ -180,15 +218,26 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: GREEN_LIGHT,
+    backgroundColor: PRIMARY_LIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
   },
   reviewAvatarEmoji: { fontSize: 16 },
   reviewAuthorBlock: { flex: 1 },
-  reviewAuthorName: { fontSize: 14, fontWeight: '700', color: TEXT_DARK },
-  reviewTimeAgo: { fontSize: 11, color: TEXT_MUTED, marginTop: 1 },
+  reviewAuthorName: { ...Typography.contentName, color: TEXT_DARK },
+  reviewTimeAgo: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 1 },
   reviewStarsRow: { marginBottom: 6 },
-  reviewText: { fontSize: 13, color: TEXT_DARK, lineHeight: 19 },
+  reviewText: { ...Typography.body, color: TEXT_DARK, lineHeight: 19 },
+  skeletonRatingNumber: { width: 100, height: 40, marginBottom: 12 },
+  skeletonRatingLabel: { width: 160, height: 16, marginBottom: 20 },
+  skeletonWriteButton: { width: '100%', height: 48, borderRadius: 26, marginBottom: 24 },
+  skeletonSummaryCard: { width: '100%', height: 140, borderRadius: 16, marginBottom: 24 },
+  skeletonAvatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10 },
+  skeletonAuthorBlock: { flex: 1 },
+  skeletonName: { width: '40%', height: 13, marginBottom: 6 },
+  skeletonTime: { width: '25%', height: 10 },
+  skeletonStars: { width: 100, height: 12, marginBottom: 8 },
+  skeletonLineFull: { width: '100%', height: 13, marginBottom: 4 },
+  skeletonLineShort: { width: '80%', height: 13 },
 });

@@ -28,7 +28,7 @@ export const IMPORT_SOURCES: ImportSourceOption[] = [
     title: 'CSV File',
     description: 'Import your travel data (CSV)',
     iconEmoji: '📄',
-    iconBackgroundColor: '#E6F7EC',
+    iconBackgroundColor: '#E8ECF2',
   },
 ];
 
