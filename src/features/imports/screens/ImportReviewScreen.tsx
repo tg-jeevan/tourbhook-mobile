@@ -11,13 +11,6 @@ import { DraftPlace } from '../types/importTypes';
 import { Typography } from '../../../core/theme/typography';
 import { AppColors } from '../../../core/theme/colors';
 
-const PRIMARY = AppColors.primary;
-const PRIMARY_LIGHT = AppColors.primaryLight;
-const TEXT_DARK = AppColors.textDark;
-const TEXT_MUTED = AppColors.textMuted;
-const PURPLE = AppColors.purple;
-const PURPLE_LIGHT = AppColors.purpleLight;
-
 const SOURCE_LABELS: Record<string, string> = {
   google_maps: 'Google Maps',
   tripit: 'Tripit',
@@ -136,40 +129,48 @@ export default function ImportReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
   headerTitleRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
-  betaBadge: { backgroundColor: PURPLE_LIGHT, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  betaBadgeText: { fontSize: 11, fontWeight: '700', color: PURPLE },
+  headerTitle: { ...Typography.screenTitle, color: AppColors.textPrimary },
+  betaBadge: { backgroundColor: AppColors.primaryLight, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  betaBadgeText: { fontSize: 11, fontWeight: '700', color: AppColors.primaryDark },
   headerPlaceholder: { width: 44 },
 
-  content: { padding: 24, paddingBottom: 32 },
-  sourceNotice: { backgroundColor: PRIMARY_LIGHT, borderRadius: 14, padding: 14, marginBottom: 24 },
-  sourceNoticeText: { fontSize: 13, color: TEXT_DARK, lineHeight: 18 },
+  content: { padding: 20, paddingBottom: 32 },
+  sourceNotice: { backgroundColor: AppColors.primaryLight, borderRadius: 14, padding: 14, marginBottom: 24 },
+  sourceNoticeText: { fontSize: 13, color: AppColors.primaryDark, lineHeight: 18 },
 
-  sectionTitle: { ...Typography.sectionHeading, color: TEXT_DARK, marginBottom: 12 },
+  sectionTitle: { ...Typography.sectionHeading, color: AppColors.textPrimary, marginBottom: 12 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
-  addPlaceText: { fontSize: 13, fontWeight: '700', color: PRIMARY },
+  addPlaceText: { fontSize: 13, fontWeight: '700', color: AppColors.primary },
 
   field: { marginBottom: 16 },
   row: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   rowField: { flex: 1 },
 
-  emptyText: { fontSize: 13, color: TEXT_MUTED, marginBottom: 12 },
+  emptyText: { fontSize: 13, color: AppColors.textMuted, marginBottom: 12 },
   placeRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 10 },
   placeInputWrapper: { flex: 1 },
   removeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     borderWidth: 1.5,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  removeButtonText: { fontSize: 14, color: TEXT_MUTED, fontWeight: '700' },
+  removeButtonText: { fontSize: 14, color: AppColors.textMuted, fontWeight: '700' },
 
-  footer: { padding: 24, borderTopWidth: 1, borderTopColor: '#EEEEEE' },
+  footer: { padding: 20, borderTopWidth: 1, borderTopColor: AppColors.borderLight, backgroundColor: AppColors.surface },
 });

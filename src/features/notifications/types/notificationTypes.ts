@@ -1,4 +1,9 @@
-export type NotificationType = 'travel_news' | 'itinerary_update' | 'destination_alert' | 'system';
+export type NotificationType =
+  | 'travel_news'
+  | 'itinerary_update'
+  | 'destination_alert'
+  | 'system'
+  | 'travel_tip';
 
 export interface TravelNewsContent {
   headline: string;
@@ -24,3 +29,4 @@ export interface NotificationItem {
 }
 
 export type NotificationFilterType = 'all' | 'travel_news' | 'itinerary';
+

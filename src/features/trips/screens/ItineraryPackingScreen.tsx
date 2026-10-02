@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,49 +8,58 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+  Sparkles,
+  ChevronRight,
+  Plus,
+  Eye,
+  Edit3,
+  Trash2,
+  Copy,
+} from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
-import { BackButton } from '../../../core/components/BackButton';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
 import { SkeletonBlock } from '../../../core/components/SkeletonBlock';
 import { EmptyState } from '../../../core/components/EmptyState';
 import { ErrorState } from '../../../core/components/ErrorState';
-import { Typography } from '../../../core/theme/typography';
 import { TimelineItem } from '../types/itineraryPackingTypes';
 import { useItineraryDays } from '../hooks/useItineraryDays';
 import { PackingItem, usePackingRecommendations } from '../hooks/usePackingRecommendations';
 import { AppColors } from '../../../core/theme/colors';
+import {
+  ItineraryPackingHeader,
+  ItineraryPackingTab,
+} from '../components/ItineraryPackingHeader';
+import {
+  PackingCategoryCard,
+  CategoryIconType,
+} from '../components/PackingCategoryCard';
+import { PackingHeroIllustration } from '../components/PackingHeroIllustration';
+import { ItineraryDaySelector } from '../components/ItineraryDaySelector';
+import { ItineraryTimelineItem } from '../components/ItineraryTimelineItem';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-
-const PRIMARY = AppColors.primary;
-const PRIMARY_LIGHT = AppColors.primaryLight;
-const TEXT_DARK = AppColors.textDark;
-const TEXT_MUTED = AppColors.textMuted;
 
 const BASE_PACKING_ITEMS: PackingItem[] = [
   { id: '1', name: 'Passport', checked: true, source: 'base' },
   { id: '2', name: 'Travel documents', checked: true, source: 'base' },
   { id: '3', name: 'Swimwear', checked: false, source: 'base' },
   { id: '4', name: 'Comfortable sandals', checked: false, source: 'base' },
-  { id: '5', name: 'Camera', checked: false, source: 'base' },
-  { id: '6', name: 'Light rain jacket', checked: false, source: 'base' },
+  { id: '5', name: 'Light rain jacket', checked: false, source: 'base' },
+  { id: '6', name: 'Camera', checked: false, source: 'base' },
 ];
-
-type TabKey = 'itinerary' | 'packing';
 
 function SkeletonTimelineItem() {
   return (
-    <View style={styles.timelineRow}>
-      <View style={styles.timelineRail}>
-        <SkeletonBlock style={styles.skeletonDot} />
-      </View>
+    <View style={styles.skeletonRow}>
+      <SkeletonBlock style={styles.skeletonDot} />
       <View style={styles.skeletonTextBlock}>
         <SkeletonBlock style={styles.skeletonTime} />
         <SkeletonBlock style={styles.skeletonTitle} />
@@ -65,23 +74,31 @@ export default function ItineraryPackingScreen() {
   const route = useRoute<RouteProp<AppStackParamList, 'ItineraryView' | 'PackingList'>>();
   const tripId = route.params?.tripId || '1';
 
-  const [activeTab, setActiveTab] = useState<TabKey>(
+  const [activeTab, setActiveTab] = useState<ItineraryPackingTab>(
     route.name === 'PackingList' ? 'packing' : 'itinerary',
   );
 
-  const { days, isLoading: isDaysLoading, isError: isDaysError, retry: retryDays } = useItineraryDays(tripId);
+  const {
+    days,
+    isLoading: isDaysLoading,
+    isError: isDaysError,
+    retry: retryDays,
+  } = useItineraryDays(tripId);
+
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const selectedDay = days[selectedDayIndex];
 
   const [packingItems, setPackingItems] = useState<PackingItem[]>(BASE_PACKING_ITEMS);
-  const recommendations = usePackingRecommendations(packingItems.map(item => item.name));
+  const [menuActivity, setMenuActivity] = useState<TimelineItem | null>(null);
+
+  const recommendations = usePackingRecommendations(packingItems.map((item) => item.name));
 
   useEffect(() => {
     if (recommendations.length === 0) return;
 
-    setPackingItems(prev => {
-      const existingIds = new Set(prev.map(item => item.id));
-      const newOnes = recommendations.filter(item => !existingIds.has(item.id));
+    setPackingItems((prev) => {
+      const existingIds = new Set(prev.map((item) => item.id));
+      const newOnes = recommendations.filter((item) => !existingIds.has(item.id));
       if (newOnes.length === 0) return prev;
 
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -91,339 +108,455 @@ export default function ItineraryPackingScreen() {
 
   const togglePackingItem = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setPackingItems(prev =>
-      prev.map(item => (item.id === id ? { ...item, checked: !item.checked } : item)),
+    setPackingItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item)),
     );
   };
 
-  const switchTab = (tab: TabKey) => {
+  const switchTab = (tab: ItineraryPackingTab) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setActiveTab(tab);
   };
 
-  const renderTimelineItem = (item: TimelineItem, index: number, isLast: boolean) => {
-    if (item.type === 'break') {
-      return (
-        <View key={item.id} style={styles.timelineRow}>
-          <View style={styles.timelineRail}>
-            <View style={styles.breakDot} />
-            {!isLast && <View style={styles.railLineDashed} />}
-          </View>
-          <View style={styles.breakCard}>
-            <Text style={styles.breakTime}>{item.time}</Text>
-            <Text style={styles.breakTitle}>{item.title}</Text>
-            <Text style={styles.breakSubtitle}>
-              {item.subtitle}
-              {item.durationMinutes ? ` · ${item.durationMinutes} min` : ''}
-            </Text>
-          </View>
-        </View>
-      );
-    }
+  // Group packing items into categories dynamically
+  const categorizedPackingItems = useMemo(() => {
+    const essentials: PackingItem[] = [];
+    const clothing: PackingItem[] = [];
+    const gadgets: PackingItem[] = [];
 
-    return (
-      <View key={item.id} style={styles.timelineRow}>
-        <View style={styles.timelineRail}>
-          <View style={styles.activityDot} />
-          {!isLast && <View style={styles.railLine} />}
-        </View>
-        <TouchableOpacity
-          style={styles.activityCard}
-          activeOpacity={0.8}
-          onPress={() =>
-            navigation.navigate('PlaceDetails', { placeId: item.id, placeName: item.title })
-          }
-        >
-          <View style={styles.activityTextBlock}>
-            <Text style={styles.activityTime}>{item.time}</Text>
-            <Text style={styles.activityTitle}>{item.title}</Text>
-            <Text style={styles.activitySubtitle}>{item.subtitle}</Text>
-          </View>
-          <View style={styles.thumbnail}>
-            <Text style={styles.thumbnailEmoji}>{item.thumbnailEmoji}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-    );
+    packingItems.forEach((item) => {
+      const lower = item.name.toLowerCase();
+      if (
+        lower.includes('passport') ||
+        lower.includes('document') ||
+        lower.includes('ticket') ||
+        lower.includes('cash') ||
+        lower.includes('card')
+      ) {
+        essentials.push(item);
+      } else if (
+        lower.includes('swimwear') ||
+        lower.includes('sandal') ||
+        lower.includes('jacket') ||
+        lower.includes('sarong') ||
+        lower.includes('shirt') ||
+        lower.includes('dress')
+      ) {
+        clothing.push(item);
+      } else {
+        gadgets.push(item);
+      }
+    });
+
+    return [
+      {
+        id: 'essentials',
+        title: 'Essentials',
+        subtitle: 'Must-have items for your trip',
+        iconType: 'essentials' as CategoryIconType,
+        items: essentials,
+      },
+      {
+        id: 'clothing',
+        title: 'Clothing',
+        subtitle: 'Based on weather and activities',
+        iconType: 'clothing' as CategoryIconType,
+        items: clothing,
+      },
+      {
+        id: 'gadgets',
+        title: 'Gadgets & Accessories',
+        subtitle: 'Capture and stay connected',
+        iconType: 'gadgets' as CategoryIconType,
+        items: gadgets,
+      },
+    ];
+  }, [packingItems]);
+
+  const handleActivityPress = (item: TimelineItem) => {
+    if (item.type === 'activity') {
+      navigation.navigate('PlaceDetails', {
+        placeId: item.id,
+        placeName: item.title,
+      });
+    }
   };
-    const renderItineraryTab = () => {
-    if (isDaysError) {
-      return <ErrorState message="We couldn't load your itinerary. Try again." onRetry={retryDays} />;
+
+  const handleMenuAction = (action: 'view' | 'edit' | 'delete' | 'duplicate') => {
+    if (!menuActivity) return;
+    const current = menuActivity;
+    setMenuActivity(null);
+
+    if (action === 'view') {
+      navigation.navigate('PlaceDetails', {
+        placeId: current.id,
+        placeName: current.title,
+      });
     }
-
-    if (isDaysLoading) {
-
-      return (
-        <ScrollView contentContainerStyle={styles.timelineContent}>
-          <SkeletonTimelineItem />
-          <SkeletonTimelineItem />
-          <SkeletonTimelineItem />
-        </ScrollView>
-      );
-    }
-       if (days.length === 0) {
-      return <EmptyState icon="🗺️" message="Your itinerary is empty. Start planning your trip." />;
-    }
-
-      return (
-        <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dayRow}
-          >
-            {days.map((day, index) => {
-              const isSelected = index === selectedDayIndex;
-              return (
-                <TouchableOpacity
-                  key={day.id}
-                  style={[styles.dayChip, isSelected && styles.dayChipActive]}
-                  onPress={() => setSelectedDayIndex(index)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.dayChipLabel, isSelected && styles.dayChipLabelActive]}>
-                    {day.dayLabel}
-                  </Text>
-                  <Text style={[styles.dayChipDate, isSelected && styles.dayChipDateActive]}>
-                    {day.dateLabel}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <ScrollView contentContainerStyle={styles.timelineContent}>
-          {selectedDay.items.length === 0 ? (
-            <EmptyState icon="🗺️" message="Your itinerary is empty. Start planning your trip." />
-          ) : (
-            selectedDay.items.map((item, index) =>
-              renderTimelineItem(item, index, index === selectedDay.items.length - 1),
-         )
-          )}
-        </ScrollView>
-
-          <TouchableOpacity
-            style={styles.addActivityButton}
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate('AddPlaces', { tripId })}
-          >
-            <Text style={styles.addActivityButtonText}>+ Add Activity</Text>
-          </TouchableOpacity>
-        </>
-         );
   };
+
   return (
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      {/* ── HEADER WITH TABS ──────────────────────────────────────── */}
+      <ItineraryPackingHeader
+        activeTab={activeTab}
+        onSelectTab={switchTab}
+        onClose={() => navigation.goBack()}
+      />
 
-      <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>My Itinerary</Text>
-        <View style={styles.headerPlaceholder} />
-      </View>
+      {/* ── TAB 1: ITINERARY (DAY-WISE VIEW) ──────────────────────── */}
+      {activeTab === 'itinerary' && (
+        <View style={styles.flexOne}>
+          {isDaysError ? (
+            <ErrorState
+              message="We couldn't load your itinerary. Try again."
+              onRetry={retryDays}
+            />
+          ) : isDaysLoading ? (
+            <ScrollView contentContainerStyle={styles.timelineContent}>
+              <SkeletonTimelineItem />
+              <SkeletonTimelineItem />
+              <SkeletonTimelineItem />
+            </ScrollView>
+          ) : days.length === 0 ? (
+            <EmptyState
+              icon="🗺️"
+              message="Your itinerary is empty. Start planning your trip."
+            />
+          ) : (
+            <>
+              {/* Day Selector */}
+              <ItineraryDaySelector
+                days={days}
+                selectedIndex={selectedDayIndex}
+                onSelectIndex={(index) => setSelectedDayIndex(index)}
+              />
 
-      <View style={styles.tabRow}>
-        <TouchableOpacity style={styles.tabButton} onPress={() => switchTab('itinerary')}>
-          <Text style={[styles.tabLabel, activeTab === 'itinerary' && styles.tabLabelActive]}>
-            Itinerary
-          </Text>
-          {activeTab === 'itinerary' && <View style={styles.tabUnderline} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabButton} onPress={() => switchTab('packing')}>
-          <Text style={[styles.tabLabel, activeTab === 'packing' && styles.tabLabelActive]}>
-            Packing List
-          </Text>
-          {activeTab === 'packing' && <View style={styles.tabUnderline} />}
-        </TouchableOpacity>
-      </View>
+              {/* Day Timeline */}
+              <ScrollView
+                contentContainerStyle={styles.timelineContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {!selectedDay || selectedDay.items.length === 0 ? (
+                  <EmptyState
+                    icon="🗺️"
+                    message="No activities scheduled for this day."
+                  />
+                ) : (
+                  selectedDay.items.map((item, index) => (
+                    <ItineraryTimelineItem
+                      key={item.id}
+                      item={item}
+                      isLast={index === selectedDay.items.length - 1}
+                      onPress={() => handleActivityPress(item)}
+                      onMenuPress={() => setMenuActivity(item)}
+                    />
+                  ))
+                )}
+              </ScrollView>
 
-      {activeTab === 'itinerary' ? (
-        renderItineraryTab()
-      ) : (
-        <ScrollView contentContainerStyle={styles.packingContent}>
-          <Text style={styles.packingHint}>AI is adding suggestions as they come in</Text>
-          {packingItems.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.packingRow}
-              onPress={() => togglePackingItem(item.id)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, item.checked && styles.checkboxChecked]} />
-              <Text style={[styles.packingItemName, item.checked && styles.packingItemChecked]}>
-                {item.name}
+              {/* Bottom Floating Add Activity Button */}
+              <TouchableOpacity
+                style={styles.floatingAddBtn}
+                onPress={() => navigation.navigate('AddPlaces', { tripId })}
+                activeOpacity={0.88}
+              >
+                <Plus size={18} color={AppColors.white} strokeWidth={2.5} />
+                <Text style={styles.floatingAddBtnText}>Add Activity</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* ── TAB 2: PACKING LIST ────────────────────────────────────── */}
+      {activeTab === 'packing' && (
+        <ScrollView
+          contentContainerStyle={styles.packingScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Packing Hero Banner */}
+          <View style={styles.packingHero}>
+            <View style={styles.packingHeroTextCol}>
+              <Text style={styles.packingHeroTitle}>Packing List</Text>
+              <Text style={styles.packingHeroSubtitle}>
+                Get ready for a hassle-free trip with{'\n'}this AI-powered packing list.
               </Text>
-              {item.source === 'ai' && (
-                <View style={styles.aiBadge}>
-                  <Text style={styles.aiBadgeText}>AI</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            </View>
+            <PackingHeroIllustration />
+          </View>
+
+          {/* AI Suggestion Info Card */}
+          <View style={styles.aiSuggestionCard}>
+            <View style={styles.aiIconCircle}>
+              <Sparkles size={20} color={AppColors.primary} />
+            </View>
+            <Text style={styles.aiSuggestionText}>
+              <Text style={styles.aiBoldText}>AI</Text> is adding suggestions based on{'\n'}your destination, weather and activities.
+            </Text>
+            <ChevronRight size={18} color={AppColors.textSecondary} />
+          </View>
+
+          {/* Expandable Category Cards */}
+          {categorizedPackingItems.map((category) => (
+            <PackingCategoryCard
+              key={category.id}
+              title={category.title}
+              subtitle={category.subtitle}
+              iconType={category.iconType}
+              items={category.items}
+              onToggleItem={togglePackingItem}
+            />
           ))}
         </ScrollView>
       )}
 
+      {/* ── ACTIVITY MENU MODAL ────────────────────────────────────── */}
+      <Modal
+        visible={!!menuActivity}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMenuActivity(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setMenuActivity(null)}
+        >
+          <View style={styles.modalCard}>
+            <Text style={styles.modalHeader} numberOfLines={1}>
+              {menuActivity?.title}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => handleMenuAction('view')}
+            >
+              <Eye size={18} color={AppColors.primary} />
+              <Text style={styles.modalOptionText}>View Place Details</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => handleMenuAction('edit')}
+            >
+              <Edit3 size={18} color={AppColors.textPrimary} />
+              <Text style={styles.modalOptionText}>Edit Activity</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => handleMenuAction('duplicate')}
+            >
+              <Copy size={18} color={AppColors.textPrimary} />
+              <Text style={styles.modalOptionText}>Duplicate Activity</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => handleMenuAction('delete')}
+            >
+              <Trash2 size={18} color="#EF4444" />
+              <Text style={[styles.modalOptionText, { color: '#EF4444' }]}>
+                Delete Activity
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCancelBtn}
+              onPress={() => setMenuActivity(null)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Bottom Nav Bar */}
       <BottomNavBar active="trips" />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FAF7F2',
   },
-  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
-  headerPlaceholder: { width: 44 },
+  flexOne: {
+    flex: 1,
+  },
 
-  tabRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-    paddingHorizontal: 24,
+  /* ── Itinerary Timeline ── */
+  timelineContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 110,
   },
-  tabButton: { flex: 1, alignItems: 'center', paddingBottom: 12 },
-  tabLabel: { fontSize: 14, fontWeight: '600', color: TEXT_MUTED },
-  tabLabelActive: { color: PRIMARY },
-  tabUnderline: {
+  floatingAddBtn: {
     position: 'absolute',
-    bottom: 0,
-    height: 2,
-    width: '60%',
-    backgroundColor: PRIMARY,
-    borderRadius: 1,
-  },
-
-  dayRow: { paddingHorizontal: 24, paddingVertical: 16, gap: 10 },
-  dayChip: {
-    width: 68,
-    paddingVertical: 10,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-  },
-  dayChipActive: { backgroundColor: PRIMARY_LIGHT, borderColor: PRIMARY },
-  dayChipLabel: { fontSize: 13, fontWeight: '700', color: TEXT_DARK },
-  dayChipLabelActive: { color: PRIMARY },
-  dayChipDate: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
-  dayChipDateActive: { color: PRIMARY },
-
-  timelineContent: { paddingHorizontal: 24, paddingBottom: 100 },
-  timelineRow: { flexDirection: 'row' },
-  timelineRail: { width: 24, alignItems: 'center' },
-  activityDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: PRIMARY,
-    marginTop: 6,
-  },
-  breakDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#C7C7CC',
-    backgroundColor: '#FFFFFF',
-    marginTop: 6,
-  },
-  railLine: { width: 2, flex: 1, backgroundColor: PRIMARY_LIGHT, marginTop: 2 },
-  railLineDashed: {
-    width: 2,
-    flex: 1,
-    backgroundColor: '#E8E8E8',
-    marginTop: 2,
-  },
-
-  activityCard: {
-    flex: 1,
+    right: 20,
+    bottom: 80,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: AppColors.primary,
     paddingVertical: 14,
-    paddingRight: 4,
+    paddingHorizontal: 20,
+    borderRadius: 28,
+    shadowColor: AppColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  activityTextBlock: { flex: 1, paddingRight: 12 },
-  activityTime: { ...Typography.smallDetail, color: TEXT_MUTED, marginBottom: 2 },
-  activityTitle: { ...Typography.contentName, color: TEXT_DARK },
-  activitySubtitle: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
-  thumbnail: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: PRIMARY_LIGHT,
+  floatingAddBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: AppColors.white,
+  },
+
+  /* ── Packing List ── */
+  packingScrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 110,
+  },
+  packingHero: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    minHeight: 84,
+    marginBottom: 16,
+  },
+  packingHeroTextCol: {
+    flex: 1,
+    paddingRight: 100,
+  },
+  packingHeroTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: AppColors.textPrimary,
+    letterSpacing: -0.4,
+    marginBottom: 6,
+  },
+  packingHeroSubtitle: {
+    fontSize: 13,
+    color: AppColors.textMuted,
+    lineHeight: 18,
+  },
+
+  /* AI Suggestion Card */
+  aiSuggestionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 18,
+    gap: 12,
+  },
+  aiIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  thumbnailEmoji: { fontSize: 22 },
-
-  breakCard: {
+  aiSuggestionText: {
     flex: 1,
-    marginVertical: 8,
-    marginRight: 4,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#D5D5DA',
-    backgroundColor: '#F7F7F9',
+    fontSize: 12,
+    color: AppColors.textSecondary,
+    lineHeight: 17,
   },
-  breakTime: { ...Typography.smallDetail, color: TEXT_MUTED, marginBottom: 2 },
-  breakTitle: { fontSize: 14, fontWeight: '600', color: '#5B5B66' },
-  breakSubtitle: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
+  aiBoldText: {
+    fontWeight: '800',
+    color: AppColors.primary,
+  },
 
-  addActivityButton: {
-    position: 'absolute',
-    right: 24,
-    bottom: 96,
-    backgroundColor: PRIMARY,
-    paddingVertical: 14,
-    paddingHorizontal: 22,
-    borderRadius: 28,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+  /* ── Skeletons ── */
+  skeletonRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  skeletonDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 16,
+    marginTop: 6,
+  },
+  skeletonTextBlock: {
+    flex: 1,
+  },
+  skeletonTime: {
+    width: 60,
+    height: 12,
+    marginBottom: 6,
+    borderRadius: 4,
+  },
+  skeletonTitle: {
+    width: '75%',
+    height: 16,
+    marginBottom: 6,
+    borderRadius: 4,
+  },
+  skeletonSubtitle: {
+    width: '50%',
+    height: 12,
+    borderRadius: 4,
+  },
+
+  /* ── Modal ── */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  modalCard: {
+    backgroundColor: AppColors.surface,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  addActivityButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-
-  packingContent: { padding: 24, paddingBottom: 100 },
-  packingHint: { ...Typography.smallDetail, color: TEXT_MUTED, marginBottom: 12 },
-  packingRow: {
+  modalHeader: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: AppColors.textMuted,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    gap: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: AppColors.borderLight,
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: TEXT_MUTED,
-    marginRight: 12,
+  modalOptionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
   },
-  checkboxChecked: { backgroundColor: PRIMARY, borderColor: PRIMARY },
-  packingItemName: { ...Typography.contentName, color: TEXT_DARK, flex: 1 },
-  packingItemChecked: { textDecorationLine: 'line-through', color: TEXT_MUTED },
-  aiBadge: {
-    backgroundColor: PRIMARY_LIGHT,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginLeft: 8,
+  modalCancelBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
   },
-  aiBadgeText: { fontSize: 10, fontWeight: '700', color: PRIMARY, letterSpacing: 0.5 },
-  
-  skeletonDot: { width: 12, height: 12, borderRadius: 6, marginTop: 6 },
-  skeletonTextBlock: { flex: 1, paddingVertical: 14, paddingRight: 4 },
-  skeletonTime: { width: 60, height: 11, marginBottom: 6 },
-  skeletonTitle: { width: '70%', height: 14, marginBottom: 6 },
-  skeletonSubtitle: { width: '50%', height: 11 },
+  modalCancelText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: AppColors.textSecondary,
+  },
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, KeyboardTypeOptions } from 'react-native';
+import { AppColors } from '../theme/colors';
 
 interface CustomTextFieldProps {
   label?: string;
@@ -34,7 +35,7 @@ export const CustomTextField: React.FC<CustomTextFieldProps> = ({
         <TextInput
           style={styles.input}
           placeholder={hint}
-          placeholderTextColor="#B0B0B8"
+          placeholderTextColor={AppColors.textLight}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={obscureText}
@@ -57,21 +58,21 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1A1A2E',
+    color: AppColors.textPrimary,
     marginBottom: 8,
   },
   wrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surface,
     borderRadius: 16,
     height: 56,
     paddingHorizontal: 20,
     borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderColor: AppColors.border,
   },
   focused: {
-    borderColor: '#E91E63',
+    borderColor: AppColors.primary,
   },
   prefix: {
     marginRight: 12,
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    color: '#1A1A2E',
+    color: AppColors.textPrimary,
     fontSize: 14,
     padding: 0,
   },

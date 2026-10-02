@@ -18,14 +18,6 @@ import { Typography } from '../../../core/theme/typography';
 import { buildDraftFromSource, IMPORT_SOURCES, ImportSourceId } from '../types/importTypes';
 import { AppColors } from '../../../core/theme/colors';
 
-const PRIMARY = AppColors.primary;
-const TEXT_DARK = AppColors.textDark;
-const TEXT_MUTED = AppColors.textMuted;
-const PURPLE = AppColors.purple;
-const PURPLE_LIGHT = AppColors.purpleLight;
-const INFO_BG = '#EAF3FB';
-const INFO_TEXT = '#3A6EA5';
-
 export default function ImportDataScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'ImportData'>>();
 
@@ -91,7 +83,7 @@ export default function ImportDataScreen() {
                   <Text style={styles.sourceDescription}>{sourceOption.description}</Text>
                 </View>
                 {isProcessing ? (
-                  <ActivityIndicator color={PRIMARY} />
+                  <ActivityIndicator color={AppColors.primary} />
                 ) : (
                   <Text style={styles.chevron}>{'>'}</Text>
                 )}
@@ -105,7 +97,7 @@ export default function ImportDataScreen() {
                     multiline
                     numberOfLines={6}
                     placeholder={'Trip name\n- Place one\n- Place two'}
-                    placeholderTextColor={TEXT_MUTED}
+                    placeholderTextColor={AppColors.textMuted}
                     value={csvText}
                     onChangeText={setCsvText}
                     textAlignVertical="top"
@@ -138,32 +130,35 @@ export default function ImportDataScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
   },
   headerTitleRow: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8 },
-  headerTitle: { ...Typography.screenTitle, color: TEXT_DARK },
-  betaBadge: { backgroundColor: PURPLE_LIGHT, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  betaBadgeText: { fontSize: 11, fontWeight: '700', color: PURPLE },
+  headerTitle: { ...Typography.screenTitle, color: AppColors.textPrimary },
+  betaBadge: { backgroundColor: AppColors.primaryLight, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  betaBadgeText: { fontSize: 11, fontWeight: '700', color: AppColors.primaryDark },
   headerPlaceholder: { width: 44 },
 
-  content: { padding: 24, paddingBottom: 24 },
-  subtitle: { fontSize: 14, fontWeight: '600', color: PRIMARY, marginBottom: 20 },
+  content: { padding: 20, paddingBottom: 24 },
+  subtitle: { fontSize: 14, fontWeight: '600', color: AppColors.primary, marginBottom: 20 },
 
   sourceCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#EFEFF2',
+    borderColor: AppColors.border,
     padding: 14,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: AppColors.black,
     shadowOpacity: 0.04,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
@@ -176,49 +171,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#EFEFF2',
+    borderColor: AppColors.borderLight,
     marginRight: 12,
   },
   sourceIconEmoji: { fontSize: 20 },
   sourceTextBlock: { flex: 1 },
-  sourceTitle: { ...Typography.contentName, color: TEXT_DARK },
-  sourceDescription: { ...Typography.smallDetail, color: TEXT_MUTED, marginTop: 2 },
-  chevron: { fontSize: 16, color: TEXT_MUTED },
+  sourceTitle: { ...Typography.contentName, color: AppColors.textPrimary },
+  sourceDescription: { ...Typography.smallDetail, color: AppColors.textSecondary, marginTop: 2 },
+  chevron: { fontSize: 16, color: AppColors.textMuted },
 
   csvPanel: {
-    backgroundColor: '#F7F7F9',
+    backgroundColor: AppColors.surfaceMuted,
     borderRadius: 14,
     padding: 14,
     marginTop: -4,
     marginBottom: 12,
   },
-  csvPanelLabel: { fontSize: 13, fontWeight: '600', color: TEXT_DARK, marginBottom: 8 },
+  csvPanelLabel: { fontSize: 13, fontWeight: '600', color: AppColors.textPrimary, marginBottom: 8 },
   csvInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.border,
     padding: 12,
     minHeight: 110,
     fontSize: 13,
-    color: TEXT_DARK,
+    color: AppColors.textPrimary,
     marginBottom: 10,
   },
   csvImportButton: {
-    backgroundColor: PRIMARY,
+    backgroundColor: AppColors.primary,
     borderRadius: 20,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  csvImportButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+  csvImportButtonText: { color: AppColors.white, fontWeight: '700', fontSize: 13 },
 
   infoBanner: {
     flexDirection: 'row',
-    backgroundColor: INFO_BG,
+    backgroundColor: AppColors.primaryLight,
     borderRadius: 14,
     padding: 14,
     marginTop: 8,
   },
-  infoIcon: { fontSize: 16, color: INFO_TEXT, marginRight: 10 },
-  infoText: { flex: 1, fontSize: 12, color: INFO_TEXT, lineHeight: 17 },
+  infoIcon: { fontSize: 16, color: AppColors.primary, marginRight: 10 },
+  infoText: { flex: 1, fontSize: 12, color: AppColors.primaryDark, lineHeight: 17 },
 });

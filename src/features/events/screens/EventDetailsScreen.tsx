@@ -26,11 +26,7 @@ import {
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { MOCK_EVENTS } from '../data/mockEventsData';
-
-const PRIMARY_GREEN = '#1FAE5D';
-const DARK_NAVY = '#1A1A2E';
-const MUTED_TEXT = '#8E8E93';
-const ACCENT_PINK = '#E91E63';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function EventDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -89,12 +85,12 @@ export default function EventDetailsScreen() {
           >
             <Bookmark
               size={20}
-              color={isSaved ? ACCENT_PINK : DARK_NAVY}
-              fill={isSaved ? ACCENT_PINK : 'transparent'}
+              color={isSaved ? AppColors.accent : AppColors.textPrimary}
+              fill={isSaved ? AppColors.accent : 'transparent'}
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={handleShare} activeOpacity={0.7}>
-            <Share2 size={20} color={DARK_NAVY} />
+            <Share2 size={20} color={AppColors.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -121,7 +117,7 @@ export default function EventDetailsScreen() {
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
             <View style={styles.infoIconBg}>
-              <Calendar size={18} color={PRIMARY_GREEN} />
+              <Calendar size={18} color={AppColors.primary} />
             </View>
             <View style={styles.infoDetails}>
               <Text style={styles.infoLabel}>Date</Text>
@@ -133,7 +129,7 @@ export default function EventDetailsScreen() {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconBg}>
-              <Clock size={18} color={PRIMARY_GREEN} />
+              <Clock size={18} color={AppColors.primary} />
             </View>
             <View style={styles.infoDetails}>
               <Text style={styles.infoLabel}>Time</Text>
@@ -145,7 +141,7 @@ export default function EventDetailsScreen() {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIconBg}>
-              <MapPin size={18} color={PRIMARY_GREEN} />
+              <MapPin size={18} color={AppColors.primary} />
             </View>
             <View style={styles.infoDetails}>
               <Text style={styles.infoLabel}>Location & Venue</Text>
@@ -161,7 +157,7 @@ export default function EventDetailsScreen() {
               <View style={styles.infoDivider} />
               <View style={styles.infoRow}>
                 <View style={styles.infoIconBg}>
-                  <Building2 size={18} color={PRIMARY_GREEN} />
+                  <Building2 size={18} color={AppColors.primary} />
                 </View>
                 <View style={styles.infoDetails}>
                   <Text style={styles.infoLabel}>Organized by</Text>
@@ -180,15 +176,15 @@ export default function EventDetailsScreen() {
         <View style={styles.highlightCard}>
           <Text style={styles.highlightTitle}>Visitor Information</Text>
           <View style={styles.bulletItem}>
-            <CheckCircle2 size={16} color={PRIMARY_GREEN} />
+            <CheckCircle2 size={16} color={AppColors.primary} />
             <Text style={styles.bulletText}>Instant digital ticket confirmation & mobile entry</Text>
           </View>
           <View style={styles.bulletItem}>
-            <CheckCircle2 size={16} color={PRIMARY_GREEN} />
+            <CheckCircle2 size={16} color={AppColors.primary} />
             <Text style={styles.bulletText}>English & local language support on site</Text>
           </View>
           <View style={styles.bulletItem}>
-            <CheckCircle2 size={16} color={PRIMARY_GREEN} />
+            <CheckCircle2 size={16} color={AppColors.primary} />
             <Text style={styles.bulletText}>Syncs directly with your Tourbhook itinerary map</Text>
           </View>
         </View>
@@ -203,12 +199,12 @@ export default function EventDetailsScreen() {
         >
           {isAddedToTrip ? (
             <>
-              <CheckCircle2 size={20} color="#FFFFFF" />
+              <CheckCircle2 size={20} color={AppColors.white} />
               <Text style={styles.primaryActionBtnText}>Saved in Itinerary</Text>
             </>
           ) : (
             <>
-              <Ticket size={20} color="#FFFFFF" />
+              <Ticket size={20} color={AppColors.white} />
               <Text style={styles.primaryActionBtnText}>Add to Itinerary</Text>
             </>
           )}
@@ -221,7 +217,7 @@ export default function EventDetailsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -230,12 +226,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F2',
+    borderBottomColor: AppColors.borderLight,
+    backgroundColor: AppColors.surface,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
   },
   headerRight: {
     flexDirection: 'row',
@@ -246,7 +243,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -259,7 +256,7 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#EEEEEE',
+    backgroundColor: AppColors.surfaceMuted,
     marginBottom: 16,
     position: 'relative',
   },
@@ -271,13 +268,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: 'rgba(26, 26, 46, 0.85)',
+    backgroundColor: 'rgba(16, 36, 63, 0.85)',
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 12,
   },
   categoryBadgeText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -285,35 +282,35 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 12,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
   priceBadgeText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 13,
     fontWeight: '700',
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     lineHeight: 30,
     marginBottom: 4,
   },
   destinationText: {
     fontSize: 14,
-    color: PRIMARY_GREEN,
+    color: AppColors.primary,
     fontWeight: '600',
     marginBottom: 20,
   },
   infoCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: AppColors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.border,
     marginBottom: 24,
   },
   infoRow: {
@@ -325,7 +322,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: AppColors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
@@ -335,49 +332,49 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
     fontWeight: '500',
     marginBottom: 2,
   },
   infoValue: {
     fontSize: 15,
     fontWeight: '600',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
   },
   infoSubValue: {
     fontSize: 13,
-    color: '#666666',
+    color: AppColors.textSecondary,
     marginTop: 2,
   },
   infoDivider: {
     height: 1,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: AppColors.borderLight,
     marginVertical: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginBottom: 10,
   },
   descriptionText: {
     fontSize: 15,
-    color: '#444444',
+    color: AppColors.textSecondary,
     lineHeight: 23,
     marginBottom: 24,
   },
   highlightCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.border,
     gap: 10,
   },
   highlightTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginBottom: 4,
   },
   bulletItem: {
@@ -387,30 +384,30 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     fontSize: 13,
-    color: '#555555',
+    color: AppColors.textSecondary,
     flex: 1,
   },
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
-    backgroundColor: '#FFFFFF',
+    borderTopColor: AppColors.borderLight,
+    backgroundColor: AppColors.surface,
   },
   primaryActionBtn: {
     height: 52,
     borderRadius: 26,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
   primaryActionBtnAdded: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: AppColors.success,
   },
   primaryActionBtnText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 16,
     fontWeight: '700',
   },

@@ -2,11 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Home, Compass, Users, Backpack, User, LucideIcon } from 'lucide-react-native';
+import { Home, Compass, Users, Briefcase, User, LucideIcon } from 'lucide-react-native';
 import { AppStackParamList } from '../navigation/types';
 import { AppColors } from '../theme/colors';
 
-export type BottomNavTab = 'home' | 'explore' | 'groups' | 'trips' | 'profile';
+export type BottomNavTab = 'home' | 'explore' | 'trips' | 'groups' | 'profile';
 
 interface TabConfig {
   key: BottomNavTab;
@@ -26,19 +26,19 @@ const TABS: TabConfig[] = [
     key: 'explore',
     label: 'Explore',
     Icon: Compass,
-    onPress: navigation => navigation.navigate('AddPlaces', { tripId: '1' }),
+    onPress: navigation => navigation.navigate('ExploreFeed'),
+  },
+  {
+    key: 'trips',
+    label: 'My Trips',
+    Icon: Briefcase,
+    onPress: navigation => navigation.navigate('MyItineraries'),
   },
   {
     key: 'groups',
     label: 'Groups',
     Icon: Users,
     onPress: navigation => navigation.navigate('GroupMatching'),
-  },
-  {
-    key: 'trips',
-    label: 'Trips',
-    Icon: Backpack,
-    onPress: navigation => navigation.navigate('MyItineraries'),
   },
   {
     key: 'profile',
@@ -68,7 +68,7 @@ export function BottomNavBar({ active }: BottomNavBarProps) {
           >
             {isActive ? (
               <View style={styles.activeIconCircle}>
-                <tab.Icon size={18} color="#FFFFFF" strokeWidth={2.25} />
+                <tab.Icon size={18} color={AppColors.textOnPrimary} strokeWidth={2.25} />
               </View>
             ) : (
               <tab.Icon size={20} color={AppColors.textMuted} strokeWidth={1.75} />
@@ -85,10 +85,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: AppColors.borderLight,
     paddingTop: 10,
     paddingBottom: 6,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
   },
   item: { flex: 1, alignItems: 'center', gap: 2 },
   activeIconCircle: {
@@ -100,6 +100,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 2,
   },
-  label: { fontSize: 11, color: AppColors.textMuted},
+  label: { fontSize: 11, color: AppColors.textMuted },
   labelActive: { color: AppColors.primary, fontWeight: '700' },
 });

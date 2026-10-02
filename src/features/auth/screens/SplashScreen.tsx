@@ -3,6 +3,7 @@ import { View, Image, Text, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../../core/navigation/types';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function SplashScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Splash'>>();
@@ -21,13 +22,23 @@ export default function SplashScreen() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.title}>ShrineTours</Text>
+      <Text style={styles.title}>Tourbhook</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1A1A2E', justifyContent: 'center', alignItems: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: AppColors.textPrimary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   logo: { width: 120, height: 120 },
-  title: { marginTop: 16, fontSize: 32, fontWeight: '800', color: '#FFFFFF' }
+  title: {
+    marginTop: 16,
+    fontSize: 32,
+    fontWeight: '800',
+    color: AppColors.textOnPrimary,
+  },
 });

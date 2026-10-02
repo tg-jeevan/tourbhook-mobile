@@ -9,11 +9,11 @@ const getTimestamp = (daysAgo: number, hoursAgo = 0): string => {
 };
 
 export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
-  // 1. Travel News - 2 hours ago (within 365 days)
+  // 1. Travel News - 2 hours ago (Today)
   {
     id: 'notif-1',
     title: 'Paris Travel Update: Louvre Extended Evening Hours',
-    message: 'Musée du Louvre announces extended night openings and timed digital tickets for upcoming visitors.',
+    message: 'Musée du Louvre announces extended night openings and timed digital tickets for upcoming season.',
     timestamp: getTimestamp(0, 2),
     type: 'travel_news',
     destination: 'Paris, France',
@@ -35,12 +35,12 @@ export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
     },
   },
 
-  // 2. Travel News - 1 day ago (within 365 days)
+  // 2. Travel Alert - 5 hours ago (Today)
   {
     id: 'notif-2',
     title: 'Travel Advisory: Seine River Waterway Maintenance',
     message: 'Scheduled navigation adjustments near Pont Alexandre III during morning cruise hours.',
-    timestamp: getTimestamp(1, 4),
+    timestamp: getTimestamp(0, 5),
     type: 'destination_alert',
     destination: 'Paris, France',
     tripId: '1',
@@ -50,7 +50,7 @@ export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
       fullArticle:
         'The Department of Paris Waterways has issued a brief advisory regarding standard maintenance work on Pont Alexandre III piers. River cruise departures from Pont Neuf will operate on normal timetables with a scenic detour through the southern channel.\n\nPassengers will enjoy unrestricted views of Grand Palais and the Eiffel Tower. No cancellations are expected for scheduled sightseeing cruises.',
       source: 'Voies Navigables de France (VNF)',
-      publishedAt: 'Yesterday, 14:15 PM',
+      publishedAt: 'Today, 08:15 AM',
       urgency: 'advisory',
       affectedPlaces: ['Pont Alexandre III', 'Seine River Cruise Terminal', 'Pont Neuf'],
       keyTakeaways: [
@@ -61,21 +61,59 @@ export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
     },
   },
 
-  // 3. Itinerary Update - 3 days ago (within 365 days)
+  // 3. Itinerary - 3 days ago (This Week)
   {
     id: 'notif-3',
     title: 'Itinerary Synchronized: Paris Adventure',
     message: 'Your Day 2 Eiffel Tower booking has been confirmed and synced to your trip timeline.',
-    timestamp: getTimestamp(3, 1),
+    timestamp: getTimestamp(3, 2),
     type: 'itinerary_update',
     destination: 'Paris, France',
     tripId: '1',
     isRead: true,
   },
 
-  // 4. Travel News - 14 days ago (within 365 days)
+  // 4. Travel Tip - 4 days ago (Earlier / This Week)
   {
     id: 'notif-4',
+    title: 'Top 5 Cafés Near the Louvre',
+    message: 'Discover the best-rated cafés within 10 minutes walk from the Louvre Museum.',
+    timestamp: getTimestamp(4, 3),
+    type: 'travel_tip',
+    destination: 'Paris, France',
+    tripId: '1',
+    isRead: true,
+    newsContent: {
+      headline: 'Top 5 Artisanal Cafés Around the Louvre & Palais-Royal',
+      fullArticle:
+        'Looking for the quintessential Parisian coffee experience after exploring the Louvre? We have curated the top five spots including Café Marly with views of the glass pyramid, Kitsuné in the Palais-Royal gardens, and Telescop Café for specialty pour-overs.',
+      source: 'Tourbhook Paris Local Guides',
+      publishedAt: '4 days ago',
+      urgency: 'normal',
+      affectedPlaces: ['Café Marly', 'Palais-Royal', 'Rue de Rivoli'],
+      keyTakeaways: [
+        'Café Marly offers direct terrace views of the Louvre Pyramid',
+        'Café Kitsuné features world-class matcha and terrace gardens',
+        'Morning visits before 10 AM avoid lines',
+      ],
+    },
+  },
+
+  // 5. Itinerary / Booking - 6 days ago (Earlier / This Week)
+  {
+    id: 'notif-5',
+    title: 'Bookings Confirmed',
+    message: 'Your hotel in Paris has been confirmed for Sept 12 – Sept 17, 2026.',
+    timestamp: getTimestamp(6, 1),
+    type: 'itinerary_update',
+    destination: 'Paris, France',
+    tripId: '1',
+    isRead: true,
+  },
+
+  // 6. Travel News - 14 days ago (Earlier)
+  {
+    id: 'notif-6',
     title: 'Tokyo Metro Pass: Digital Transit Expansion',
     message: 'Foreign tourist 72-hour metro passes now support contactless phone tap across all Tokyo lines.',
     timestamp: getTimestamp(14, 0),
@@ -98,9 +136,9 @@ export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
     },
   },
 
-  // 5. Travel News - 180 days ago (within 365 days)
+  // 7. Travel News - 180 days ago (within 365 days)
   {
-    id: 'notif-5',
+    id: 'notif-7',
     title: 'Bali Eco-Tax & Heritage Guidelines',
     message: 'New tourist conservation contribution initiative active for temple and natural reserve entry.',
     timestamp: getTimestamp(180, 0),
@@ -123,7 +161,7 @@ export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
     },
   },
 
-  // 6. EXPIRED / OLD Notification - 410 days ago (OUTSIDE 365-day retention -> MUST BE EXCLUDED)
+  // 8. EXPIRED / OLD Notification - 410 days ago (OUTSIDE 365-day retention -> MUST BE EXCLUDED)
   {
     id: 'notif-expired-1',
     title: 'Archived Travel Alert (Expired > 365 Days)',

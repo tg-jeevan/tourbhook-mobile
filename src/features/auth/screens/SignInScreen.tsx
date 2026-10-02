@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   TextInput,
@@ -9,36 +10,60 @@ import {
   Platform,
   Alert,
   KeyboardAvoidingView,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { AuthStackParamList } from '../../../core/navigation/types';
 import { useAuth } from '../../../core/auth/AuthContext';
+import { AppColors } from '../../../core/theme/colors';
 
 type SignInScreenNavProp = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
-// ── CUSTOM INLINE CHEVRON LEFT ICON ──────────────────────────
-const ChevronLeftIcon = () => (
-  <View style={styles.chevronContainer}>
-    <View style={styles.chevronLineTop} />
-    <View style={styles.chevronLineBottom} />
+// ── CUSTOM INLINE CHEVRON BACK ICON ──────────────────────────
+const BackIcon = () => (
+  <View style={styles.backIconCircle}>
+    <View style={styles.chevronContainer}>
+      <View style={styles.chevronLineTop} />
+      <View style={styles.chevronLineBottom} />
+    </View>
   </View>
 );
 
 // ── CUSTOM INLINE MAIL ICON ──────────────────────────────────
-const MailIcon = () => (
+const MailIcon = ({ focused }: { focused: boolean }) => (
   <View style={styles.mailIconContainer}>
-    <View style={styles.mailOutline} />
-    <View style={styles.mailV} />
+    <View
+      style={[
+        styles.mailOutline,
+        focused && { borderColor: AppColors.primary },
+      ]}
+    />
+    <View
+      style={[
+        styles.mailV,
+        focused && { borderColor: AppColors.primary },
+      ]}
+    />
   </View>
 );
 
 // ── CUSTOM INLINE LOCK ICON ──────────────────────────────────
-const LockIcon = () => (
+const LockIcon = ({ focused }: { focused: boolean }) => (
   <View style={styles.lockIconContainer}>
-    <View style={styles.lockShackle} />
-    <View style={styles.lockBody} />
+    <View
+      style={[
+        styles.lockShackle,
+        focused && { borderColor: AppColors.primary },
+      ]}
+    />
+    <View
+      style={[
+        styles.lockBody,
+        focused && { backgroundColor: AppColors.primary },
+      ]}
+    />
   </View>
 );
 
@@ -58,290 +83,394 @@ const EyeHiddenIcon = () => (
   </View>
 );
 
+// ── GOOGLE "G" LOGO BADGE ───────────────────────────────────
+const GoogleBadge = () => (
+  <View style={styles.googleBadge}>
+    <Text style={styles.googleBadgeText}>G</Text>
+  </View>
+);
+
 const SignInScreen = () => {
   const navigation = useNavigation<SignInScreenNavProp>();
   const { loginWithMock } = useAuth();
+  const { height: screenHeight } = useWindowDimensions();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [obscurePassword, setObscurePassword] = useState(true);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
 
+  // Responsive layout calculations
+  const heroHeight = Math.max(160, Math.min(screenHeight * 0.24, 210));
+  const bottomIllustrationHeight = Math.max(110, Math.min(screenHeight * 0.18, 160));
+
   const handleSignIn = () => {
-    // Placeholder sign in action to keep future integration ready
-    console.log('Sign In initiated with email:', email);
+    loginWithMock();
   };
 
   const handleGoogleSignIn = () => {
-    // Placeholder google sign in action to keep future integration ready
-    console.log('Google Sign In initiated');
+    loginWithMock();
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex1}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <View style={styles.root}>
+      {/* ── TOP HERO BACKGROUND ── */}
+      <View style={[styles.heroContainer, { height: heroHeight }]} pointerEvents="none">
+        <Image
+          source={require('../../../../assets/images/welcomeHeroBackground.jpg')}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+        <View style={styles.heroGradientOverlay} />
+      </View>
+
+      {/* ── BOTTOM TRAVEL ILLUSTRATION ── */}
+      <View
+        style={[styles.bottomIllustrationContainer, { height: bottomIllustrationHeight }]}
+        pointerEvents="none"
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+        <Image
+          source={require('../../../../assets/images/welcomeTravelIllustration.png')}
+          style={styles.bottomIllustrationImage}
+          resizeMode="cover"
+        />
+      </View>
 
-        {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <ChevronLeftIcon />
-        </TouchableOpacity>
-
-        <View style={styles.gap24} />
-
-        {/* Header Text */}
-        <Text style={styles.title}>Welcome Back</Text>
-        <View style={styles.gap8} />
-        <Text style={styles.subtitle}>Sign in to continue your journey</Text>
-
-        <View style={styles.gap32} />
-
-        {/* Google Sign In Button */}
-        <TouchableOpacity
-          style={styles.googleButton}
-          onPress={handleGoogleSignIn}
-          activeOpacity={0.8}
-        >
-          <View style={styles.googleIconContainer}>
-            <Text style={styles.googleIconText}>G</Text>
-          </View>
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </TouchableOpacity>
-
-        <View style={styles.gap24} />
-
-        {/* Or Divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.divider} />
-        </View>
-
-        <View style={styles.gap24} />
-
-        {/* Email Input Field */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Email</Text>
-          <View style={styles.gap8} />
-          <View
-            style={[
-              styles.inputWrapper,
-              emailFocused && styles.inputWrapperFocused,
-            ]}
-          >
-            <View style={styles.inputPrefixIcon}>
-              <MailIcon />
-            </View>
-            <TextInput
-              style={styles.textInput}
-              placeholder="your@email.com"
-              placeholderTextColor="#B0B0B8"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              onFocus={() => setEmailFocused(true)}
-              onBlur={() => setEmailFocused(false)}
-            />
-          </View>
-        </View>
-
-        <View style={styles.gap20} />
-
-        {/* Password Input Field */}
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>Password</Text>
-          <View style={styles.gap8} />
-          <View
-            style={[
-              styles.inputWrapper,
-              passwordFocused && styles.inputWrapperFocused,
-            ]}
-          >
-            <View style={styles.inputPrefixIcon}>
-              <LockIcon />
-            </View>
-            <TextInput
-              style={styles.textInput}
-              placeholder="••••••••"
-              placeholderTextColor="#B0B0B8"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={obscurePassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              onFocus={() => setPasswordFocused(true)}
-              onBlur={() => setPasswordFocused(false)}
-            />
-            <TouchableOpacity
-              style={styles.suffixButton}
-              onPress={() => setObscurePassword(!obscurePassword)}
-              activeOpacity={0.7}
-            >
-              {obscurePassword ? <EyeHiddenIcon /> : <EyeVisibleIcon />}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.gap12} />
-
-        {/* Forgot Password Link */}
-        <TouchableOpacity
-          style={styles.forgotPasswordWrapper}
-          onPress={() => {
-            try {
-              // Try to navigate using existing navigation setup
-              navigation.navigate('ForgotPassword' as any);
-            } catch (e) {
-              Alert.alert('Forgot Password', 'This route has not been migrated yet.');
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        <View style={styles.gap24} />
-
-        {/* Sign In Button */}
-        <TouchableOpacity
-          style={styles.signInButton}
-          onPress={handleSignIn}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.signInButtonText}>Sign In</Text>
-        </TouchableOpacity>
-
-        <View style={styles.gap24} />
-
-        {/* Sign Up Footer */}
-        <View style={styles.footerRow}>
-          <Text style={styles.footerText}>{"Don't have an account? "}</Text>
+      {/* ── FOREGROUND CONTENT ── */}
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        {/* Top Navigation Bar with Back Button */}
+        <View style={styles.topBar}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('SignUp')}
-            activeOpacity={0.7}
+            style={styles.backButtonTouchable}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.signUpText}>Sign Up</Text>
+            <BackIcon />
           </TouchableOpacity>
         </View>
 
-        {__DEV__ && (
-          <>
-            <View style={styles.gap24} />
-            <TouchableOpacity
-              style={styles.mockAuthButton}
-              onPress={loginWithMock}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.mockAuthButtonText}>Continue with Test Account</Text>
-            </TouchableOpacity>
-          </>
-        )}
+        <KeyboardAvoidingView
+          style={styles.flex1}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
+              {
+                paddingTop: Math.max(20, heroHeight - 80),
+                paddingBottom: bottomIllustrationHeight + 24,
+              },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── MAIN CARD / FORM SHEET ── */}
+            <View style={styles.cardSheet}>
+              {/* Header Title & Subtitle */}
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sign in to continue your journey</Text>
 
-        <View style={styles.gap40} />
-      </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <View style={styles.gap20} />
+
+              {/* Google Sign In Button */}
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={handleGoogleSignIn}
+                activeOpacity={0.85}
+              >
+                <GoogleBadge />
+                <Text style={styles.googleButtonText}>Continue with Google</Text>
+              </TouchableOpacity>
+
+              <View style={styles.gap18} />
+
+              {/* Divider with "or" */}
+              <View style={styles.dividerRow}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>or</Text>
+                <View style={styles.divider} />
+              </View>
+
+              <View style={styles.gap18} />
+
+              {/* Email Input Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    emailFocused && styles.inputWrapperFocused,
+                  ]}
+                >
+                  <View style={styles.inputPrefixIcon}>
+                    <MailIcon focused={emailFocused} />
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="your@email.com"
+                    placeholderTextColor={AppColors.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setEmailFocused(true)}
+                    onBlur={() => setEmailFocused(false)}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.gap16} />
+
+              {/* Password Input Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    passwordFocused && styles.inputWrapperFocused,
+                  ]}
+                >
+                  <View style={styles.inputPrefixIcon}>
+                    <LockIcon focused={passwordFocused} />
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="••••••••"
+                    placeholderTextColor={AppColors.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={obscurePassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
+                  />
+                  <TouchableOpacity
+                    style={styles.suffixButton}
+                    onPress={() => setObscurePassword(!obscurePassword)}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    {obscurePassword ? <EyeHiddenIcon /> : <EyeVisibleIcon />}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.gap10} />
+
+              {/* Forgot Password Link */}
+              <TouchableOpacity
+                style={styles.forgotPasswordWrapper}
+                onPress={() => {
+                  try {
+                    navigation.navigate('ForgotPassword' as any);
+                  } catch (e) {
+                    Alert.alert('Forgot Password', 'This route has not been migrated yet.');
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <View style={styles.gap20} />
+
+              {/* Primary CTA - Sign In Button */}
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleSignIn}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.primaryButtonText}>Sign In</Text>
+                <Text style={styles.primaryButtonArrow}>→</Text>
+              </TouchableOpacity>
+
+              <View style={styles.gap16} />
+
+              {/* Sign Up Navigation Footer */}
+              <View style={styles.footerRow}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('SignUp')}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.signUpText}>Sign Up</Text>
+                </TouchableOpacity>
+              </View>
+
+              {__DEV__ && (
+                <>
+                  <View style={styles.gap16} />
+                  <TouchableOpacity
+                    style={styles.mockAuthButton}
+                    onPress={loginWithMock}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.mockAuthButtonText}>Continue with Test Account</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 };
 
-
 const styles = StyleSheet.create({
-  // Fills background white as in Flutter AppColors.background (#FFFFFF)
+  root: {
+    flex: 1,
+    backgroundColor: AppColors.background,
+  },
+  heroContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    overflow: 'hidden',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
+  heroGradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: 'rgba(246, 241, 232, 0.25)',
+  },
+  bottomIllustrationContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'flex-end',
+  },
+  bottomIllustrationImage: {
+    width: '100%',
+    height: '100%',
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
   },
   flex1: {
     flex: 1,
   },
-
-  // Back Button Chevron Left Container
-  backButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
+  topBar: {
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 8 : 4,
+    zIndex: 10,
   },
-  chevronContainer: {
-    width: 28,
-    height: 28,
+  backButtonTouchable: {
+    alignSelf: 'flex-start',
+  },
+  backIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: AppColors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  chevronContainer: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: -2,
   },
   chevronLineTop: {
-    width: 14,
-    height: 3,
-    backgroundColor: '#1A1A2E',
-    borderRadius: 1.5,
-    transform: [{ rotate: '-45deg' }, { translateY: 2 }],
+    width: 10,
+    height: 2.2,
+    backgroundColor: AppColors.textPrimary,
+    borderRadius: 1.1,
+    transform: [{ rotate: '-45deg' }, { translateY: 1.6 }],
   },
   chevronLineBottom: {
-    width: 14,
-    height: 3,
-    backgroundColor: '#1A1A2E',
-    borderRadius: 1.5,
-    transform: [{ rotate: '45deg' }, { translateY: -2 }],
+    width: 10,
+    height: 2.2,
+    backgroundColor: AppColors.textPrimary,
+    borderRadius: 1.1,
+    transform: [{ rotate: '45deg' }, { translateY: -1.6 }],
   },
-
-  // Header Titles
+  scrollContent: {
+    paddingHorizontal: 20,
+    flexGrow: 1,
+  },
+  cardSheet: {
+    backgroundColor: AppColors.surface,
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    shadowColor: AppColors.textPrimary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: AppColors.borderLight,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
+    fontSize: 24,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    letterSpacing: -0.4,
+    fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
   },
   subtitle: {
-    fontSize: 14,
-    color: 'rgba(26, 26, 46, 0.7)',
+    fontSize: 13.5,
+    color: AppColors.textSecondary,
+    marginTop: 4,
     fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
   },
-
-  // Google button
   googleButton: {
     width: '100%',
-    height: 56,
-    borderRadius: 28,
+    height: 50,
+    borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
-    backgroundColor: '#FFFFFF',
+    borderColor: AppColors.borderLight,
+    backgroundColor: AppColors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: AppColors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  googleIconContainer: {
-    marginRight: 12,
+  googleBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
-  googleIconText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
+  googleBadgeText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#EA4335',
+    fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
   },
   googleButtonText: {
-    fontSize: 16,
+    fontSize: 14.5,
     fontWeight: '600',
-    color: '#1A1A2E',
+    color: AppColors.textPrimary,
     fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
   },
-
-  // Divider Row
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -350,106 +479,100 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: AppColors.borderLight,
   },
   dividerText: {
-    fontSize: 14,
-    color: '#8E8E93',
-    paddingHorizontal: 16,
+    fontSize: 13,
+    color: AppColors.textMuted,
+    paddingHorizontal: 12,
     fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
   },
-
-  // Inputs
   inputContainer: {
     width: '100%',
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1A1A2E',
-    fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: 6,
+    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F7',
-    borderRadius: 16,
-    height: 56,
-    paddingHorizontal: 20,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    height: 50,
+    paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderColor: AppColors.borderLight,
   },
   inputWrapperFocused: {
-    borderColor: '#E91E63',
+    borderColor: AppColors.primary,
+    backgroundColor: AppColors.surface,
   },
   inputPrefixIcon: {
-    marginRight: 12,
+    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   textInput: {
     flex: 1,
     height: '100%',
-    color: '#1A1A2E',
+    color: AppColors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
-    padding: 0, // removes default android padding
+    padding: 0,
   },
   suffixButton: {
-    paddingLeft: 12,
+    paddingLeft: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  // Mail Icon Styling
   mailIconContainer: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mailOutline: {
-    width: 18,
+    width: 16,
     height: 12,
     borderWidth: 1.5,
-    borderColor: '#8E8E93',
+    borderColor: AppColors.textMuted,
     borderRadius: 2,
   },
   mailV: {
     position: 'absolute',
-    width: 10,
-    height: 10,
+    width: 8,
+    height: 8,
     borderLeftWidth: 1.5,
     borderBottomWidth: 1.5,
-    borderColor: '#8E8E93',
-    transform: [{ rotate: '-45deg' }, { translateY: -4.5 }],
+    borderColor: AppColors.textMuted,
+    transform: [{ rotate: '-45deg' }, { translateY: -3.5 }],
   },
-
-  // Lock Icon Styling
   lockIconContainer: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
   lockShackle: {
-    width: 10,
-    height: 10,
+    width: 9,
+    height: 8,
     borderWidth: 1.5,
-    borderColor: '#8E8E93',
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
+    borderColor: AppColors.textMuted,
+    borderTopLeftRadius: 4.5,
+    borderTopRightRadius: 4.5,
     borderBottomWidth: 0,
-    transform: [{ translateY: 2 }],
+    transform: [{ translateY: 1.5 }],
   },
   lockBody: {
-    width: 14,
-    height: 10,
-    backgroundColor: '#8E8E93',
+    width: 13,
+    height: 9,
+    backgroundColor: AppColors.textMuted,
     borderRadius: 2,
   },
-
-  // Eye Icon Styling
   eyeContainer: {
     width: 20,
     height: 20,
@@ -460,53 +583,60 @@ const styles = StyleSheet.create({
     width: 16,
     height: 10,
     borderWidth: 1.5,
-    borderColor: '#8E8E93',
+    borderColor: AppColors.textMuted,
     borderRadius: 50,
   },
   eyePupil: {
     position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#8E8E93',
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: AppColors.textMuted,
   },
   eyeSlash: {
     position: 'absolute',
-    width: 18,
+    width: 16,
     height: 1.5,
-    backgroundColor: '#8E8E93',
+    backgroundColor: AppColors.textMuted,
     transform: [{ rotate: '45deg' }],
   },
-
-  // Forgot password
   forgotPasswordWrapper: {
     alignSelf: 'flex-end',
+    paddingVertical: 2,
   },
   forgotPasswordText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#E91E63',
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.primary,
     fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
   },
-
-  // Action Button
-  signInButton: {
+  primaryButton: {
     width: '100%',
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E91E63',
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: AppColors.primary,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 0,
+    shadowColor: AppColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  signInButtonText: {
+  primaryButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
+    fontWeight: '700',
+    color: AppColors.textOnPrimary,
+    letterSpacing: 0.2,
+    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
   },
-
-  // Footer signup link
+  primaryButtonArrow: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.textOnPrimary,
+    marginLeft: 8,
+  },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -514,44 +644,36 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   footerText: {
-    fontSize: 14,
-    color: '#8E8E93',
+    fontSize: 13.5,
+    color: AppColors.textSecondary,
     fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
   },
   signUpText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#E91E63',
-    fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: AppColors.primary,
+    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
   },
-
-  // Mock Bypass Button Styles
   mockAuthButton: {
     width: '100%',
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#F5F5F7',
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mockAuthButtonText: {
-    fontSize: 16,
+    fontSize: 13.5,
     fontWeight: '600',
-    color: '#E91E63',
+    color: AppColors.textSecondary,
     fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
   },
-
-  // Spacing gaps
-  gap8: { height: 8 },
-  gap12: { height: 12 },
+  gap10: { height: 10 },
   gap16: { height: 16 },
+  gap18: { height: 18 },
   gap20: { height: 20 },
-  gap24: { height: 24 },
-  gap32: { height: 32 },
-  gap40: { height: 40 },
 });
 
 export default SignInScreen;
-

@@ -29,11 +29,10 @@ import {
 import { InstagramIcon, YouTubeIcon } from '../components/SocialIcons';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
+import { AppColors } from '../../../core/theme/colors';
 
 type UGCPostingNavProp = NativeStackNavigationProp<AppStackParamList, 'UGCPosting'>;
 type UGCPostingRouteProp = RouteProp<AppStackParamList, 'UGCPosting'>;
-
-const PRIMARY_GREEN = '#2E7D32';
 
 export type DetectedPlatform = 'instagram' | 'youtube' | null;
 
@@ -160,7 +159,7 @@ export default function UGCPostingScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Destination Association Banner */}
           <View style={styles.destBanner}>
-            <MapPin size={16} color={PRIMARY_GREEN} />
+            <MapPin size={16} color={AppColors.primary} />
             <Text style={styles.destLabel}>Associating with:</Text>
             <Text style={styles.destName} numberOfLines={1}>
               {destination}
@@ -185,14 +184,14 @@ export default function UGCPostingScreen() {
                         styles.platformBadge,
                         {
                           backgroundColor:
-                            detectedPlatform === 'instagram' ? '#C13584' : '#FF0000',
+                            detectedPlatform === 'instagram' ? AppColors.instagramAlt : AppColors.youtube,
                         },
                       ]}
                     >
                       {detectedPlatform === 'instagram' ? (
-                        <InstagramIcon size={11} color="#FFFFFF" />
+                        <InstagramIcon size={11} color={AppColors.white} />
                       ) : (
-                        <YouTubeIcon size={11} color="#FFFFFF" />
+                        <YouTubeIcon size={11} color={AppColors.white} />
                       )}
                       <Text style={styles.platformBadgeText}>
                         {detectedPlatform === 'instagram' ? 'Instagram Reel' : 'YouTube Shorts'}
@@ -207,11 +206,11 @@ export default function UGCPostingScreen() {
                     errorMessage ? styles.inputBoxError : null,
                   ]}
                 >
-                  <Link2 size={18} color="#8E8E93" />
+                  <Link2 size={18} color={AppColors.textMuted} />
                   <TextInput
                     style={styles.input}
                     placeholder="https://www.instagram.com/reel/..."
-                    placeholderTextColor="#8E8E93"
+                    placeholderTextColor={AppColors.textLight}
                     value={link}
                     onChangeText={handleLinkChange}
                     autoCapitalize="none"
@@ -220,7 +219,7 @@ export default function UGCPostingScreen() {
                 </View>
                 {errorMessage && (
                   <View style={styles.errorRow}>
-                    <AlertCircle size={13} color="#E91E63" />
+                    <AlertCircle size={13} color={AppColors.error} />
                     <Text style={styles.errorText}>{errorMessage}</Text>
                   </View>
                 )}
@@ -235,7 +234,7 @@ export default function UGCPostingScreen() {
                     handleQuickPaste('https://www.instagram.com/reel/C3_ParisSunset')
                   }
                 >
-                  <InstagramIcon size={13} color="#C13584" />
+                  <InstagramIcon size={13} color={AppColors.instagramAlt} />
                   <Text style={styles.sampleText} numberOfLines={1}>
                     Valid Instagram Reel (Paris Sunset)
                   </Text>
@@ -247,7 +246,7 @@ export default function UGCPostingScreen() {
                     handleQuickPaste('https://youtube.com/shorts/ParisFoodGuide2026')
                   }
                 >
-                  <YouTubeIcon size={13} color="#FF0000" />
+                  <YouTubeIcon size={13} color={AppColors.youtube} />
                   <Text style={styles.sampleText} numberOfLines={1}>
                     Valid YouTube Shorts (Croissant Tour)
                   </Text>
@@ -259,7 +258,7 @@ export default function UGCPostingScreen() {
                     handleQuickPaste('https://www.youtube.com/shorts/SpamVideoParis')
                   }
                 >
-                  <ShieldAlert size={13} color="#E91E63" />
+                  <ShieldAlert size={13} color={AppColors.error} />
                   <Text style={styles.sampleText} numberOfLines={1}>
                     Sample Triggering Moderation Policy Rejection
                   </Text>
@@ -272,7 +271,7 @@ export default function UGCPostingScreen() {
                 <TextInput
                   style={[styles.inputBox, styles.captionBox]}
                   placeholder="e.g. Best visited right at 7 PM for golden hour..."
-                  placeholderTextColor="#8E8E93"
+                  placeholderTextColor={AppColors.textLight}
                   value={caption}
                   onChangeText={setCaption}
                   multiline
@@ -282,7 +281,7 @@ export default function UGCPostingScreen() {
               {/* Pipeline Overview Box */}
               <View style={styles.pipelineInfoBox}>
                 <View style={styles.pipelineHeader}>
-                  <Sparkles size={16} color={PRIMARY_GREEN} />
+                  <Sparkles size={16} color={AppColors.primary} />
                   <Text style={styles.pipelineTitle}>Automated Processing Pipeline</Text>
                 </View>
                 <Text style={styles.pipelineDesc}>
@@ -297,7 +296,7 @@ export default function UGCPostingScreen() {
                 activeOpacity={0.85}
               >
                 <Text style={styles.submitBtnText}>Submit for AI Verification</Text>
-                <ArrowRight size={18} color="#FFFFFF" />
+                <ArrowRight size={18} color={AppColors.textOnPrimary} />
               </TouchableOpacity>
             </>
           )}
@@ -305,7 +304,7 @@ export default function UGCPostingScreen() {
           {/* Processing Pipeline Animation State */}
           {isProcessing && (
             <View style={styles.processingCard}>
-              <ActivityIndicator size="large" color={PRIMARY_GREEN} style={styles.spinner} />
+              <ActivityIndicator size="large" color={AppColors.primary} style={styles.spinner} />
               <Text style={styles.processingHeading}>Processing Travel Video</Text>
               <Text style={styles.processingSub}>Executing automated backend pipeline</Text>
 
@@ -313,7 +312,7 @@ export default function UGCPostingScreen() {
                 <View style={styles.stepRow}>
                   <CheckCircle2
                     size={18}
-                    color={pipelineStep >= 1 ? PRIMARY_GREEN : '#D1D1D6'}
+                    color={pipelineStep >= 1 ? AppColors.primary : AppColors.borderDark}
                   />
                   <Text style={[styles.stepText, pipelineStep >= 1 && styles.stepTextActive]}>
                     1. Ingesting video & metadata
@@ -323,7 +322,7 @@ export default function UGCPostingScreen() {
                 <View style={styles.stepRow}>
                   <CheckCircle2
                     size={18}
-                    color={pipelineStep >= 2 ? PRIMARY_GREEN : '#D1D1D6'}
+                    color={pipelineStep >= 2 ? AppColors.primary : AppColors.borderDark}
                   />
                   <Text style={[styles.stepText, pipelineStep >= 2 && styles.stepTextActive]}>
                     2. AI Analysis & destination association
@@ -333,7 +332,7 @@ export default function UGCPostingScreen() {
                 <View style={styles.stepRow}>
                   <CheckCircle2
                     size={18}
-                    color={pipelineStep >= 3 ? PRIMARY_GREEN : '#D1D1D6'}
+                    color={pipelineStep >= 3 ? AppColors.primary : AppColors.borderDark}
                   />
                   <Text style={[styles.stepText, pipelineStep >= 3 && styles.stepTextActive]}>
                     3. Zero-tolerance moderation safety check
@@ -349,7 +348,7 @@ export default function UGCPostingScreen() {
               {submissionResult === 'approved' ? (
                 <View style={styles.approvedCard}>
                   <View style={styles.approvedIconBg}>
-                    <ShieldCheck size={36} color={PRIMARY_GREEN} />
+                    <ShieldCheck size={36} color={AppColors.success} />
                   </View>
                   <Text style={styles.resultTitle}>Moderation Approved! 🎉</Text>
                   <Text style={styles.resultSub}>
@@ -360,7 +359,7 @@ export default function UGCPostingScreen() {
                   {/* AI Generated Preview */}
                   <View style={styles.aiGeneratedBox}>
                     <View style={styles.aiGenHeader}>
-                      <Sparkles size={14} color={PRIMARY_GREEN} />
+                      <Sparkles size={14} color={AppColors.primary} />
                       <Text style={styles.aiGenTitle}>AI Analysis Generated</Text>
                     </View>
                     <Text style={styles.aiGenText}>
@@ -387,7 +386,7 @@ export default function UGCPostingScreen() {
               ) : (
                 <View style={styles.rejectedCard}>
                   <View style={styles.rejectedIconBg}>
-                    <ShieldAlert size={36} color="#E91E63" />
+                    <ShieldAlert size={36} color={AppColors.error} />
                   </View>
                   <Text style={styles.resultTitle}>Moderation Policy Notice</Text>
                   <Text style={styles.resultSub}>
@@ -408,7 +407,7 @@ export default function UGCPostingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
   flex1: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -416,28 +415,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: AppColors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F2',
+    borderBottomColor: AppColors.borderLight,
   },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E' },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: AppColors.textPrimary },
   placeholder: { width: 44 },
   content: { padding: 20, paddingBottom: 36 },
   destBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: AppColors.surfaceHighlight,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#C2EAD0',
+    borderColor: AppColors.primaryLight,
   },
-  destLabel: { fontSize: 12, color: '#555555', fontWeight: '500' },
-  destName: { fontSize: 13, fontWeight: '700', color: PRIMARY_GREEN, flex: 1 },
-  sectionHeading: { fontSize: 20, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
-  sectionSub: { fontSize: 13, color: '#666666', lineHeight: 18, marginBottom: 20 },
+  destLabel: { fontSize: 12, color: AppColors.textMuted, fontWeight: '500' },
+  destName: { fontSize: 13, fontWeight: '700', color: AppColors.primary, flex: 1 },
+  sectionHeading: { fontSize: 20, fontWeight: '700', color: AppColors.textPrimary, marginBottom: 4 },
+  sectionSub: { fontSize: 13, color: AppColors.textMuted, lineHeight: 18, marginBottom: 20 },
   inputWrapper: { marginBottom: 16 },
   inputLabelRow: {
     flexDirection: 'row',
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#1A1A2E' },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: AppColors.textPrimary },
   platformBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,14 +454,14 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
   },
-  platformBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  platformBadgeText: { color: AppColors.white, fontSize: 10, fontWeight: '700' },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    backgroundColor: AppColors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.border,
     paddingHorizontal: 12,
     height: 48,
     gap: 8,
@@ -471,77 +471,77 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingTop: 10,
   },
-  inputBoxError: { borderColor: '#E91E63', backgroundColor: '#FFF5F7' },
-  input: { flex: 1, fontSize: 14, color: '#1A1A2E' },
+  inputBoxError: { borderColor: AppColors.error, backgroundColor: AppColors.errorLight },
+  input: { flex: 1, fontSize: 14, color: AppColors.textPrimary },
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
-  errorText: { fontSize: 12, color: '#E91E63' },
+  errorText: { fontSize: 12, color: AppColors.error },
   samplesCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: AppColors.surface,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.border,
     marginBottom: 16,
     gap: 8,
   },
-  samplesTitle: { fontSize: 11, fontWeight: '700', color: '#8E8E93', textTransform: 'uppercase' },
+  samplesTitle: { fontSize: 11, fontWeight: '700', color: AppColors.textMuted, textTransform: 'uppercase' },
   sampleItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surfaceSubtle,
     padding: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.borderLight,
   },
-  sampleText: { fontSize: 12, color: '#333333', flex: 1 },
+  sampleText: { fontSize: 12, color: AppColors.textPrimary, flex: 1 },
   pipelineInfoBox: {
-    backgroundColor: '#F0FBF5',
+    backgroundColor: AppColors.surfaceHighlight,
     borderRadius: 12,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: PRIMARY_GREEN,
+    borderLeftColor: AppColors.primary,
     marginBottom: 24,
   },
   pipelineHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  pipelineTitle: { fontSize: 12, fontWeight: '700', color: PRIMARY_GREEN },
-  pipelineDesc: { fontSize: 11, color: '#444444', lineHeight: 16 },
+  pipelineTitle: { fontSize: 12, fontWeight: '700', color: AppColors.primary },
+  pipelineDesc: { fontSize: 11, color: AppColors.textSecondary, lineHeight: 16 },
   submitBtn: {
     height: 50,
     borderRadius: 25,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
-  submitBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  submitBtnText: { color: AppColors.textOnPrimary, fontSize: 15, fontWeight: '700' },
   processingCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: AppColors.surface,
     borderRadius: 18,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.border,
     marginTop: 20,
   },
   spinner: { marginBottom: 16 },
-  processingHeading: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
-  processingSub: { fontSize: 13, color: '#8E8E93', marginBottom: 20 },
+  processingHeading: { fontSize: 18, fontWeight: '700', color: AppColors.textPrimary, marginBottom: 4 },
+  processingSub: { fontSize: 13, color: AppColors.textMuted, marginBottom: 20 },
   stepsList: { width: '100%', gap: 12 },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stepText: { fontSize: 13, color: '#8E8E93' },
-  stepTextActive: { color: '#1A1A2E', fontWeight: '600' },
+  stepText: { fontSize: 13, color: AppColors.textMuted },
+  stepTextActive: { color: AppColors.textPrimary, fontWeight: '600' },
   resultContainer: { marginTop: 16 },
   approvedCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderRadius: 18,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#C2EAD0',
-    shadowColor: '#000000',
+    borderColor: AppColors.successBorder,
+    shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -551,67 +551,67 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: AppColors.successLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   rejectedCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderRadius: 18,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F8BBD0',
+    borderColor: AppColors.errorBorder,
   },
   rejectedIconBg: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#FCE4EC',
+    backgroundColor: AppColors.errorLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
-  resultTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 6 },
-  resultSub: { fontSize: 13, color: '#666666', textAlign: 'center', lineHeight: 18, marginBottom: 16 },
-  boldText: { fontWeight: '700', color: '#1A1A2E' },
+  resultTitle: { fontSize: 18, fontWeight: '700', color: AppColors.textPrimary, marginBottom: 6 },
+  resultSub: { fontSize: 13, color: AppColors.textMuted, textAlign: 'center', lineHeight: 18, marginBottom: 16 },
+  boldText: { fontWeight: '700', color: AppColors.textPrimary },
   aiGeneratedBox: {
     width: '100%',
-    backgroundColor: '#F0FBF5',
+    backgroundColor: AppColors.surfaceHighlight,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#C2EAD0',
+    borderColor: AppColors.primaryLight,
     marginBottom: 20,
   },
   aiGenHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  aiGenTitle: { fontSize: 12, fontWeight: '700', color: PRIMARY_GREEN },
-  aiGenText: { fontSize: 12, color: '#333333', fontStyle: 'italic', marginBottom: 8 },
+  aiGenTitle: { fontSize: 12, fontWeight: '700', color: AppColors.primary },
+  aiGenText: { fontSize: 12, color: AppColors.textSecondary, fontStyle: 'italic', marginBottom: 8 },
   tagWrap: { flexDirection: 'row', gap: 6 },
   tagChip: {
     fontSize: 10,
-    color: PRIMARY_GREEN,
+    color: AppColors.primary,
     fontWeight: '700',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#C2EAD0',
+    borderColor: AppColors.primaryLight,
   },
   actionPrimaryBtn: {
     width: '100%',
     height: 48,
     borderRadius: 24,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
-  actionPrimaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  actionPrimaryText: { color: AppColors.textOnPrimary, fontWeight: '700', fontSize: 14 },
   actionSecondaryBtn: {
     paddingVertical: 8,
   },
-  actionSecondaryText: { color: '#666666', fontWeight: '600', fontSize: 13 },
+  actionSecondaryText: { color: AppColors.textMuted, fontWeight: '600', fontSize: 13 },
 });

@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { BackButton } from '../components/BackButton';
+import { AppColors } from '../theme/colors';
 
 export default function DevScreenTester() {
   const navigation = useNavigation<any>();
@@ -29,6 +30,15 @@ export default function DevScreenTester() {
     { name: 'Itinerary Map', route: 'ItineraryMap', params: { tripId: '1' } },
   ];
 
+  const exploreScreens = [
+    { name: 'Explore Feed (Main)', route: 'ExploreFeed', params: undefined },
+    { name: 'Reel Viewer (Eiffel Tower)', route: 'ReelViewer', params: { reelId: 'ugc-paris-1' } },
+    { name: 'Destination Details (Paris)', route: 'DestinationDetails', params: { destinationId: 'dest-paris', destinationName: 'Paris, France' } },
+    { name: 'Destination Details (Santorini)', route: 'DestinationDetails', params: { destinationId: 'dest-santorini', destinationName: 'Santorini, Greece' } },
+    { name: 'Destination Details (Bali)', route: 'DestinationDetails', params: { destinationId: 'dest-bali', destinationName: 'Bali, Indonesia' } },
+    { name: 'Destination Details (Tokyo)', route: 'DestinationDetails', params: { destinationId: 'dest-tokyo', destinationName: 'Tokyo, Japan' } },
+  ];
+
   const instagramAndReelsScreens = [
     { name: 'Connect Instagram (Profile)', route: 'InstagramConnect', params: undefined },
     { name: 'Destination Reels (Paris Trip)', route: 'TripDetails', params: { tripId: '1' } },
@@ -50,15 +60,15 @@ export default function DevScreenTester() {
     { name: 'Checking Packing', route: 'CheckingPacking', params: { tripId: '1' } },
   ];
 
-    const groupScreens = [
+  const groupScreens = [
     { name: 'Group Matching', route: 'GroupMatching', params: undefined },
   ];
 
-    const importScreens = [
+  const importScreens = [
     { name: 'Import Data', route: 'ImportData', params: undefined },
   ];
 
-    const reviewScreens = [
+  const reviewScreens = [
     { name: 'Reviews', route: 'Reviews', params: { placeId: '1', placeName: 'Eiffel Tower' } },
   ];
 
@@ -109,9 +119,10 @@ export default function DevScreenTester() {
         <View style={styles.placeholder} />
       </View>
       <ScrollView contentContainerStyle={styles.content}>
+        {renderGroup('Trips & Itinerary Flow (SCRUM-37)', tripScreens)}
+        {renderGroup('Explore Flow & Feed (SCRUM-36)', exploreScreens)}
         {renderGroup('Authentication Flow', authScreens)}
         {renderGroup('Instagram Profile & Destination Reels (SCRUM-35)', instagramAndReelsScreens)}
-        {renderGroup('Trips & Itinerary Flow', tripScreens)}
         {renderGroup('UGC Content Display Flow (SCRUM-27)', ugcScreens)}
         {renderGroup('Packing Flow', packingScreens)}
         {renderGroup('Groups & Verification Flow', groupScreens)}
@@ -125,14 +136,38 @@ export default function DevScreenTester() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#E91E63' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: AppColors.primary },
   placeholder: { width: 44 },
   content: { padding: 24 },
   group: { marginBottom: 28 },
-  groupTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#EEEEEE', paddingBottom: 6 },
+  groupTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+    paddingBottom: 6,
+  },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  button: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20, backgroundColor: '#F5F5F7', borderWidth: 1, borderColor: '#E8E8E8' },
-  buttonText: { fontSize: 13, color: '#1A1A2E', fontWeight: '500' }
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: AppColors.surface,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  buttonText: { fontSize: 13, color: AppColors.textPrimary, fontWeight: '500' },
 });

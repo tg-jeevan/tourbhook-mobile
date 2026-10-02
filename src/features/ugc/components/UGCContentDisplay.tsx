@@ -16,24 +16,21 @@ import {
   Heart,
   Eye,
   Sparkles,
-  MapPin,
+  Bookmark,
+  MoreHorizontal,
+  ChevronDown,
   Clock,
   ExternalLink,
   ShieldCheck,
+  Upload,
   X,
-  Share2,
+  Video,
 } from 'lucide-react-native';
 import { InstagramIcon, YouTubeIcon } from './SocialIcons';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { filterApprovedDestinationReels } from '../data/mockUGCData';
 import { UGCContentDisplayProps, UGCItem } from '../types/ugcTypes';
-
-const PRIMARY_GREEN = '#1FAE5D';
-const DARK_NAVY = '#1A1A2E';
-const MUTED_TEXT = '#8E8E93';
-const ACCENT_PINK = '#E91E63';
-const INSTA_PURPLE = '#C13584';
-const YT_RED = '#FF0000';
+import { AppColors } from '../../../core/theme/colors';
 
 export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
   destination,
@@ -47,6 +44,9 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
 
   // CRITICAL ZERO-TOLERANCE MODERATION: ONLY approved items for this destination
   const approvedItems = filterApprovedDestinationReels(destination, platformFilter);
+  const totalAllCount = filterApprovedDestinationReels(destination, 'all').length;
+  const totalReelsCount = filterApprovedDestinationReels(destination, 'instagram').length;
+  const totalShortsCount = filterApprovedDestinationReels(destination, 'youtube').length;
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -71,176 +71,254 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Section Header */}
-      <View style={styles.sectionHeader}>
-        <View style={styles.headerTitleColumn}>
-          <View style={styles.titleRow}>
+      {/* ── SECTION HEADER ────────────────────────────────────────── */}
+      <View style={styles.sectionHeaderRow}>
+        <View style={styles.headerTitleWrap}>
+          <View style={styles.titleWithCount}>
             <Text style={styles.sectionTitle}>Traveler Reels & Shorts</Text>
             <View style={styles.countBadge}>
-              <Text style={styles.countText}>{approvedItems.length}</Text>
+              <Text style={styles.countBadgeText}>{approvedItems.length}</Text>
             </View>
           </View>
           <Text style={styles.sectionSubtitle}>
-            Curated community videos verified by AI & moderation
+            Curated community videos from Instagram, verified by AI & moderation.
           </Text>
         </View>
 
         <TouchableOpacity
-          style={styles.addPostBtn}
+          style={styles.shareReelBtn}
           onPress={handleShareClick}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <Text style={styles.addPostBtnText}>+ Share Reel</Text>
+          <Upload size={13} color={AppColors.accent} />
+          <Text style={styles.shareReelBtnText}>Share Reel</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Platform Filter Tabs */}
-      <View style={styles.tabsRow}>
-        <TouchableOpacity
-          style={[styles.tabChip, platformFilter === 'all' && styles.tabChipActive]}
-          onPress={() => setPlatformFilter('all')}
+      {/* ── FILTER & SORT PILLS ROW ────────────────────────────────── */}
+      <View style={styles.filtersRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersScroll}
         >
-          <Text style={[styles.tabChipText, platformFilter === 'all' && styles.tabChipTextActive]}>
-            All ({filterApprovedDestinationReels(destination, 'all').length})
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabChip, platformFilter === 'instagram' && styles.tabChipActive]}
-          onPress={() => setPlatformFilter('instagram')}
-        >
-          <InstagramIcon size={14} color={platformFilter === 'instagram' ? '#FFFFFF' : INSTA_PURPLE} />
-          <Text style={[styles.tabChipText, platformFilter === 'instagram' && styles.tabChipTextActive]}>
-            Reels ({filterApprovedDestinationReels(destination, 'instagram').length})
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabChip, platformFilter === 'youtube' && styles.tabChipActive]}
-          onPress={() => setPlatformFilter('youtube')}
-        >
-          <YouTubeIcon size={14} color={platformFilter === 'youtube' ? '#FFFFFF' : YT_RED} />
-          <Text style={[styles.tabChipText, platformFilter === 'youtube' && styles.tabChipTextActive]}>
-            Shorts ({filterApprovedDestinationReels(destination, 'youtube').length})
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Reels List OR Empty State */}
-      {approvedItems.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <View style={styles.emptyIconCircle}>
-            <InstagramIcon size={28} color={MUTED_TEXT} />
-          </View>
-          <Text style={styles.emptyTitle}>No Approved Reels Yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Pending or unapproved submissions remain hidden under our zero-tolerance safety policy. Be the first to share a verified Reel for{' '}
-            <Text style={styles.boldText}>{destination}</Text>!
-          </Text>
+          {/* All Filter */}
           <TouchableOpacity
-            style={styles.emptyCtaBtn}
-            onPress={handleShareClick}
-            activeOpacity={0.8}
+            style={[styles.filterPill, platformFilter === 'all' && styles.filterPillActive]}
+            onPress={() => setPlatformFilter('all')}
+            activeOpacity={0.75}
           >
-            <Text style={styles.emptyCtaText}>Submit a Reel / Short</Text>
+            <Text
+              style={[
+                styles.filterPillText,
+                platformFilter === 'all' && styles.filterPillTextActive,
+              ]}
+            >
+              All ({totalAllCount})
+            </Text>
+          </TouchableOpacity>
+
+          {/* Instagram Reels Filter */}
+          <TouchableOpacity
+            style={[styles.filterPill, platformFilter === 'instagram' && styles.filterPillActive]}
+            onPress={() => setPlatformFilter('instagram')}
+            activeOpacity={0.75}
+          >
+            <InstagramIcon
+              size={13}
+              color={platformFilter === 'instagram' ? AppColors.white : AppColors.instagramAlt}
+            />
+            <Text
+              style={[
+                styles.filterPillText,
+                platformFilter === 'instagram' && styles.filterPillTextActive,
+              ]}
+            >
+              Reels ({totalReelsCount})
+            </Text>
+          </TouchableOpacity>
+
+          {/* YouTube Shorts Filter */}
+          <TouchableOpacity
+            style={[styles.filterPill, platformFilter === 'youtube' && styles.filterPillActive]}
+            onPress={() => setPlatformFilter('youtube')}
+            activeOpacity={0.75}
+          >
+            <YouTubeIcon
+              size={13}
+              color={platformFilter === 'youtube' ? AppColors.white : AppColors.youtube}
+            />
+            <Text
+              style={[
+                styles.filterPillText,
+                platformFilter === 'youtube' && styles.filterPillTextActive,
+              ]}
+            >
+              Shorts ({totalShortsCount})
+            </Text>
+          </TouchableOpacity>
+
+          {/* Sort Pill */}
+          <View style={styles.sortPill}>
+            <Text style={styles.sortPillText}>Latest</Text>
+            <ChevronDown size={13} color={AppColors.textSecondary} />
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* ── REELS CARDS LIST OR MODERATION EMPTY STATE ─────────────── */}
+      {approvedItems.length === 0 ? (
+        /* Empty / Zero-Tolerance Moderation Proof State */
+        <View style={styles.emptyCard}>
+          <View style={styles.emptyIconContainer}>
+            <Video size={28} color={AppColors.primary} />
+          </View>
+          <Text style={styles.emptyTitle}>No approved reels yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Travel reels for this destination will appear here once they pass our moderation review.
+          </Text>
+
+          <View style={styles.moderationNoticeBox}>
+            <ShieldCheck size={16} color={AppColors.success} />
+            <Text style={styles.moderationNoticeText}>
+              Zero-Tolerance Content Safety: Pending or unapproved submissions remain hidden.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.emptySubmitBtn}
+            onPress={handleShareClick}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.emptySubmitBtnText}>+ Submit a Reel / Short</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.itemsGrid}>
+        /* Content Cards List (Horizontal split-card design) */
+        <View style={styles.cardsList}>
           {approvedItems.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={styles.card}
-              activeOpacity={0.9}
+              style={styles.horizontalCard}
+              activeOpacity={0.92}
               onPress={() => setSelectedReel(item)}
             >
-              {/* Video Thumbnail */}
-              <View style={styles.thumbnailContainer}>
-                <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnail} />
-                <View style={styles.thumbnailOverlay} />
+              {/* Left Column: Video Thumbnail */}
+              <View style={styles.thumbColumn}>
+                <Image source={{ uri: item.thumbnailUrl }} style={styles.thumbnailImg} />
+                <View style={styles.thumbDarkGradient} />
 
-                {/* Platform Badge */}
+                {/* Top Left Platform Badge */}
                 <View
                   style={[
-                    styles.platformBadge,
-                    { backgroundColor: item.platform === 'instagram' ? INSTA_PURPLE : YT_RED },
+                    styles.platformTag,
+                    {
+                      backgroundColor:
+                        item.platform === 'instagram' ? AppColors.instagram : AppColors.youtube,
+                    },
                   ]}
                 >
                   {item.platform === 'instagram' ? (
-                    <InstagramIcon size={12} color="#FFFFFF" />
+                    <InstagramIcon size={10} color={AppColors.white} />
                   ) : (
-                    <YouTubeIcon size={12} color="#FFFFFF" />
+                    <YouTubeIcon size={10} color={AppColors.white} />
                   )}
-                  <Text style={styles.platformBadgeText}>
-                    {item.platform === 'instagram' ? 'Reel' : 'Short'}
+                  <Text style={styles.platformTagText}>
+                    {item.platform === 'instagram' ? 'REEL' : 'SHORT'}
                   </Text>
                 </View>
 
-                {/* Duration Badge */}
+                {/* Top Right Duration */}
                 {item.duration && (
-                  <View style={styles.durationBadge}>
-                    <Clock size={10} color="#FFFFFF" />
-                    <Text style={styles.durationText}>{item.duration}</Text>
+                  <View style={styles.durationTag}>
+                    <Text style={styles.durationTagText}>{item.duration}</Text>
                   </View>
                 )}
 
                 {/* Center Play Button */}
-                <View style={styles.playIconCircle}>
-                  <Play size={18} color="#FFFFFF" fill="#FFFFFF" />
-                </View>
-
-                {/* Engagement Overlay Bottom */}
-                <View style={styles.thumbStatsRow}>
-                  {item.likesCount !== undefined && (
-                    <View style={styles.thumbStat}>
-                      <Heart size={12} color="#FFFFFF" fill="#FFFFFF" />
-                      <Text style={styles.thumbStatText}>{item.likesCount.toLocaleString()}</Text>
-                    </View>
-                  )}
-                  {item.viewsCount !== undefined && (
-                    <View style={styles.thumbStat}>
-                      <Eye size={12} color="#FFFFFF" />
-                      <Text style={styles.thumbStatText}>{item.viewsCount.toLocaleString()}</Text>
-                    </View>
-                  )}
+                <View style={styles.centerPlayCircle}>
+                  <Play size={16} color={AppColors.white} fill={AppColors.white} />
                 </View>
               </View>
 
-              {/* Card Body */}
-              <View style={styles.cardBody}>
-                <Text style={styles.cardTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
+              {/* Right Column: Card Details */}
+              <View style={styles.detailsColumn}>
+                <View style={styles.detailsTopWrap}>
+                  {/* Title */}
+                  <Text style={styles.cardTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
 
-                <View style={styles.creatorRow}>
-                  {item.creatorAvatar ? (
-                    <Image source={{ uri: item.creatorAvatar }} style={styles.creatorAvatar} />
-                  ) : (
-                    <View style={styles.creatorAvatarFallback} />
-                  )}
-                  <Text style={styles.creatorHandle}>{item.creatorHandle}</Text>
-                  <View style={styles.moderationApprovedChip}>
-                    <ShieldCheck size={11} color={PRIMARY_GREEN} />
-                    <Text style={styles.moderationApprovedText}>Approved</Text>
+                  {/* Creator & Moderation Row */}
+                  <View style={styles.creatorRow}>
+                    {item.creatorAvatar ? (
+                      <Image source={{ uri: item.creatorAvatar }} style={styles.creatorAvatar} />
+                    ) : (
+                      <View style={styles.creatorAvatarFallback}>
+                        <Text style={styles.creatorInitial}>
+                          {item.creatorHandle?.[1] || item.creatorHandle?.[0] || 'T'}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={styles.creatorHandle} numberOfLines={1}>
+                      {item.creatorHandle}
+                    </Text>
+
+                    <View style={styles.approvedPill}>
+                      <ShieldCheck size={11} color={AppColors.success} />
+                      <Text style={styles.approvedPillText}>Approved</Text>
+                    </View>
                   </View>
+
+                  {/* AI Spot Association */}
+                  {item.aiAnalysis?.detectedPlace && (
+                    <View style={styles.aiSpotPill}>
+                      <Sparkles size={11} color={AppColors.primary} />
+                      <Text style={styles.aiSpotText} numberOfLines={1}>
+                        AI Spot: {item.aiAnalysis.detectedPlace}
+                      </Text>
+                    </View>
+                  )}
                 </View>
 
-                {/* AI Highlights Insight */}
-                {item.aiAnalysis?.detectedPlace && (
-                  <View style={styles.aiInsightRow}>
-                    <Sparkles size={12} color={PRIMARY_GREEN} />
-                    <Text style={styles.aiInsightText} numberOfLines={1}>
-                      AI Spot: {item.aiAnalysis.detectedPlace}
-                    </Text>
+                {/* Engagement & Secondary Actions Row */}
+                <View style={styles.engagementRow}>
+                  <View style={styles.leftStats}>
+                    {item.likesCount !== undefined && (
+                      <View style={styles.statItem}>
+                        <Heart size={12} color={AppColors.textMuted} />
+                        <Text style={styles.statNumber}>
+                          {item.likesCount > 999
+                            ? `${(item.likesCount / 1000).toFixed(1).replace('.0', '')},${(item.likesCount % 1000).toString().padStart(3, '0')}`
+                            : item.likesCount}
+                        </Text>
+                      </View>
+                    )}
+
+                    {item.viewsCount !== undefined && (
+                      <View style={styles.statItem}>
+                        <Eye size={12} color={AppColors.textMuted} />
+                        <Text style={styles.statNumber}>
+                          {item.viewsCount > 999
+                            ? `${Math.floor(item.viewsCount / 1000)},${(item.viewsCount % 1000).toString().padStart(3, '0')}`
+                            : item.viewsCount}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                )}
+
+                  <View style={styles.rightActions}>
+                    <Bookmark size={13} color={AppColors.textMuted} />
+                    <MoreHorizontal size={14} color={AppColors.textMuted} />
+                  </View>
+                </View>
               </View>
             </TouchableOpacity>
           ))}
         </View>
       )}
 
-      {/* Reel Preview & Details Modal */}
+      {/* ── MODAL PREVIEW & DETAILS ────────────────────────────────── */}
       <Modal
         visible={!!selectedReel}
         animationType="slide"
@@ -255,10 +333,12 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
                   <View style={styles.modalTitleRow}>
                     <View
                       style={[
-                        styles.platformBadge,
+                        styles.platformTag,
                         {
                           backgroundColor:
-                            selectedReel.platform === 'instagram' ? INSTA_PURPLE : YT_RED,
+                            selectedReel.platform === 'instagram'
+                              ? AppColors.instagram
+                              : AppColors.youtube,
                           position: 'relative',
                           top: 0,
                           left: 0,
@@ -266,17 +346,17 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
                       ]}
                     >
                       {selectedReel.platform === 'instagram' ? (
-                        <InstagramIcon size={12} color="#FFFFFF" />
+                        <InstagramIcon size={12} color={AppColors.white} />
                       ) : (
-                        <YouTubeIcon size={12} color="#FFFFFF" />
+                        <YouTubeIcon size={12} color={AppColors.white} />
                       )}
-                      <Text style={styles.platformBadgeText}>
+                      <Text style={styles.platformTagText}>
                         {selectedReel.platform === 'instagram' ? 'Instagram Reel' : 'YouTube Short'}
                       </Text>
                     </View>
-                    <View style={styles.modalApprovedBadge}>
-                      <ShieldCheck size={13} color={PRIMARY_GREEN} />
-                      <Text style={styles.modalApprovedText}>Moderated & Approved</Text>
+                    <View style={styles.approvedPill}>
+                      <ShieldCheck size={12} color={AppColors.success} />
+                      <Text style={styles.approvedPillText}>Approved</Text>
                     </View>
                   </View>
 
@@ -284,7 +364,7 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
                     style={styles.modalCloseBtn}
                     onPress={() => setSelectedReel(null)}
                   >
-                    <X size={20} color={DARK_NAVY} />
+                    <X size={20} color={AppColors.textPrimary} />
                   </TouchableOpacity>
                 </View>
 
@@ -301,9 +381,11 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
                       activeOpacity={0.85}
                     >
                       <View style={styles.largePlayCircle}>
-                        <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
+                        <Play size={24} color={AppColors.white} fill={AppColors.white} />
                       </View>
-                      <Text style={styles.playPromptText}>Watch on {selectedReel.platform === 'instagram' ? 'Instagram' : 'YouTube'}</Text>
+                      <Text style={styles.playPromptText}>
+                        Watch on {selectedReel.platform === 'instagram' ? 'Instagram' : 'YouTube'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
 
@@ -326,7 +408,7 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
                   {selectedReel.aiAnalysis && (
                     <View style={styles.aiBreakdownCard}>
                       <View style={styles.aiHeaderRow}>
-                        <Sparkles size={16} color={PRIMARY_GREEN} />
+                        <Sparkles size={16} color={AppColors.primary} />
                         <Text style={styles.aiCardTitle}>AI Travel Insight</Text>
                       </View>
 
@@ -348,7 +430,7 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
 
                       {selectedReel.aiAnalysis.bestTimeToVisit && (
                         <View style={styles.timingRow}>
-                          <Clock size={13} color={MUTED_TEXT} />
+                          <Clock size={13} color={AppColors.textMuted} />
                           <Text style={styles.timingText}>
                             Best time: {selectedReel.aiAnalysis.bestTimeToVisit}
                           </Text>
@@ -365,7 +447,7 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
                     onPress={() => handleOpenLink(selectedReel.url)}
                     activeOpacity={0.85}
                   >
-                    <ExternalLink size={18} color="#FFFFFF" />
+                    <ExternalLink size={18} color={AppColors.textOnPrimary} />
                     <Text style={styles.openExternalBtnText}>
                       Open in {selectedReel.platform === 'instagram' ? 'Instagram App' : 'YouTube App'}
                     </Text>
@@ -384,287 +466,395 @@ const styles = StyleSheet.create({
   container: {
     marginTop: 8,
   },
-  sectionHeader: {
+  sectionHeaderRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 12,
   },
-  headerTitleColumn: {
+  headerTitleWrap: {
     flex: 1,
+    paddingRight: 10,
   },
-  titleRow: {
+  titleWithCount: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: DARK_NAVY,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    letterSpacing: -0.2,
   },
   countBadge: {
-    backgroundColor: '#E8F7EE',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  countText: {
-    color: PRIMARY_GREEN,
+  countBadgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
+    color: AppColors.primary,
   },
   sectionSubtitle: {
     fontSize: 12,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  shareReelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FFF1EE',
+    borderWidth: 1,
+    borderColor: '#FFD0C5',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 18,
     marginTop: 2,
   },
-  addPostBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#FCE4EC',
-    borderWidth: 1,
-    borderColor: '#F8BBD0',
-  },
-  addPostBtnText: {
-    color: ACCENT_PINK,
-    fontSize: 13,
+  shareReelBtnText: {
+    fontSize: 12,
     fontWeight: '700',
+    color: AppColors.accent,
   },
-  tabsRow: {
-    flexDirection: 'row',
-    gap: 8,
+
+  /* ── FILTER TABS ───────────────────────────────────────────────── */
+  filtersRow: {
     marginBottom: 16,
   },
-  tabChip: {
+  filtersScroll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#F5F5F7',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: AppColors.surface,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: '#EAE5DC',
   },
-  tabChipActive: {
-    backgroundColor: PRIMARY_GREEN,
-    borderColor: PRIMARY_GREEN,
+  filterPillActive: {
+    backgroundColor: AppColors.primary,
+    borderColor: AppColors.primary,
   },
-  tabChipText: {
+  filterPillText: {
     fontSize: 12,
-    color: '#555555',
     fontWeight: '600',
+    color: AppColors.textPrimary,
   },
-  tabChipTextActive: {
-    color: '#FFFFFF',
+  filterPillTextActive: {
+    color: AppColors.white,
+    fontWeight: '700',
   },
-  itemsGrid: {
-    gap: 16,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-    overflow: 'hidden',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  thumbnailContainer: {
-    height: 180,
-    width: '100%',
-    backgroundColor: '#EAEAEA',
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-  },
-  thumbnailOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  platformBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
+  sortPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: AppColors.surface,
+    borderWidth: 1,
+    borderColor: '#EAE5DC',
   },
-  platformBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+  sortPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
   },
-  durationBadge: {
+
+  /* ── REEL CARDS (HORIZONTAL SPLIT) ─────────────────────────────── */
+  cardsList: {
+    gap: 14,
+  },
+  horizontalCard: {
+    flexDirection: 'row',
+    backgroundColor: AppColors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#EAE5DC',
+    padding: 10,
+    shadowColor: AppColors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  thumbColumn: {
+    width: 145,
+    height: 165,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#10243F',
+  },
+  thumbnailImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  thumbDarkGradient: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(16,36,63,0.22)',
+  },
+  platformTag: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 6,
     paddingVertical: 3,
     borderRadius: 6,
+    zIndex: 2,
   },
-  durationText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '600',
+  platformTagText: {
+    color: AppColors.white,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
-  playIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  durationTag: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    zIndex: 2,
+  },
+  durationTagText: {
+    color: AppColors.white,
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  centerPlayCircle: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -20,
+    marginLeft: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.8)',
+    borderColor: AppColors.white,
+    zIndex: 2,
   },
-  thumbStatsRow: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    flexDirection: 'row',
-    gap: 12,
+
+  /* ── DETAILS COLUMN ────────────────────────────────────────────── */
+  detailsColumn: {
+    flex: 1,
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 4,
+    justifyContent: 'space-between',
   },
-  thumbStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  thumbStatText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  cardBody: {
-    padding: 14,
+  detailsTopWrap: {
+    flex: 1,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
-    color: DARK_NAVY,
-    lineHeight: 20,
+    color: AppColors.textPrimary,
+    lineHeight: 19,
     marginBottom: 8,
+    letterSpacing: -0.2,
   },
   creatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     marginBottom: 6,
   },
   creatorAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
   creatorAvatarFallback: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#E8E8E8',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFE8E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  creatorInitial: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: AppColors.accent,
   },
   creatorHandle: {
-    fontSize: 12,
-    color: '#555555',
+    fontSize: 11,
+    color: AppColors.textSecondary,
     fontWeight: '500',
     flex: 1,
   },
-  moderationApprovedChip: {
+  approvedPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: '#ECFDF5',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  moderationApprovedText: {
+  approvedPillText: {
     fontSize: 10,
-    color: PRIMARY_GREEN,
+    color: AppColors.success,
     fontWeight: '700',
   },
-  aiInsightRow: {
+  aiSpotPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 4,
-    backgroundColor: '#F0FBF5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: 4,
+    backgroundColor: '#E6F4F8',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 6,
+    alignSelf: 'flex-start',
+    marginTop: 2,
   },
-  aiInsightText: {
-    fontSize: 11,
-    color: PRIMARY_GREEN,
+  aiSpotText: {
+    fontSize: 10,
+    color: AppColors.primary,
     fontWeight: '600',
   },
+
+  /* ── ENGAGEMENT ROW ────────────────────────────────────────────── */
+  engagementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F3EFE8',
+    marginTop: 6,
+  },
+  leftStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statNumber: {
+    fontSize: 10,
+    color: AppColors.textMuted,
+    fontWeight: '600',
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  /* ── EMPTY / MODERATION PROOF STATE ────────────────────────────── */
   emptyCard: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 16,
+    backgroundColor: AppColors.surface,
+    borderRadius: 22,
     padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#EAE5DC',
+    shadowColor: AppColors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
   },
-  emptyIconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+  emptyIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FAF7F2',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#EAE5DC',
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: DARK_NAVY,
+    fontSize: 17,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
     marginBottom: 6,
+    letterSpacing: -0.2,
   },
   emptySubtitle: {
     fontSize: 13,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 19,
     marginBottom: 16,
+    paddingHorizontal: 8,
   },
-  boldText: {
-    fontWeight: '700',
-    color: DARK_NAVY,
+  moderationNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginBottom: 18,
   },
-  emptyCtaBtn: {
-    backgroundColor: PRIMARY_GREEN,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+  moderationNoticeText: {
+    flex: 1,
+    fontSize: 11,
+    color: AppColors.success,
+    fontWeight: '600',
+    lineHeight: 15,
   },
-  emptyCtaText: {
-    color: '#FFFFFF',
+  emptySubmitBtn: {
+    backgroundColor: AppColors.primary,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    borderRadius: 22,
+    shadowColor: AppColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  emptySubmitBtnText: {
+    color: AppColors.white,
     fontWeight: '700',
     fontSize: 13,
   },
+
+  /* ── MODAL STYLES ──────────────────────────────────────────────── */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -676,32 +866,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: '#F0EAE1',
   },
   modalTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  modalApprovedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#E8F7EE',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  modalApprovedText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: PRIMARY_GREEN,
-  },
   modalCloseBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: '#FAF7F2',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -722,8 +898,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   modalPlayOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(16,36,63,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
@@ -736,17 +916,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: AppColors.white,
   },
   playPromptText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontWeight: '700',
     fontSize: 13,
   },
   modalReelTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     lineHeight: 24,
     marginBottom: 12,
   },
@@ -764,19 +944,19 @@ const styles = StyleSheet.create({
   modalCreatorName: {
     fontSize: 14,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
   },
   modalDestSub: {
     fontSize: 12,
-    color: PRIMARY_GREEN,
+    color: AppColors.primary,
     fontWeight: '500',
   },
   aiBreakdownCard: {
-    backgroundColor: '#F0FBF5',
+    backgroundColor: '#E6F4F8',
     borderRadius: 14,
     padding: 14,
     borderLeftWidth: 4,
-    borderLeftColor: PRIMARY_GREEN,
+    borderLeftColor: AppColors.primary,
     marginBottom: 16,
   },
   aiHeaderRow: {
@@ -788,11 +968,11 @@ const styles = StyleSheet.create({
   aiCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
   },
   aiSummaryText: {
     fontSize: 13,
-    color: '#333333',
+    color: AppColors.textSecondary,
     lineHeight: 18,
     marginBottom: 10,
   },
@@ -803,45 +983,43 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   vibeChip: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#D1EBF5',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#C2EAD0',
+    borderRadius: 8,
   },
   vibeChipText: {
     fontSize: 11,
-    color: PRIMARY_GREEN,
     fontWeight: '600',
+    color: AppColors.primary,
   },
   timingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginTop: 4,
   },
   timingText: {
-    fontSize: 12,
-    color: MUTED_TEXT,
+    fontSize: 11,
+    color: AppColors.textMuted,
+    fontWeight: '500',
   },
   modalFooter: {
     paddingHorizontal: 20,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    paddingTop: 10,
   },
   openExternalBtn: {
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
+    height: 50,
+    borderRadius: 25,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
   openExternalBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
+    color: AppColors.textOnPrimary,
     fontWeight: '700',
+    fontSize: 15,
   },
 });

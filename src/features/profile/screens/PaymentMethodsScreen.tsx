@@ -5,6 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function PaymentMethodsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'PaymentMethods'>>();
@@ -40,11 +41,26 @@ export default function PaymentMethodsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: AppColors.textPrimary },
   placeholder: { width: 44 },
   content: { padding: 24 },
-  card: { padding: 16, backgroundColor: '#F5F5F7', borderRadius: 12, borderWidth: 1, borderColor: '#E8E8E8' },
-  cardText: { fontSize: 16, color: '#1A1A2E', fontWeight: '500' }
+  card: {
+    padding: 16,
+    backgroundColor: AppColors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  cardText: { fontSize: 16, color: AppColors.textPrimary, fontWeight: '500' },
 });

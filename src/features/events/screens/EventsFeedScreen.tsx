@@ -27,13 +27,9 @@ import {
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
-import { EventItem, DateFilterOption, EventFilterState } from '../types/eventTypes';
+import { EventItem, DateFilterOption } from '../types/eventTypes';
 import { getEventsForDestination } from '../data/mockEventsData';
-
-const PRIMARY_GREEN = '#1FAE5D';
-const DARK_NAVY = '#1A1A2E';
-const MUTED_TEXT = '#8E8E93';
-const ACCENT_PINK = '#E91E63';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function EventsFeedScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -185,18 +181,18 @@ export default function EventsFeedScreen() {
 
         <View style={styles.metaRow}>
           <View style={styles.metaItem}>
-            <Calendar size={14} color={PRIMARY_GREEN} />
+            <Calendar size={14} color={AppColors.primary} />
             <Text style={styles.metaText}>{formatDateDisplay(item.date)}</Text>
           </View>
           <View style={styles.metaDivider} />
           <View style={styles.metaItem}>
-            <Clock size={14} color={PRIMARY_GREEN} />
+            <Clock size={14} color={AppColors.primary} />
             <Text style={styles.metaText}>{item.time}</Text>
           </View>
         </View>
 
         <View style={styles.locationRow}>
-          <MapPin size={14} color={MUTED_TEXT} />
+          <MapPin size={14} color={AppColors.textMuted} />
           <Text style={styles.locationText} numberOfLines={1}>
             {item.location}
           </Text>
@@ -212,7 +208,7 @@ export default function EventsFeedScreen() {
             onPress={() => navigation.navigate('EventDetails', { eventId: item.id })}
           >
             <Text style={styles.detailsBtnText}>View Details</Text>
-            <ChevronRight size={16} color={PRIMARY_GREEN} />
+            <ChevronRight size={16} color={AppColors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -231,7 +227,7 @@ export default function EventsFeedScreen() {
           </Text>
         </View>
         <TouchableOpacity style={styles.filterIconButton} onPress={openFilterModal}>
-          <Filter size={20} color={activeFilterCount > 0 ? '#FFFFFF' : DARK_NAVY} />
+          <Filter size={20} color={activeFilterCount > 0 ? AppColors.white : AppColors.textPrimary} />
           {activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
               <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
@@ -243,17 +239,17 @@ export default function EventsFeedScreen() {
       {/* Search & Quick Filter Bar */}
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
-          <Search size={18} color={MUTED_TEXT} />
+          <Search size={18} color={AppColors.textMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search events, festivals, concerts..."
-            placeholderTextColor={MUTED_TEXT}
+            placeholderTextColor={AppColors.textLight}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <X size={16} color={MUTED_TEXT} />
+              <X size={16} color={AppColors.textMuted} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -306,19 +302,19 @@ export default function EventsFeedScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.activeChipsScroll}>
             {selectedLocation !== 'all' && (
               <View style={styles.activeChip}>
-                <MapPin size={12} color={PRIMARY_GREEN} />
+                <MapPin size={12} color={AppColors.primary} />
                 <Text style={styles.activeChipText}>{selectedLocation}</Text>
                 <TouchableOpacity onPress={() => setSelectedLocation('all')}>
-                  <X size={14} color={DARK_NAVY} />
+                  <X size={14} color={AppColors.textPrimary} />
                 </TouchableOpacity>
               </View>
             )}
             {selectedCategory !== 'all' && (
               <View style={styles.activeChip}>
-                <Tag size={12} color={PRIMARY_GREEN} />
+                <Tag size={12} color={AppColors.primary} />
                 <Text style={styles.activeChipText}>{selectedCategory}</Text>
                 <TouchableOpacity onPress={() => setSelectedCategory('all')}>
-                  <X size={14} color={DARK_NAVY} />
+                  <X size={14} color={AppColors.textPrimary} />
                 </TouchableOpacity>
               </View>
             )}
@@ -333,7 +329,7 @@ export default function EventsFeedScreen() {
       {filteredEvents.length === 0 ? (
         <View style={styles.emptyStateContainer}>
           <View style={styles.emptyIconCircle}>
-            <Calendar size={36} color={MUTED_TEXT} />
+            <Calendar size={36} color={AppColors.textMuted} />
           </View>
           <Text style={styles.emptyTitle}>No events found</Text>
           <Text style={styles.emptySubtitle}>
@@ -369,7 +365,7 @@ export default function EventsFeedScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filter Events</Text>
               <TouchableOpacity onPress={() => setIsFilterModalVisible(false)}>
-                <X size={22} color={DARK_NAVY} />
+                <X size={22} color={AppColors.textPrimary} />
               </TouchableOpacity>
             </View>
 
@@ -520,7 +516,7 @@ export default function EventsFeedScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -529,7 +525,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F2',
+    borderBottomColor: AppColors.borderLight,
+    backgroundColor: AppColors.surface,
   },
   headerCenter: {
     flex: 1,
@@ -538,7 +535,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 12,
-    color: PRIMARY_GREEN,
+    color: AppColors.primary,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -546,13 +543,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
   },
   filterIconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -560,7 +557,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.accent,
     width: 18,
     height: 18,
     borderRadius: 9,
@@ -568,7 +565,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterBadgeText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 10,
     fontWeight: '700',
   },
@@ -580,17 +577,17 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surface,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 44,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.border,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginLeft: 8,
   },
   pillsContainer: {
@@ -604,21 +601,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surface,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.border,
   },
   pillActive: {
-    backgroundColor: PRIMARY_GREEN,
-    borderColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
+    borderColor: AppColors.primary,
   },
   pillText: {
     fontSize: 13,
-    color: '#555555',
+    color: AppColors.textSecondary,
     fontWeight: '500',
   },
   pillTextActive: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontWeight: '600',
   },
   activeChipsRow: {
@@ -633,16 +630,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: AppColors.primaryLight,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#C2EAD0',
+    borderColor: AppColors.primaryLight,
   },
   activeChipText: {
     fontSize: 12,
-    color: DARK_NAVY,
+    color: AppColors.primaryDark,
     fontWeight: '500',
   },
   clearAllBtn: {
@@ -651,7 +648,7 @@ const styles = StyleSheet.create({
   },
   clearAllText: {
     fontSize: 12,
-    color: ACCENT_PINK,
+    color: AppColors.accent,
     fontWeight: '600',
   },
   listContent: {
@@ -659,12 +656,12 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: AppColors.border,
     overflow: 'hidden',
-    shadowColor: '#000000',
+    shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -674,7 +671,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     height: 170,
     width: '100%',
-    backgroundColor: '#EAEAEA',
+    backgroundColor: AppColors.surfaceMuted,
     position: 'relative',
   },
   cardImage: {
@@ -685,13 +682,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: 'rgba(26, 26, 46, 0.85)',
+    backgroundColor: 'rgba(16, 36, 63, 0.85)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   categoryBadgeText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -699,13 +696,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 12,
     right: 12,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   priceBadgeText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -715,7 +712,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     lineHeight: 24,
     marginBottom: 8,
   },
@@ -733,12 +730,12 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D1D1D6',
+    backgroundColor: AppColors.border,
     marginHorizontal: 8,
   },
   metaText: {
     fontSize: 13,
-    color: '#444444',
+    color: AppColors.textSecondary,
     fontWeight: '500',
   },
   locationRow: {
@@ -749,18 +746,18 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 13,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
     flex: 1,
   },
   shortDesc: {
     fontSize: 13,
-    color: '#666666',
+    color: AppColors.textSecondary,
     lineHeight: 18,
     marginBottom: 12,
   },
   cardFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F7',
+    borderTopColor: AppColors.borderLight,
     paddingTop: 12,
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -773,7 +770,7 @@ const styles = StyleSheet.create({
   detailsBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: PRIMARY_GREEN,
+    color: AppColors.primary,
   },
   emptyStateContainer: {
     flex: 1,
@@ -786,42 +783,44 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: AppColors.borderLight,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
   },
   resetFiltersBtn: {
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
   },
   resetFiltersBtnText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontWeight: '600',
     fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: AppColors.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -833,12 +832,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: AppColors.borderLight,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
   },
   modalBody: {
     paddingHorizontal: 20,
@@ -847,7 +846,7 @@ const styles = StyleSheet.create({
   filterSectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginTop: 12,
     marginBottom: 10,
   },
@@ -861,21 +860,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 18,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.borderLight,
   },
   optionChipActive: {
-    backgroundColor: PRIMARY_GREEN,
-    borderColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
+    borderColor: AppColors.primary,
   },
   optionChipText: {
     fontSize: 13,
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     fontWeight: '500',
   },
   optionChipTextActive: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontWeight: '600',
   },
   modalFooter: {
@@ -883,7 +882,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: AppColors.borderLight,
     gap: 12,
   },
   modalResetBtn: {
@@ -891,12 +890,12 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#D1D1D6',
+    borderColor: AppColors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalResetBtnText: {
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     fontWeight: '600',
     fontSize: 15,
   },
@@ -904,12 +903,12 @@ const styles = StyleSheet.create({
     flex: 2,
     height: 48,
     borderRadius: 24,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalApplyBtnText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontWeight: '700',
     fontSize: 15,
   },

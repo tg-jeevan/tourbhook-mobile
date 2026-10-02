@@ -1,3 +1,5 @@
+import { AppColors } from '../../../core/theme/colors';
+
 export type ImportSourceId = 'google_maps' | 'tripit' | 'csv';
 
 export interface ImportSourceOption {
@@ -14,21 +16,21 @@ export const IMPORT_SOURCES: ImportSourceOption[] = [
     title: 'Google Maps',
     description: 'Import saved places and routes',
     iconEmoji: '📍',
-    iconBackgroundColor: '#FFFFFF',
+    iconBackgroundColor: AppColors.surface,
   },
   {
     id: 'tripit',
     title: 'Tripit',
     description: 'Import your travel itineraries',
     iconEmoji: '✈️',
-    iconBackgroundColor: '#FDECE3',
+    iconBackgroundColor: AppColors.accentLight,
   },
   {
     id: 'csv',
     title: 'CSV File',
     description: 'Import your travel data (CSV)',
     iconEmoji: '📄',
-    iconBackgroundColor: '#E8ECF2',
+    iconBackgroundColor: AppColors.surfaceMuted,
   },
 ];
 

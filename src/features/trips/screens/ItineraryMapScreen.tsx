@@ -5,13 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Platform,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
 import { BackButton } from '../../../core/components/BackButton';
+import { AppColors } from '../../../core/theme/colors';
 
 interface RouteStop {
   id: string;
@@ -73,14 +72,12 @@ export default function ItineraryMapScreen() {
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
 
-  // Helper to sort stops by sequence order (ascending) before rendering
   const getOrderedRouteStops = (stops: RouteStop[]): RouteStop[] => {
     return [...stops].sort((a, b) => a.sequence - b.sequence);
   };
 
   const orderedStops = getOrderedRouteStops(mockRouteStops);
 
-  // Automatically fit map camera to contain all route markers with edge padding
   useEffect(() => {
     if (mapRef.current && orderedStops.length > 0) {
       const coordinates = orderedStops.map((stop) => ({
@@ -88,7 +85,6 @@ export default function ItineraryMapScreen() {
         longitude: stop.longitude,
       }));
 
-      // Small delay to ensure MapView layout has occurred on Android
       const timer = setTimeout(() => {
         mapRef.current?.fitToCoordinates(coordinates, {
           edgePadding: { top: 60, right: 60, bottom: 60, left: 60 },
@@ -102,7 +98,6 @@ export default function ItineraryMapScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      {/* Header section matching Flutter visual styling */}
       <View style={styles.header}>
         <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headerTextContainer}>
@@ -111,7 +106,6 @@ export default function ItineraryMapScreen() {
         </View>
       </View>
 
-      {/* Day Tabs */}
       <View style={styles.tabsContainer}>
         {[1, 2, 3].map((day) => {
           const isSelected = selectedDay === day;
@@ -129,7 +123,6 @@ export default function ItineraryMapScreen() {
         })}
       </View>
 
-      {/* Main Map View Container */}
       <View style={styles.mapContainer}>
         {orderedStops.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -146,7 +139,6 @@ export default function ItineraryMapScreen() {
               longitudeDelta: 0.05,
             }}
           >
-            {/* Sequential markers */}
             {orderedStops.map((stop) => {
               const isSelected = selectedStopId === stop.id;
               return (
@@ -172,20 +164,18 @@ export default function ItineraryMapScreen() {
               );
             })}
 
-            {/* AI Route polyline connector following sequence sorting */}
             <Polyline
               coordinates={orderedStops.map((stop) => ({
                 latitude: stop.latitude,
                 longitude: stop.longitude,
               }))}
-              strokeColor="#4285F4" // Google route blue
+              strokeColor={AppColors.primary}
               strokeWidth={4}
             />
           </MapView>
         )}
       </View>
 
-      {/* Timeline List section below map */}
       <ScrollView contentContainerStyle={styles.timelineList}>
         {orderedStops.map((stop, index) => {
           const isLast = index === orderedStops.length - 1;
@@ -198,7 +188,6 @@ export default function ItineraryMapScreen() {
               onPress={() => setSelectedStopId(stop.id)}
               activeOpacity={0.8}
             >
-              {/* Left sequential indicator */}
               <View style={styles.sequenceCol}>
                 <View
                   style={[
@@ -218,7 +207,6 @@ export default function ItineraryMapScreen() {
                 {!isLast && <View style={styles.timelineLine} />}
               </View>
 
-              {/* Right place detail content */}
               <View style={styles.infoCol}>
                 <Text style={styles.timeText}>{stop.time}</Text>
                 <Text style={styles.nameText}>{stop.name}</Text>
@@ -235,7 +223,7 @@ export default function ItineraryMapScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -243,6 +231,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
   },
   headerTextContainer: {
     marginLeft: 16,
@@ -250,20 +241,20 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1A1A2E',
+    color: AppColors.textPrimary,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#E91E63',
-    fontWeight: '500',
+    color: AppColors.primary,
+    fontWeight: '600',
     marginTop: 2,
   },
 
-  // Day Tabs
   tabsContainer: {
     flexDirection: 'row',
+    backgroundColor: AppColors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: AppColors.borderLight,
     paddingHorizontal: 24,
   },
   tab: {
@@ -273,28 +264,31 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabSelected: {
-    borderBottomColor: '#E91E63',
+    borderBottomColor: AppColors.primary,
   },
   tabText: {
     fontSize: 16,
-    color: '#8E8E93',
+    color: AppColors.textMuted,
     fontWeight: '400',
   },
   tabTextSelected: {
-    color: '#E91E63',
+    color: AppColors.primary,
     fontWeight: '600',
   },
 
-  // Map Container
   mapContainer: {
     height: 350,
     width: '100%',
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: AppColors.borderLight,
   },
   map: {
-    ...StyleSheet.absoluteFill,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   emptyContainer: {
     flex: 1,
@@ -303,36 +297,34 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#8E8E93',
+    color: AppColors.textMuted,
   },
 
-  // Numbered Sequential Markers
   customMarker: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#E91E63',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: AppColors.white,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: AppColors.black,
     shadowOpacity: 0.25,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 2 },
   },
   customMarkerSelected: {
-    backgroundColor: '#4285F4',
-    transform: [{ scale: 1.2 }],
+    backgroundColor: AppColors.accent,
+    transform: [{ scale: 1.25 }],
   },
   customMarkerText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontSize: 13,
     fontWeight: '700',
   },
 
-  // Timeline list view below map
   timelineList: {
     padding: 24,
   },
@@ -341,7 +333,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   timelineRowSelected: {
-    backgroundColor: '#FCE4EC',
+    backgroundColor: AppColors.primaryLight,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
@@ -354,28 +346,28 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: AppColors.border,
   },
   sequenceBadgeSelected: {
-    backgroundColor: '#E91E63',
-    borderColor: '#E91E63',
+    backgroundColor: AppColors.primary,
+    borderColor: AppColors.primary,
   },
   sequenceBadgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#8E8E93',
+    color: AppColors.textMuted,
   },
   sequenceBadgeTextSelected: {
-    color: '#FFFFFF',
+    color: AppColors.white,
   },
   timelineLine: {
     flex: 1,
     width: 2,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: AppColors.border,
     marginTop: 4,
   },
   infoCol: {
@@ -384,17 +376,17 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#8E8E93',
+    color: AppColors.textMuted,
   },
   nameText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A2E',
+    color: AppColors.textPrimary,
     marginTop: 2,
   },
   durationText: {
     fontSize: 13,
-    color: '#8E8E93',
+    color: AppColors.textMuted,
     marginTop: 2,
   },
 });

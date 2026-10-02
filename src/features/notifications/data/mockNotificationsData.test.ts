@@ -2,8 +2,13 @@ import {
   RAW_MOCK_NOTIFICATIONS,
   getActiveNotifications,
 } from './mockNotificationsData';
+import { notificationStore } from './notificationStore';
 
 describe('Notifications & Travel News (SCRUM-34)', () => {
+  beforeEach(() => {
+    notificationStore.resetToInitial();
+  });
+
   it('should include notifications with age <= 365 days', () => {
     const active = getActiveNotifications();
     const recentNotif = active.find((n) => n.id === 'notif-1');
@@ -46,4 +51,44 @@ describe('Notifications & Travel News (SCRUM-34)', () => {
       }
     });
   });
+
+  it('markAllAsRead should mark all items as read and reset unreadCount to 0 while keeping history', () => {
+    // Initial unread items exist
+    expect(notificationStore.getUnreadCount()).toBeGreaterThan(0);
+    const initialCount = notificationStore.getNotifications().length;
+
+    // Trigger Mark All as Read
+    notificationStore.markAllAsRead();
+
+    // Unread count is now 0
+    expect(notificationStore.getUnreadCount()).toBe(0);
+
+    // All notifications still exist in 365-day history
+    const after = notificationStore.getNotifications();
+    expect(after.length).toBe(initialCount);
+    after.forEach((item) => {
+      expect(item.isRead).toBe(true);
+    });
+  });
+
+  it('adding a new notification increases unread count accordingly without affecting existing read items', () => {
+    notificationStore.markAllAsRead();
+    expect(notificationStore.getUnreadCount()).toBe(0);
+
+    notificationStore.addNotification({
+      id: 'notif-new-1',
+      title: 'New Flight Deal to Rome',
+      message: 'Exclusive 20% discount on flights departing next month.',
+      timestamp: new Date().toISOString(),
+      type: 'travel_news',
+      destination: 'Rome, Italy',
+      isRead: false,
+    });
+
+    expect(notificationStore.getUnreadCount()).toBe(1);
+    const notifs = notificationStore.getNotifications();
+    const newNotif = notifs.find((n) => n.id === 'notif-new-1');
+    expect(newNotif?.isRead).toBe(false);
+  });
 });
+

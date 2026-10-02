@@ -30,6 +30,16 @@ import DevScreenTester from './DevScreenNavigator';
 import ItineraryPackingScreen from '../../features/trips/screens/ItineraryPackingScreen';
 import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen';
 import CheckingPackingScreen from '../../features/trips/screens/CheckingPackingScreen';
+import SplashScreen from '../../features/auth/screens/SplashScreen';
+import WelcomeScreen from '../../features/auth/screens/WelcomeScreen';
+import SignInScreen from '../../features/auth/screens/SignInScreen';
+import SignUpScreen from '../../features/auth/screens/SignUpScreen';
+import ForgotPasswordScreen from '../../features/auth/screens/ForgotPasswordScreen';
+import OTPVerificationScreen from '../../features/auth/screens/OTPVerificationScreen';
+import ResetPasswordScreen from '../../features/auth/screens/ResetPasswordScreen';
+import ExploreFeedScreen from '../../features/explore/screens/ExploreFeedScreen';
+import ReelViewerScreen from '../../features/explore/screens/ReelViewerScreen';
+import DestinationDetailsScreen from '../../features/explore/screens/DestinationDetailsScreen';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -65,7 +75,18 @@ export const AppNavigator = () => {
       <Stack.Screen name="EventsFeed" component={EventsFeedScreen} />
       <Stack.Screen name="EventDetails" component={EventDetailsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="ExploreFeed" component={ExploreFeedScreen} />
+      <Stack.Screen name="ReelViewer" component={ReelViewerScreen} />
+      <Stack.Screen name="DestinationDetails" component={DestinationDetailsScreen} />
       <Stack.Screen name="DevScreenTester" component={DevScreenTester} />
+      {/* Auth screens (accessible from DevScreenTester) */}
+      <Stack.Screen name="Splash" component={SplashScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      <Stack.Screen name="SignIn" component={SignInScreen} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 };

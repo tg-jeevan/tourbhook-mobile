@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { AppColors } from '../theme/colors';
 
 interface PrimaryButtonProps {
   text: string;
@@ -23,7 +24,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       activeOpacity={0.8}
     >
       {isLoading ? (
-        <ActivityIndicator color="#FFFFFF" size="small" />
+        <ActivityIndicator color={AppColors.textOnPrimary} size="small" />
       ) : (
         <Text style={[styles.text, textStyle]}>{text}</Text>
       )}
@@ -36,12 +37,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#E91E63',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   text: {
-    color: '#FFFFFF',
+    color: AppColors.textOnPrimary,
     fontSize: 16,
     fontWeight: '600',
   },

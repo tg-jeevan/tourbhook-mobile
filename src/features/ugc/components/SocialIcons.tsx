@@ -1,12 +1,13 @@
 import React from 'react';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import { AppColors } from '../../../core/theme/colors';
 
 interface IconProps {
   size?: number;
   color?: string;
 }
 
-export const InstagramIcon: React.FC<IconProps> = ({ size = 20, color = '#FFFFFF' }) => {
+export const InstagramIcon: React.FC<IconProps> = ({ size = 20, color = AppColors.white }) => {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Rect
@@ -33,7 +34,7 @@ export const InstagramIcon: React.FC<IconProps> = ({ size = 20, color = '#FFFFFF
   );
 };
 
-export const YouTubeIcon: React.FC<IconProps> = ({ size = 20, color = '#FFFFFF' }) => {
+export const YouTubeIcon: React.FC<IconProps> = ({ size = 20, color = AppColors.white }) => {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path

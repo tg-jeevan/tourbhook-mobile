@@ -3,10 +3,9 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { X, MoreVertical } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
-import { BackButton } from '../../../core/components/BackButton';
-import { Typography } from '../../../core/theme/typography';
-
+import { AppColors } from '../../../core/theme/colors';
 import { UGCContentDisplay } from '../../ugc/components/UGCContentDisplay';
 
 export default function PlaceDetailsScreen() {
@@ -17,12 +16,22 @@ export default function PlaceDetailsScreen() {
   const placeId = route.params?.placeId || '1';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      {/* Top Header */}
       <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
+        <TouchableOpacity
+          style={styles.headerIconBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <X size={24} color={AppColors.textPrimary} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Place Details</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
+          <MoreVertical size={22} color={AppColors.textPrimary} />
+        </TouchableOpacity>
       </View>
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Image source={require('../../../../assets/images/welcomeImage.jpg')} style={styles.image} />
         <View style={styles.gap16} />
@@ -34,6 +43,7 @@ export default function PlaceDetailsScreen() {
               placeName,
             })
           }
+          activeOpacity={0.8}
         >
           <Text style={styles.rating}>⭐ 4.8 (1,250 reviews)</Text>
         </TouchableOpacity>
@@ -54,9 +64,9 @@ export default function PlaceDetailsScreen() {
           }
           activeOpacity={0.85}
         >
-          <Text style={styles.nearbyEventsText}>🎪 Browse Events & Activities in Paris</Text>
+          <Text style={styles.nearbyEventsText}>🎪 Browse Events & Activities in {placeName}</Text>
         </TouchableOpacity>
-        <View style={styles.gap16} />
+        <View style={styles.gap24} />
 
         {/* UGC Content Display */}
         <UGCContentDisplay
@@ -69,17 +79,31 @@ export default function PlaceDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { ...Typography.screenTitle, fontSize: 18 },
-  placeholder: { width: 44 },
-  content: { padding: 24 },
-  image: { width: '100%', height: 220, borderRadius: 16 },
-
-  title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
-  rating: { fontSize: 14, color: '#8E8E93', marginTop: 4 },
-  desc: { fontSize: 14, color: 'rgba(26,26,46,0.8)', lineHeight: 21, marginTop: 12 },
-  nearbyEventsBtn: { padding: 14, backgroundColor: '#E8F7EE', borderRadius: 12, borderWidth: 1, borderColor: '#C2EAD0', alignItems: 'center' },
-  nearbyEventsText: { fontSize: 14, fontWeight: '700', color: '#1FAE5D' },
-  gap16: { height: 16 }
+  safeArea: { flex: 1, backgroundColor: '#FAF7F2' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAF7F2',
+  },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: AppColors.textPrimary },
+  headerIconBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
+  image: { width: '100%', height: 200, borderRadius: 20 },
+  title: { fontSize: 26, fontWeight: '800', color: AppColors.textPrimary, letterSpacing: -0.3 },
+  rating: { fontSize: 13, color: AppColors.textMuted, marginTop: 4, fontWeight: '500' },
+  desc: { fontSize: 13, color: AppColors.textSecondary, lineHeight: 20, marginTop: 8 },
+  nearbyEventsBtn: {
+    padding: 14,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    alignItems: 'center',
+  },
+  nearbyEventsText: { fontSize: 13, fontWeight: '700', color: AppColors.primary },
+  gap16: { height: 14 },
+  gap24: { height: 20 },
 });

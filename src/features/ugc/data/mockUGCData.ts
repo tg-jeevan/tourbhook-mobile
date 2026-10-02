@@ -185,14 +185,14 @@ export const MOCK_UGC_ITEMS: UGCItem[] = [
     },
   },
 
-  // ── TOKYO, JAPAN (MIXED APPROVED & PENDING/REJECTED FOR TESTING) 
+  // ── KYOTO & TOKYO (KYOTO APPROVED, TOKYO PENDING/REJECTED FOR MOD PROOF) 
   {
-    id: 'ugc-tokyo-approved-1',
-    destination: 'Tokyo, Japan',
+    id: 'ugc-kyoto-approved-1',
+    destination: 'Kyoto, Japan',
     platform: 'youtube',
-    url: 'https://youtube.com/shorts/TokyoShibuyaCrossingNight',
-    title: 'Crazy Energy of Shibuya Crossing from Above 🚶‍♂️✨',
-    creatorHandle: '@tokyo_street_vibes',
+    url: 'https://youtube.com/shorts/KyotoBambooForestWalk',
+    title: 'Arashiyama Bamboo Grove at Sunrise 🎋✨',
+    creatorHandle: '@kyoto_vibes',
     creatorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     thumbnailUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&auto=format&fit=crop&q=80',
     status: 'approved', // APPROVED -> VISIBLE
@@ -201,10 +201,10 @@ export const MOCK_UGC_ITEMS: UGCItem[] = [
     viewsCount: 78000,
     duration: '0:30',
     aiAnalysis: {
-      summary: 'Bird-eye view of Shibuya scramble crossing illuminated by colossal neon billboards.',
-      vibeTags: ['Neon', 'Night Walk', 'Iconic', 'Cyberpunk'],
-      detectedPlace: 'Shibuya Scramble Crossing',
-      bestTimeToVisit: '20:00 - 22:00',
+      summary: 'Serene sunrise walk through Arashiyama bamboo forest with morning sunlight filtering through towering stalks.',
+      vibeTags: ['Bamboo', 'Morning Walk', 'Iconic', 'Zen'],
+      detectedPlace: 'Arashiyama Bamboo Grove',
+      bestTimeToVisit: '06:30 - 08:00',
       moderationScore: 0.99,
     },
   },

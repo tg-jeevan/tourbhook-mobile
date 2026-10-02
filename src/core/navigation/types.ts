@@ -13,6 +13,15 @@ export type AuthStackParamList = {
 };
 
 export type AppStackParamList = {
+  // --- AUTH SCREENS (accessible from DevScreenTester) ---
+  Splash: undefined;
+  Welcome: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  ForgotPassword: undefined;
+  OTPVerification: { email: string };
+  ResetPassword: { email: string; otp: string };
+  // --- APP SCREENS ---
   MyItineraries: undefined;
   DevScreenTester: undefined;
   PlanTrip: undefined;
@@ -43,6 +52,9 @@ export type AppStackParamList = {
   EventDetails: { eventId: string };
   Notifications: undefined;
   InstagramConnect: undefined;
+  ExploreFeed: undefined;
+  ReelViewer: { reelId?: string; reel?: any } | undefined;
+  DestinationDetails: { destinationId?: string; destinationName: string; country?: string };
 };
 
 export type RootStackParamList = {

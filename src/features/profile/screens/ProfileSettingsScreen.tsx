@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { BackButton } from '../../../core/components/BackButton';
 import { CustomTextField } from '../../../core/components/CustomTextField';
 import { PrimaryButton } from '../../../core/components/PrimaryButton';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function ProfileSettingsScreen() {
   const navigation = useNavigation();
@@ -30,11 +31,20 @@ export default function ProfileSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: AppColors.textPrimary },
   placeholder: { width: 44 },
   content: { padding: 24 },
   gap20: { height: 20 },
-  gap32: { height: 32 }
+  gap32: { height: 32 },
 });

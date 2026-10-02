@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { useAuth } from '../../../core/auth/AuthContext';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function ProfileMenuScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'ProfileMenu'>>();
@@ -60,25 +61,47 @@ export default function ProfileMenuScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: AppColors.textPrimary },
   placeholder: { width: 44 },
   content: { padding: 24 },
-  profileHeader: { alignItems: 'center', marginBottom: 32 },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#F5F5F7', marginBottom: 12, borderWidth: 1.5, borderColor: '#E8E8E8' },
-  name: { fontSize: 20, fontWeight: '700', color: '#1A1A2E' },
-  email: { fontSize: 14, color: '#8E8E93', marginTop: 4 },
-  menu: { borderTopWidth: 1, borderTopColor: '#EEEEEE' },
-  item: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
-  itemText: { fontSize: 16, color: '#1A1A2E' },
+  profileHeader: { alignItems: 'center', marginBottom: 28 },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: AppColors.surface,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: AppColors.border,
+  },
+  name: { fontSize: 20, fontWeight: '700', color: AppColors.textPrimary },
+  email: { fontSize: 14, color: AppColors.textMuted, marginTop: 4 },
+  menu: {
+    backgroundColor: AppColors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+  },
+  item: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: AppColors.borderLight },
+  itemText: { fontSize: 15, color: AppColors.textPrimary, fontWeight: '500' },
   logoutItem: {
-    borderBottomColor: '#FCE4EC',
+    borderBottomWidth: 0,
   },
   logoutText: {
-    color: '#E91E63',
+    color: AppColors.error,
     fontWeight: '600',
   },
 });

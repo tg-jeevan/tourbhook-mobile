@@ -3,10 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
   Modal,
-  ScrollView,
   Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,46 +14,55 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Bell,
   Newspaper,
-  Compass,
-  Calendar,
-  AlertTriangle,
-  Info,
-  CheckCheck,
   X,
   Share2,
-  ChevronRight,
-  ShieldAlert,
   Clock,
   MapPin,
-  Sparkles,
+  Check,
+  CheckCheck,
+  Trash2,
+  Eye,
+  EyeOff,
+  Info,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
-import { BackButton } from '../../../core/components/BackButton';
 import {
   NotificationItem,
   NotificationFilterType,
   TravelNewsContent,
 } from '../types/notificationTypes';
-import { getActiveNotifications } from '../data/mockNotificationsData';
+import { useNotificationState } from '../data/notificationStore';
+import { AppColors } from '../../../core/theme/colors';
+import { NotificationHeader } from '../components/NotificationHeader';
+import { NotificationFilters } from '../components/NotificationFilters';
+import { NotificationCard } from '../components/NotificationCard';
 
-const PRIMARY_GREEN = '#1FAE5D';
-const DARK_NAVY = '#1A1A2E';
-const MUTED_TEXT = '#8E8E93';
-const ACCENT_PINK = '#E91E63';
-const AMBER_ADVISORY = '#F59E0B';
+interface TimelineSection {
+  id: 'today' | 'this_week' | 'earlier';
+  title: string;
+  dotColor: string;
+  items: NotificationItem[];
+}
 
 export default function NotificationsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
-  // Active notifications filtered by 365-day retention rule
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
-    getActiveNotifications()
-  );
+  // Active notifications and shared unread count from store
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+    markAsRead,
+    toggleReadStatus,
+    deleteNotification,
+  } = useNotificationState();
+
   const [activeFilter, setActiveFilter] = useState<NotificationFilterType>('all');
   const [selectedNews, setSelectedNews] = useState<{
     item: NotificationItem;
     content: TravelNewsContent;
   } | null>(null);
+  const [actionItem, setActionItem] = useState<NotificationItem | null>(null);
 
   // Filtered list based on active tab
   const displayedNotifications = useMemo(() => {
@@ -63,25 +71,67 @@ export default function NotificationsScreen() {
         return item.type === 'travel_news' || item.type === 'destination_alert';
       }
       if (activeFilter === 'itinerary') {
-        return item.type === 'itinerary_update';
+        return item.type === 'itinerary_update' || item.type === 'travel_tip';
       }
       return true;
     });
   }, [notifications, activeFilter]);
 
-  const unreadCount = useMemo(() => {
-    return notifications.filter((n) => !n.isRead).length;
-  }, [notifications]);
+  // Group notifications into dynamic timeline sections (Today, This Week, Earlier)
+  const timelineSections = useMemo<TimelineSection[]>(() => {
+    const now = Date.now();
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const ONE_WEEK_MS = 7 * ONE_DAY_MS;
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-  };
+    const todayItems: NotificationItem[] = [];
+    const thisWeekItems: NotificationItem[] = [];
+    const earlierItems: NotificationItem[] = [];
+
+    displayedNotifications.forEach((item) => {
+      const itemTime = new Date(item.timestamp).getTime();
+      const ageMs = Math.max(0, now - itemTime);
+
+      if (ageMs < ONE_DAY_MS) {
+        todayItems.push(item);
+      } else if (ageMs < ONE_WEEK_MS) {
+        thisWeekItems.push(item);
+      } else {
+        earlierItems.push(item);
+      }
+    });
+
+    const sections: TimelineSection[] = [];
+    if (todayItems.length > 0) {
+      sections.push({
+        id: 'today',
+        title: 'Today',
+        dotColor: '#0E7490', // Ocean Teal
+        items: todayItems,
+      });
+    }
+    if (thisWeekItems.length > 0) {
+      sections.push({
+        id: 'this_week',
+        title: 'This Week',
+        dotColor: '#0284C7', // Blue
+        items: thisWeekItems,
+      });
+    }
+    if (earlierItems.length > 0) {
+      sections.push({
+        id: 'earlier',
+        title: 'Earlier',
+        dotColor: '#64748B', // Slate
+        items: earlierItems,
+      });
+    }
+
+    return sections;
+  }, [displayedNotifications]);
 
   const handleNotificationPress = (item: NotificationItem) => {
-    // Mark as read
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
-    );
+    // Mark as read in store
+    markAsRead(item.id);
 
     // If it has news content, open the news reader modal
     if (item.newsContent) {
@@ -90,6 +140,16 @@ export default function NotificationsScreen() {
       // Navigate to trip details if it is an itinerary update
       navigation.navigate('TripDetails', { tripId: item.tripId });
     }
+  };
+
+  const handleToggleReadStatus = (item: NotificationItem) => {
+    toggleReadStatus(item.id);
+    setActionItem(null);
+  };
+
+  const handleDeleteNotification = (itemId: string) => {
+    deleteNotification(itemId);
+    setActionItem(null);
   };
 
   const handleShareNews = async () => {
@@ -104,194 +164,128 @@ export default function NotificationsScreen() {
     }
   };
 
-  const formatRelativeTime = (isoString: string) => {
-    const diffMs = Date.now() - new Date(isoString).getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMinutes / 60);
-    const diffDays = Math.floor(diffHours / 24);
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      {/* ── 1. HEADER ──────────────────────────────────────────────── */}
+      <NotificationHeader
+        onClose={() => navigation.goBack()}
+        onMarkAllAsRead={markAllAsRead}
+        hasUnread={unreadCount > 0}
+      />
 
-    if (diffMinutes < 60) return `${Math.max(1, diffMinutes)}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 30) return `${diffDays}d ago`;
+      {/* ── 2. NOTIFICATION FILTERS ────────────────────────────────── */}
+      <NotificationFilters
+        activeFilter={activeFilter}
+        onSelectFilter={(f) => setActiveFilter(f)}
+      />
 
-    try {
-      const d = new Date(isoString);
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch {
-      return `${diffDays}d ago`;
-    }
-  };
-
-  const getNotificationIcon = (type: NotificationItem['type']) => {
-    switch (type) {
-      case 'travel_news':
-        return <Newspaper size={18} color="#FFFFFF" />;
-      case 'destination_alert':
-        return <AlertTriangle size={18} color="#FFFFFF" />;
-      case 'itinerary_update':
-        return <Compass size={18} color="#FFFFFF" />;
-      default:
-        return <Bell size={18} color="#FFFFFF" />;
-    }
-  };
-
-  const getNotificationIconBg = (type: NotificationItem['type']) => {
-    switch (type) {
-      case 'travel_news':
-        return PRIMARY_GREEN;
-      case 'destination_alert':
-        return AMBER_ADVISORY;
-      case 'itinerary_update':
-        return '#3B82F6';
-      default:
-        return DARK_NAVY;
-    }
-  };
-
-  const renderNotificationCard = ({ item }: { item: NotificationItem }) => (
-    <TouchableOpacity
-      style={[styles.notifCard, !item.isRead && styles.notifCardUnread]}
-      activeOpacity={0.85}
-      onPress={() => handleNotificationPress(item)}
-    >
-      <View
-        style={[
-          styles.iconContainer,
-          { backgroundColor: getNotificationIconBg(item.type) },
-        ]}
+      {/* ── 3. TIMELINE & LIST ─────────────────────────────────────── */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        {getNotificationIcon(item.type)}
-      </View>
-
-      <View style={styles.notifBody}>
-        <View style={styles.notifHeaderRow}>
-          <View style={styles.typeBadge}>
-            <Text style={styles.typeBadgeText}>
-              {item.type === 'travel_news'
-                ? 'Travel News'
-                : item.type === 'destination_alert'
-                ? 'Travel Alert'
-                : 'Itinerary'}
+        {timelineSections.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconBg}>
+              <Bell size={36} color={AppColors.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>No notifications</Text>
+            <Text style={styles.emptySubtitle}>
+              {activeFilter === 'travel_news'
+                ? 'No recent travel news or advisory notifications for your destinations.'
+                : activeFilter === 'itinerary'
+                ? 'No recent itinerary updates or booking notices.'
+                : 'You are all caught up with your notifications.'}
             </Text>
           </View>
-          <Text style={styles.timeText}>{formatRelativeTime(item.timestamp)}</Text>
-        </View>
-
-        <Text style={[styles.notifTitle, !item.isRead && styles.notifTitleUnread]}>
-          {item.title}
-        </Text>
-
-        <Text style={styles.notifMessage} numberOfLines={2}>
-          {item.message}
-        </Text>
-
-        {item.destination && (
-          <View style={styles.destinationTagRow}>
-            <MapPin size={12} color={PRIMARY_GREEN} />
-            <Text style={styles.destinationTagText}>{item.destination}</Text>
-          </View>
-        )}
-
-        {item.newsContent && (
-          <View style={styles.readNewsPrompt}>
-            <Text style={styles.readNewsPromptText}>Tap to read full travel update</Text>
-            <ChevronRight size={14} color={PRIMARY_GREEN} />
-          </View>
-        )}
-      </View>
-
-      {!item.isRead && <View style={styles.unreadDot} />}
-    </TouchableOpacity>
-  );
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Top Header */}
-      <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          <Text style={styles.retentionNotice}>365-day history</Text>
-        </View>
-        {unreadCount > 0 ? (
-          <TouchableOpacity style={styles.markReadBtn} onPress={markAllAsRead}>
-            <CheckCheck size={18} color={PRIMARY_GREEN} />
-          </TouchableOpacity>
         ) : (
-          <View style={styles.placeholder} />
-        )}
-      </View>
+          <View style={styles.timelineContainer}>
+            {/* Left Vertical Line */}
+            <View style={styles.timelineVerticalLine} />
 
-      {/* Filter Tabs */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeFilter === 'all' && styles.tabBtnActive]}
-          onPress={() => setActiveFilter('all')}
-        >
-          <Text
-            style={[styles.tabText, activeFilter === 'all' && styles.tabTextActive]}
-          >
-            All
-          </Text>
-        </TouchableOpacity>
+            {/* Sections */}
+            {timelineSections.map((section) => (
+              <View key={section.id} style={styles.sectionWrap}>
+                {/* Section Header */}
+                <View style={styles.sectionHeaderRow}>
+                  <View
+                    style={[styles.timelineNode, { backgroundColor: section.dotColor }]}
+                  />
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                </View>
 
-        <TouchableOpacity
-          style={[
-            styles.tabBtn,
-            activeFilter === 'travel_news' && styles.tabBtnActive,
-          ]}
-          onPress={() => setActiveFilter('travel_news')}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeFilter === 'travel_news' && styles.tabTextActive,
-            ]}
-          >
-            Travel News & Alerts
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeFilter === 'itinerary' && styles.tabBtnActive]}
-          onPress={() => setActiveFilter('itinerary')}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeFilter === 'itinerary' && styles.tabTextActive,
-            ]}
-          >
-            Itinerary
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Notifications List */}
-      {displayedNotifications.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconBg}>
-            <Bell size={36} color={MUTED_TEXT} />
+                {/* Section Cards */}
+                <View style={styles.sectionCardsWrap}>
+                  {section.items.map((item) => (
+                    <NotificationCard
+                      key={item.id}
+                      item={item}
+                      onPress={() => handleNotificationPress(item)}
+                      onMorePress={() => setActionItem(item)}
+                    />
+                  ))}
+                </View>
+              </View>
+            ))}
           </View>
-          <Text style={styles.emptyTitle}>No notifications</Text>
-          <Text style={styles.emptySubtitle}>
-            {activeFilter === 'travel_news'
-              ? 'No recent travel news or advisory notifications for your destinations.'
-              : 'You are all caught up with your itinerary updates and travel notifications.'}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={displayedNotifications}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          renderItem={renderNotificationCard}
-        />
-      )}
+        )}
+      </ScrollView>
 
-      {/* Travel News Details Modal (Direct from Notification) */}
+      {/* ── 4. THREE-DOT ACTION MENU MODAL ─────────────────────────── */}
+      <Modal
+        visible={!!actionItem}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setActionItem(null)}
+      >
+        <TouchableOpacity
+          style={styles.actionModalOverlay}
+          activeOpacity={1}
+          onPress={() => setActionItem(null)}
+        >
+          <View style={styles.actionModalCard}>
+            <Text style={styles.actionModalHeader} numberOfLines={1}>
+              {actionItem?.title}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.actionOptionBtn}
+              onPress={() => actionItem && handleToggleReadStatus(actionItem)}
+            >
+              {actionItem?.isRead ? (
+                <>
+                  <EyeOff size={18} color={AppColors.textPrimary} />
+                  <Text style={styles.actionOptionText}>Mark as Unread</Text>
+                </>
+              ) : (
+                <>
+                  <Eye size={18} color={AppColors.primary} />
+                  <Text style={styles.actionOptionTextPrimary}>Mark as Read</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionOptionBtn}
+              onPress={() => actionItem && handleDeleteNotification(actionItem.id)}
+            >
+              <Trash2 size={18} color="#EF4444" />
+              <Text style={styles.actionOptionTextDestructive}>
+                Delete Notification
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionModalCancelBtn}
+              onPress={() => setActionItem(null)}
+            >
+              <Text style={styles.actionModalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ── 5. TRAVEL NEWS DETAIL MODAL ────────────────────────────── */}
       <Modal
         visible={!!selectedNews}
         animationType="slide"
@@ -303,18 +297,23 @@ export default function NotificationsScreen() {
             {/* Modal Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderBadge}>
-                <Newspaper size={14} color={PRIMARY_GREEN} />
+                <Newspaper size={14} color={AppColors.primary} />
                 <Text style={styles.modalHeaderBadgeText}>Travel News & Advisory</Text>
               </View>
               <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.modalIconBtn} onPress={handleShareNews}>
-                  <Share2 size={18} color={DARK_NAVY} />
+                <TouchableOpacity
+                  style={styles.modalIconBtn}
+                  onPress={handleShareNews}
+                  accessibilityLabel="Share Article"
+                >
+                  <Share2 size={18} color={AppColors.textPrimary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalIconBtn}
                   onPress={() => setSelectedNews(null)}
+                  accessibilityLabel="Close"
                 >
-                  <X size={20} color={DARK_NAVY} />
+                  <X size={20} color={AppColors.textPrimary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -329,14 +328,14 @@ export default function NotificationsScreen() {
                 <View style={styles.articleMetaRow}>
                   {selectedNews.item.destination && (
                     <View style={styles.articleDestChip}>
-                      <MapPin size={12} color={PRIMARY_GREEN} />
+                      <MapPin size={12} color={AppColors.primary} />
                       <Text style={styles.articleDestText}>
                         {selectedNews.item.destination}
                       </Text>
                     </View>
                   )}
                   <View style={styles.articleTimeRow}>
-                    <Clock size={12} color={MUTED_TEXT} />
+                    <Clock size={12} color={AppColors.textMuted} />
                     <Text style={styles.articleTimeText}>
                       {selectedNews.content.publishedAt}
                     </Text>
@@ -350,7 +349,7 @@ export default function NotificationsScreen() {
 
                 {/* Source */}
                 <View style={styles.sourceBox}>
-                  <Info size={14} color="#555555" />
+                  <Info size={14} color={AppColors.textSecondary} />
                   <Text style={styles.sourceText}>
                     Source: {selectedNews.content.source}
                   </Text>
@@ -381,7 +380,7 @@ export default function NotificationsScreen() {
                     <View style={styles.affectedChipsWrap}>
                       {selectedNews.content.affectedPlaces.map((place, idx) => (
                         <View key={idx} style={styles.affectedChip}>
-                          <MapPin size={12} color="#555555" />
+                          <MapPin size={12} color={AppColors.textSecondary} />
                           <Text style={styles.affectedChipText}>{place}</Text>
                         </View>
                       ))}
@@ -410,175 +409,59 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAF7F2',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F2',
+  scrollContent: {
+    paddingBottom: 40,
   },
-  headerCenter: {
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: DARK_NAVY,
-  },
-  retentionNotice: {
-    fontSize: 11,
-    color: MUTED_TEXT,
-    marginTop: 1,
-  },
-  markReadBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E8F7EE',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholder: {
-    width: 36,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F7',
-  },
-  tabBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F7',
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-  },
-  tabBtnActive: {
-    backgroundColor: PRIMARY_GREEN,
-    borderColor: PRIMARY_GREEN,
-  },
-  tabText: {
-    fontSize: 13,
-    color: '#555555',
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  listContent: {
-    padding: 16,
-    gap: 12,
-  },
-  notifCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+
+  /* ── Timeline ── */
+  timelineContainer: {
     position: 'relative',
+    paddingLeft: 8,
+    paddingRight: 16,
   },
-  notifCardUnread: {
-    backgroundColor: '#F9FDFB',
-    borderColor: '#C2EAD0',
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  notifBody: {
-    flex: 1,
-  },
-  notifHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  typeBadge: {
-    backgroundColor: '#F0F0F2',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  typeBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: DARK_NAVY,
-  },
-  timeText: {
-    fontSize: 12,
-    color: MUTED_TEXT,
-  },
-  notifTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: DARK_NAVY,
-    marginBottom: 4,
-  },
-  notifTitleUnread: {
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  notifMessage: {
-    fontSize: 13,
-    color: '#666666',
-    lineHeight: 18,
-    marginBottom: 6,
-  },
-  destinationTagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 6,
-  },
-  destinationTagText: {
-    fontSize: 12,
-    color: PRIMARY_GREEN,
-    fontWeight: '600',
-  },
-  readNewsPrompt: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 2,
-  },
-  readNewsPromptText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: PRIMARY_GREEN,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: PRIMARY_GREEN,
+  timelineVerticalLine: {
     position: 'absolute',
     top: 14,
-    right: 14,
+    bottom: 24,
+    left: 20,
+    width: 2,
+    backgroundColor: '#E2E8F0',
+    zIndex: 0,
   },
+  sectionWrap: {
+    marginBottom: 20,
+    position: 'relative',
+    zIndex: 1,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    marginBottom: 12,
+  },
+  timelineNode: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+    borderWidth: 2,
+    borderColor: '#FAF7F2',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    letterSpacing: -0.2,
+  },
+  sectionCardsWrap: {
+    paddingLeft: 16,
+  },
+
+  /* ── Empty State ── */
   emptyContainer: {
-    flex: 1,
+    paddingTop: 80,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -587,33 +470,95 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: AppColors.borderLight,
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: DARK_NAVY,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
     textAlign: 'center',
     lineHeight: 20,
   },
+
+  /* ── Action Menu Modal ── */
+  actionModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+    padding: 16,
+  },
+  actionModalCard: {
+    backgroundColor: AppColors.surface,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: AppColors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  actionModalHeader: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: AppColors.textMuted,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  actionOptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
+  actionOptionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
+  },
+  actionOptionTextPrimary: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: AppColors.primary,
+  },
+  actionOptionTextDestructive: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
+  actionModalCancelBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  actionModalCancelText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: AppColors.textSecondary,
+  },
+
+  /* ── Travel News Modal ── */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: AppColors.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
+    backgroundColor: AppColors.surface,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    maxHeight: '88%',
     paddingBottom: 24,
   },
   modalHeader: {
@@ -623,13 +568,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: AppColors.borderLight,
   },
   modalHeaderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: AppColors.primaryLight,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -637,7 +582,7 @@ const styles = StyleSheet.create({
   modalHeaderBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: PRIMARY_GREEN,
+    color: AppColors.primaryDark,
   },
   modalActions: {
     flexDirection: 'row',
@@ -648,7 +593,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -668,7 +613,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#E8F7EE',
+    backgroundColor: AppColors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -676,7 +621,7 @@ const styles = StyleSheet.create({
   articleDestText: {
     fontSize: 12,
     fontWeight: '600',
-    color: PRIMARY_GREEN,
+    color: AppColors.primaryDark,
   },
   articleTimeRow: {
     flexDirection: 'row',
@@ -685,12 +630,12 @@ const styles = StyleSheet.create({
   },
   articleTimeText: {
     fontSize: 12,
-    color: MUTED_TEXT,
+    color: AppColors.textMuted,
   },
   articleHeadline: {
     fontSize: 20,
-    fontWeight: '700',
-    color: DARK_NAVY,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
     lineHeight: 26,
     marginBottom: 10,
   },
@@ -698,27 +643,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: AppColors.surfaceMuted,
     padding: 10,
     borderRadius: 8,
     marginBottom: 16,
   },
   sourceText: {
     fontSize: 12,
-    color: '#555555',
+    color: AppColors.textSecondary,
   },
   takeawaysCard: {
-    backgroundColor: '#F0FBF5',
+    backgroundColor: AppColors.primaryLight,
     borderRadius: 12,
     padding: 14,
     borderLeftWidth: 4,
-    borderLeftColor: PRIMARY_GREEN,
+    borderLeftColor: AppColors.primary,
     marginBottom: 18,
   },
   takeawaysTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginBottom: 8,
   },
   takeawayItem: {
@@ -731,18 +676,18 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     marginTop: 6,
   },
   takeawayText: {
     fontSize: 13,
-    color: '#333333',
+    color: AppColors.textPrimary,
     lineHeight: 18,
     flex: 1,
   },
   articleBody: {
     fontSize: 15,
-    color: '#333333',
+    color: AppColors.textPrimary,
     lineHeight: 23,
     marginBottom: 20,
   },
@@ -752,7 +697,7 @@ const styles = StyleSheet.create({
   affectedTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: DARK_NAVY,
+    color: AppColors.textPrimary,
     marginBottom: 8,
   },
   affectedChipsWrap: {
@@ -764,30 +709,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F5F5F7',
+    backgroundColor: AppColors.surfaceMuted,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
   },
   affectedChipText: {
     fontSize: 12,
-    color: '#444444',
+    color: AppColors.textSecondary,
   },
   modalFooter: {
     paddingHorizontal: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: AppColors.borderLight,
   },
   modalDismissBtn: {
     height: 48,
     borderRadius: 24,
-    backgroundColor: PRIMARY_GREEN,
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalDismissBtnText: {
-    color: '#FFFFFF',
+    color: AppColors.white,
     fontWeight: '700',
     fontSize: 15,
   },

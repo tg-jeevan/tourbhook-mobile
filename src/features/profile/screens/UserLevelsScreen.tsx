@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { BackButton } from '../../../core/components/BackButton';
+import { AppColors } from '../../../core/theme/colors';
 
 export default function UserLevelsScreen() {
   const navigation = useNavigation();
@@ -23,11 +24,20 @@ export default function UserLevelsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFFFFF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1A1A2E' },
+  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: AppColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: AppColors.borderLight,
+  },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: AppColors.textPrimary },
   placeholder: { width: 44 },
   content: { padding: 24, justifyContent: 'center', alignItems: 'center', flex: 1 },
-  levelName: { fontSize: 24, fontWeight: '700', color: '#E91E63' },
-  points: { fontSize: 16, color: '#8E8E93', marginTop: 12 }
+  levelName: { fontSize: 24, fontWeight: '700', color: AppColors.primary },
+  points: { fontSize: 16, color: AppColors.textMuted, marginTop: 12 },
 });

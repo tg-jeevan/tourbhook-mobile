@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, ViewStyle } from 'react-native';
+import { AppColors } from '../theme/colors';
 
 export function SkeletonBlock({ style }: { style?: ViewStyle }) {
   const opacity = useRef(new Animated.Value(0.4)).current;
@@ -20,7 +21,7 @@ export function SkeletonBlock({ style }: { style?: ViewStyle }) {
 
 const styles = StyleSheet.create({
   base: {
-    backgroundColor: '#E8E8EC',
+    backgroundColor: AppColors.surfaceMuted,
     borderRadius: 8,
   },
 });

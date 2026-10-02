@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { AppColors } from '../theme/colors';
 
 interface BackButtonProps {
   onPress: () => void;
@@ -32,14 +33,14 @@ const styles = StyleSheet.create({
   chevronLineTop: {
     width: 14,
     height: 3,
-    backgroundColor: '#1A1A2E',
+    backgroundColor: AppColors.textPrimary,
     borderRadius: 1.5,
     transform: [{ rotate: '-45deg' }, { translateY: 2 }],
   },
   chevronLineBottom: {
     width: 14,
     height: 3,
-    backgroundColor: '#1A1A2E',
+    backgroundColor: AppColors.textPrimary,
     borderRadius: 1.5,
     transform: [{ rotate: '45deg' }, { translateY: -2 }],
   },
