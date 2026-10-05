@@ -12,6 +12,34 @@ export type AuthStackParamList = {
   ResetPassword: { email: string; otp: string };
 };
 
+// ── Trip Creation shared params ──────────────────────────────────────────────
+export type TravelerType = 'solo' | 'couple' | 'family' | 'group';
+export type TravelPurpose = 'Leisure' | 'Birthday' | 'Bachelorette';
+export type TravelStyle = 'Budget Friendly' | 'Fast Travel' | 'Relaxed Vacation' | 'Explore Everything';
+export type TravelMode = 'Airplane' | 'Boat' | 'Bus' | 'Car' | 'Public Transport' | 'Train';
+
+/** Core trip info collected on PlanTrip */
+export interface TripCreationParams {
+  destination: string;
+  startDate: string;
+  endDate: string;
+  travelerType: TravelerType;
+  adults: number;
+  kids: number;
+  purpose: TravelPurpose;
+  /** Age of primary traveler (from profile or inline input). -1 = not collected. */
+  primaryAge: number;
+  /** Only required when primaryAge >= 60 */
+  medicalInfo?: string;
+}
+
+/** Full params carried through to AddPlaces / TravelMode / Packing */
+export interface TripCreationFullParams extends TripCreationParams {
+  travelStyle: TravelStyle;
+  selectedPlaceIds?: string[];
+  travelModes?: TravelMode[];
+}
+
 export type AppStackParamList = {
   // --- AUTH SCREENS (accessible from DevScreenTester) ---
   Splash: undefined;
@@ -24,16 +52,24 @@ export type AppStackParamList = {
   // --- APP SCREENS ---
   MyItineraries: undefined;
   DevScreenTester: undefined;
+  /** Step 1: core trip info */
   PlanTrip: undefined;
-  TripPreferences: { destination: string; startDate: string; endDate: string; travelers: number };
-  TripSummary: { destination: string; startDate: string; endDate: string; travelers: number; preferences: string[] };
+  /** Step 2: travel style / preferences — receives PlanTrip data */
+  TripPreferences: TripCreationParams;
+  /** Step 3: Review summary — receives full params after travel style */
+  TripSummary: TripCreationFullParams;
+  /** Step 4: Add Places — receives full params */
+  AddPlaces: TripCreationFullParams & { tripId?: string };
+  /** Step 5: Travel Mode selection */
+  TravelMode: TripCreationFullParams & { selectedPlaceIds?: string[]; tripId?: string };
+  /** Step 6+: Packing list in creation flow */
+  CheckingPacking: { tripId: string };
+  /** Itinerary view / packing tabs (existing trip) */
   TripDetails: { tripId: string };
   PlaceDetails: { placeId: string; placeName: string };
-  AddPlaces: { tripId: string };
   ItineraryView: { tripId: string };
   ItineraryMap: { tripId: string };
   PackingList: { tripId: string };
-  CheckingPacking: { tripId: string };
   ProfileMenu: undefined;
   ProfileSettings: undefined;
   UserLevels: undefined;

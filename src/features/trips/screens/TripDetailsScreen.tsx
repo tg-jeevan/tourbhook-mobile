@@ -153,6 +153,22 @@ export default function TripDetailsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Modify Itinerary Plan — navigates to PlanTrip in edit mode */}
+        <TouchableOpacity
+          style={styles.modifyBannerBtn}
+          onPress={() => navigation.navigate('PlanTrip')}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.actionIconWrap, { backgroundColor: '#FEF3C7' }]}>
+            <Plane size={18} color="#D97706" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.modifyBannerTitle}>Modify Itinerary Plan</Text>
+            <Text style={styles.modifyBannerSubtitle}>Update destination, dates, travellers or preferences</Text>
+          </View>
+          <ChevronRight size={16} color={AppColors.textMuted} />
+        </TouchableOpacity>
+
         {/* Events & Activities Banner */}
         <TouchableOpacity
           style={styles.eventsBannerBtn}
@@ -282,6 +298,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: AppColors.textPrimary,
+  },
+
+  /* Modify Itinerary Banner */
+  modifyBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    backgroundColor: '#FFFBEB',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    marginBottom: 12,
+    gap: 4,
+  },
+  modifyBannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+    marginBottom: 2,
+  },
+  modifyBannerSubtitle: {
+    fontSize: 11,
+    color: AppColors.textMuted,
+    fontWeight: '500',
   },
 
   /* Events Banner */

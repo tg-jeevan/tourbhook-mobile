@@ -4,16 +4,26 @@ import { X, ArrowLeft } from 'lucide-react-native';
 import { AppColors } from '../../../core/theme/colors';
 
 interface TripFlowProgressHeaderProps {
-  currentStep: 1 | 2 | 3;
+  /** 1-based step number */
+  currentStep: number;
+  /** Total steps in the flow */
+  totalSteps?: number;
+  /** Step label shown below the dots */
+  stepLabel?: string;
   onBack: () => void;
+  /** Show X (close) icon. False shows ← (back) */
   showCloseIcon?: boolean;
 }
 
 export const TripFlowProgressHeader: React.FC<TripFlowProgressHeaderProps> = ({
   currentStep,
+  totalSteps = 6,
+  stepLabel,
   onBack,
   showCloseIcon = true,
 }) => {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
+
   return (
     <View style={styles.container}>
       {/* Back / Close Button */}
@@ -29,26 +39,35 @@ export const TripFlowProgressHeader: React.FC<TripFlowProgressHeaderProps> = ({
         )}
       </TouchableOpacity>
 
-      {/* Center 3-Step Progress */}
+      {/* Center Progress */}
       <View style={styles.progressCenterWrap}>
         <View style={styles.stepsIndicatorRow}>
-          {/* Step 1 Dot */}
-          <View style={[styles.stepDot, currentStep >= 1 && styles.stepDotActive]} />
-          
-          {/* Line 1-2 */}
-          <View style={[styles.stepLine, currentStep >= 2 && styles.stepLineActive]} />
-
-          {/* Step 2 Dot */}
-          <View style={[styles.stepDot, currentStep >= 2 && styles.stepDotActive]} />
-
-          {/* Line 2-3 */}
-          <View style={[styles.stepLine, currentStep >= 3 && styles.stepLineActive]} />
-
-          {/* Step 3 Dot */}
-          <View style={[styles.stepDot, currentStep >= 3 && styles.stepDotActive]} />
+          {steps.map((step, idx) => (
+            <React.Fragment key={step}>
+              {/* Step Dot */}
+              <View
+                style={[
+                  styles.stepDot,
+                  currentStep >= step && styles.stepDotActive,
+                  currentStep === step && styles.stepDotCurrent,
+                ]}
+              />
+              {/* Connecting line (not after last dot) */}
+              {idx < totalSteps - 1 && (
+                <View
+                  style={[
+                    styles.stepLine,
+                    currentStep > step && styles.stepLineActive,
+                  ]}
+                />
+              )}
+            </React.Fragment>
+          ))}
         </View>
 
-        <Text style={styles.stepText}>Step {currentStep} of 3</Text>
+        <Text style={styles.stepText}>
+          {stepLabel || `Step ${currentStep} of ${totalSteps}`}
+        </Text>
       </View>
 
       {/* Right placeholder to keep center balanced */}
@@ -79,23 +98,25 @@ const styles = StyleSheet.create({
   stepsIndicatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     marginBottom: 4,
   },
   stepDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
     backgroundColor: '#CBD5E1',
   },
   stepDotActive: {
     backgroundColor: AppColors.primary,
+  },
+  stepDotCurrent: {
     width: 10,
     height: 10,
     borderRadius: 5,
   },
   stepLine: {
-    width: 28,
+    width: 18,
     height: 2,
     backgroundColor: '#E2E8F0',
   },

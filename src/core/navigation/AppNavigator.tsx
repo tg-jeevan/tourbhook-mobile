@@ -8,6 +8,10 @@ import TripSummaryScreen from '../../features/trips/screens/TripSummaryScreen';
 import TripDetailsScreen from '../../features/trips/screens/TripDetailsScreen';
 import PlaceDetailsScreen from '../../features/trips/screens/PlaceDetailsScreen';
 import AddPlacesScreen from '../../features/trips/screens/AddPlacesScreen';
+import TravelModeScreen from '../../features/trips/screens/TravelModeScreen';
+import ItineraryPackingScreen from '../../features/trips/screens/ItineraryPackingScreen';
+import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen';
+import CheckingPackingScreen from '../../features/trips/screens/CheckingPackingScreen';
 import ProfileMenuScreen from '../../features/profile/screens/ProfileMenuScreen';
 import ProfileSettingsScreen from '../../features/profile/screens/ProfileSettingsScreen';
 import UserLevelsScreen from '../../features/profile/screens/UserLevelsScreen';
@@ -27,9 +31,6 @@ import EventDetailsScreen from '../../features/events/screens/EventDetailsScreen
 import NotificationsScreen from '../../features/notifications/screens/NotificationsScreen';
 import InstagramConnectScreen from '../../features/ugc/screens/InstagramConnectScreen';
 import DevScreenTester from './DevScreenNavigator';
-import ItineraryPackingScreen from '../../features/trips/screens/ItineraryPackingScreen';
-import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen';
-import CheckingPackingScreen from '../../features/trips/screens/CheckingPackingScreen';
 import SplashScreen from '../../features/auth/screens/SplashScreen';
 import WelcomeScreen from '../../features/auth/screens/WelcomeScreen';
 import SignInScreen from '../../features/auth/screens/SignInScreen';
@@ -46,17 +47,27 @@ const Stack = createNativeStackNavigator<AppStackParamList>();
 export const AppNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="DevScreenTester" screenOptions={{ headerShown: false }}>
+      {/* ── Main App ── */}
       <Stack.Screen name="MyItineraries" component={MyItinerariesScreen} />
+
+      {/* ── Itinerary Creation Flow (Steps 1–6) ── */}
       <Stack.Screen name="PlanTrip" component={PlanTripScreen} />
       <Stack.Screen name="TripPreferences" component={TripPreferencesScreen} />
       <Stack.Screen name="TripSummary" component={TripSummaryScreen} />
+      <Stack.Screen name="AddPlaces" component={AddPlacesScreen} />
+      <Stack.Screen name="TravelMode" component={TravelModeScreen} />
+      {/* Step 6: Generating / blank itinerary state */}
+      <Stack.Screen name="CheckingPacking" component={CheckingPackingScreen} />
+
+      {/* ── Existing Trip Screens ── */}
       <Stack.Screen name="TripDetails" component={TripDetailsScreen} />
       <Stack.Screen name="PlaceDetails" component={PlaceDetailsScreen} />
-      <Stack.Screen name="AddPlaces" component={AddPlacesScreen} />
+      {/* ItineraryView & PackingList share the same ItineraryPackingScreen (tab-switching) */}
       <Stack.Screen name="ItineraryView" component={ItineraryPackingScreen} />
-      <Stack.Screen name="ItineraryMap" component={ItineraryMapScreen} />
       <Stack.Screen name="PackingList" component={ItineraryPackingScreen} />
-      <Stack.Screen name="CheckingPacking" component={CheckingPackingScreen} />
+      <Stack.Screen name="ItineraryMap" component={ItineraryMapScreen} />
+
+      {/* ── Profile & Settings ── */}
       <Stack.Screen name="ProfileMenu" component={ProfileMenuScreen} />
       <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
       <Stack.Screen name="UserLevels" component={UserLevelsScreen} />
@@ -66,20 +77,31 @@ export const AppNavigator = () => {
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
+
+      {/* ── Community & Social ── */}
       <Stack.Screen name="UGCPosting" component={UGCPostingScreen} />
       <Stack.Screen name="InstagramConnect" component={InstagramConnectScreen} />
       <Stack.Screen name="GroupMatching" component={GroupMatchingScreen} />
+
+      {/* ── Imports ── */}
       <Stack.Screen name="ImportData" component={ImportDataScreen} />
       <Stack.Screen name="ImportReview" component={ImportReviewScreen} />
+
+      {/* ── Reviews & Events ── */}
       <Stack.Screen name="Reviews" component={ReviewsScreen} />
       <Stack.Screen name="EventsFeed" component={EventsFeedScreen} />
       <Stack.Screen name="EventDetails" component={EventDetailsScreen} />
+
+      {/* ── Notifications ── */}
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+
+      {/* ── Explore ── */}
       <Stack.Screen name="ExploreFeed" component={ExploreFeedScreen} />
       <Stack.Screen name="ReelViewer" component={ReelViewerScreen} />
       <Stack.Screen name="DestinationDetails" component={DestinationDetailsScreen} />
+
+      {/* ── Dev / Auth ── */}
       <Stack.Screen name="DevScreenTester" component={DevScreenTester} />
-      {/* Auth screens (accessible from DevScreenTester) */}
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="SignIn" component={SignInScreen} />

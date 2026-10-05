@@ -258,7 +258,21 @@ export default function ItineraryPackingScreen() {
               {/* Bottom Floating Add Activity Button */}
               <TouchableOpacity
                 style={styles.floatingAddBtn}
-                onPress={() => navigation.navigate('AddPlaces', { tripId })}
+                onPress={() =>
+                  navigation.navigate('AddPlaces', {
+                    // Minimal params for add-activity mode on existing trip
+                    destination: 'Your Trip',
+                    startDate: '',
+                    endDate: '',
+                    travelerType: 'couple',
+                    adults: 2,
+                    kids: 0,
+                    purpose: 'Leisure',
+                    primaryAge: 25,
+                    travelStyle: 'Explore Everything',
+                    tripId,
+                  })
+                }
                 activeOpacity={0.88}
               >
                 <Plus size={18} color={AppColors.white} strokeWidth={2.5} />

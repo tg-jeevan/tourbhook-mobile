@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -17,49 +16,145 @@ import {
   Star,
   Pencil,
   ArrowRight,
+  Heart,
+  Zap,
 } from 'lucide-react-native';
-import { AppStackParamList } from '../../../core/navigation/types';
+import { AppStackParamList, TravelerType } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { TripFlowProgressHeader } from '../components/TripFlowProgressHeader';
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function travelerLabel(type: TravelerType, adults: number, kids: number): string {
+  const typeLabel: Record<TravelerType, string> = {
+    solo: 'Solo',
+    couple: 'Couple',
+    family: 'Family',
+    group: 'Friends / Group',
+  };
+
+  let base = typeLabel[type];
+  if (type === 'solo') return 'Solo Traveler';
+
+  const parts: string[] = [`${adults} Adult${adults !== 1 ? 's' : ''}`];
+  if (kids > 0) parts.push(`${kids} Kid${kids !== 1 ? 's' : ''}`);
+  return `${base} · ${parts.join(' + ')}`;
+}
+
+function travelStyleEmoji(style: string): string {
+  const map: Record<string, string> = {
+    'Budget Friendly': '💰',
+    'Fast Travel': '⚡',
+    'Relaxed Vacation': '🌅',
+    'Explore Everything': '🗺️',
+  };
+  return map[style] || '✨';
+}
+
+// ── Summary Row ───────────────────────────────────────────────────────────────
+function SummaryRow({
+  iconBg,
+  icon,
+  label,
+  value,
+  onEdit,
+}: {
+  iconBg: string;
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onEdit: () => void;
+}) {
+  return (
+    <View style={rowStyles.row}>
+      <View style={[rowStyles.iconCircle, { backgroundColor: iconBg }]}>{icon}</View>
+      <View style={rowStyles.textCol}>
+        <Text style={rowStyles.label}>{label}</Text>
+        <Text style={rowStyles.value}>{value}</Text>
+      </View>
+      <TouchableOpacity style={rowStyles.editBtn} onPress={onEdit} activeOpacity={0.7}>
+        <Pencil size={13} color={AppColors.textMuted} />
+        <Text style={rowStyles.editText}>Edit</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const rowStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  textCol: {
+    flex: 1,
+  },
+  label: {
+    fontSize: 11,
+    color: AppColors.textMuted,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  value: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+  },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: '#FAF7F2',
+  },
+  editText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: AppColors.textMuted,
+  },
+});
+
+// ── Main Screen ───────────────────────────────────────────────────────────────
 export default function TripSummaryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'TripSummary'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'TripSummary'>>();
   const params = route.params;
 
-  const destination = params?.destination || 'Paris, France';
-  const startDate = params?.startDate || 'Sept 12, 2026';
-  const endDate = params?.endDate || 'Sept 17, 2026';
-  const travelers = params?.travelers || 2;
-  const preferences = params?.preferences && params.preferences.length > 0
-    ? params.preferences
-    : ['Adventure', 'Relaxation'];
+  const destination    = params?.destination   || '—';
+  const startDate      = params?.startDate     || '—';
+  const endDate        = params?.endDate       || '—';
+  const travelerType   = params?.travelerType  || 'couple';
+  const adults         = params?.adults        ?? 2;
+  const kids           = params?.kids          ?? 0;
+  const purpose        = params?.purpose       || 'Leisure';
+  const travelStyle    = params?.travelStyle   || 'Explore Everything';
 
-  const getDestinationImage = () => {
-    const q = destination.toLowerCase();
-    if (q.includes('tokyo') || q.includes('japan')) {
-      return 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&auto=format&fit=crop&q=80';
-    }
-    if (q.includes('kerala') || q.includes('india') || q.includes('bali')) {
-      return 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&auto=format&fit=crop&q=80';
-    }
-    // Default Paris
-    return 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&auto=format&fit=crop&q=80';
-  };
+  const travelersText = travelerLabel(travelerType, adults, kids);
 
-  const handleEdit = () => {
-    navigation.goBack();
-  };
+  const goBackToStep1 = () => navigation.navigate('PlanTrip');
+  const goBackToStep2 = () => navigation.goBack();
 
   const handleConfirm = () => {
-    navigation.navigate('TripDetails', { tripId: '1' });
+    navigation.navigate('AddPlaces', {
+      ...params,
+    });
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* ── PROGRESS HEADER ───────────────────────────────────────── */}
       <TripFlowProgressHeader
         currentStep={3}
+        totalSteps={6}
+        stepLabel="Step 3 of 6 · Review"
         onBack={() => navigation.goBack()}
         showCloseIcon={false}
       />
@@ -68,113 +163,87 @@ export default function TripSummaryScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── HERO TITLE ───────────────────────────────────────────── */}
+        {/* ── HERO ─────────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
           <Text style={styles.heroTitle}>Trip Summary</Text>
           <Text style={styles.heroSubtitle}>
-            Review your details and let's create{'\n'}your itinerary
+            Review your details before we start{'\n'}selecting places
           </Text>
         </View>
 
-        {/* ── SUMMARY DETAILS CARD ─────────────────────────────────── */}
+        {/* ── SUMMARY CARD ─────────────────────────────────────────── */}
         <View style={styles.summaryCard}>
-          {/* Row 1: Destination */}
-          <View style={styles.summaryRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#E0F2FE' }]}>
-              <MapPin size={18} color="#0284C7" />
-            </View>
-            <View style={styles.summaryTextCol}>
-              <Text style={styles.summaryLabel}>Destination</Text>
-              <Text style={styles.summaryValue}>{destination}</Text>
-            </View>
-            <TouchableOpacity style={styles.editBtn} onPress={handleEdit} activeOpacity={0.7}>
-              <Pencil size={13} color={AppColors.textMuted} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
+          <SummaryRow
+            iconBg="#E0F2FE"
+            icon={<MapPin size={18} color="#0284C7" />}
+            label="Destination"
+            value={destination}
+            onEdit={goBackToStep1}
+          />
 
           <View style={styles.divider} />
 
-          {/* Row 2: Travel Dates */}
-          <View style={styles.summaryRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
-              <Calendar size={18} color="#059669" />
-            </View>
-            <View style={styles.summaryTextCol}>
-              <Text style={styles.summaryLabel}>Travel Dates</Text>
-              <Text style={styles.summaryValue}>
-                {startDate} – {endDate}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.editBtn} onPress={handleEdit} activeOpacity={0.7}>
-              <Pencil size={13} color={AppColors.textMuted} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
+          <SummaryRow
+            iconBg="#DCFCE7"
+            icon={<Calendar size={18} color="#059669" />}
+            label="Travel Dates"
+            value={`${startDate} – ${endDate}`}
+            onEdit={goBackToStep1}
+          />
 
           <View style={styles.divider} />
 
-          {/* Row 3: Number of Travelers */}
-          <View style={styles.summaryRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#FFEDD5' }]}>
-              <Users size={18} color="#EA580C" />
-            </View>
-            <View style={styles.summaryTextCol}>
-              <Text style={styles.summaryLabel}>Number of Travelers</Text>
-              <Text style={styles.summaryValue}>{travelers} Travelers</Text>
-            </View>
-            <TouchableOpacity style={styles.editBtn} onPress={handleEdit} activeOpacity={0.7}>
-              <Pencil size={13} color={AppColors.textMuted} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
+          <SummaryRow
+            iconBg="#FFEDD5"
+            icon={<Users size={18} color="#EA580C" />}
+            label="Travelers"
+            value={travelersText}
+            onEdit={goBackToStep1}
+          />
 
           <View style={styles.divider} />
 
-          {/* Row 4: Interests */}
-          <View style={styles.summaryRow}>
-            <View style={[styles.iconCircle, { backgroundColor: '#F3E8FF' }]}>
-              <Star size={18} color="#7C3AED" />
-            </View>
-            <View style={styles.summaryTextCol}>
-              <Text style={styles.summaryLabel}>Interests</Text>
-              <View style={styles.interestsTagsRow}>
-                {preferences.map((pref) => (
-                  <View key={pref} style={styles.interestPill}>
-                    <Text style={styles.interestPillText}>{pref}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-            <TouchableOpacity style={styles.editBtn} onPress={handleEdit} activeOpacity={0.7}>
-              <Pencil size={13} color={AppColors.textMuted} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
+          <SummaryRow
+            iconBg="#FEF3C7"
+            icon={<Heart size={18} color="#D97706" />}
+            label="Purpose"
+            value={purpose}
+            onEdit={goBackToStep1}
+          />
+
+          <View style={styles.divider} />
+
+          <SummaryRow
+            iconBg="#F3E8FF"
+            icon={<Star size={18} color="#7C3AED" />}
+            label="Travel Style"
+            value={`${travelStyleEmoji(travelStyle)}  ${travelStyle}`}
+            onEdit={goBackToStep2}
+          />
         </View>
 
-        {/* ── PERSONALIZED ITINERARY BANNER ("Looks great!") ───────── */}
-        <View style={styles.personalizedBanner}>
-          <Image source={{ uri: getDestinationImage() }} style={styles.bannerImage} />
-          <View style={styles.bannerGradient} />
-
-          <View style={styles.bannerTextWrap}>
-            <Text style={styles.bannerTitle}>Looks great!</Text>
-            <Text style={styles.bannerDesc}>
-              We'll create a personalized{'\n'}itinerary based on your details.
+        {/* ── CONFIRMATION BANNER ──────────────────────────────────── */}
+        <View style={styles.confirmBanner}>
+          <View style={styles.confirmBannerIcon}>
+            <Zap size={22} color={AppColors.primary} />
+          </View>
+          <View style={styles.confirmBannerText}>
+            <Text style={styles.confirmBannerTitle}>Everything looks great!</Text>
+            <Text style={styles.confirmBannerDesc}>
+              Next, select the places you'd like to visit and we'll craft your personalised itinerary.
             </Text>
           </View>
         </View>
 
         <View style={styles.bottomSpacer} />
 
-        {/* ── FINAL CTA BUTTON ─────────────────────────────────────── */}
+        {/* ── CTA ──────────────────────────────────────────────────── */}
         <TouchableOpacity
           style={styles.primaryCtaBtn}
           onPress={handleConfirm}
           activeOpacity={0.88}
         >
-          <Text style={styles.primaryCtaText}>Confirm & Open Itinerary</Text>
+          <Text style={styles.primaryCtaText}>Next: Add Places</Text>
           <ArrowRight size={18} color={AppColors.white} />
         </TouchableOpacity>
       </ScrollView>
@@ -217,124 +286,50 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EAE5DC',
     padding: 16,
-    marginBottom: 18,
+    marginBottom: 16,
     shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  summaryTextCol: {
-    flex: 1,
-  },
-  summaryLabel: {
-    fontSize: 11,
-    color: AppColors.textMuted,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  summaryValue: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: AppColors.textPrimary,
-  },
-  editBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    backgroundColor: '#FAF7F2',
-  },
-  editText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: AppColors.textMuted,
-  },
   divider: {
     height: 1,
     backgroundColor: '#F3EFE8',
   },
-  interestsTagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  interestPill: {
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  interestPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#0284C7',
-  },
 
-  /* Personalized Banner */
-  personalizedBanner: {
-    height: 140,
-    borderRadius: 22,
-    overflow: 'hidden',
-    position: 'relative',
-    justifyContent: 'flex-end',
-    padding: 16,
+  /* Confirmation Banner */
+  confirmBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F9FF',
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#EAE5DC',
-    shadowColor: AppColors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    borderColor: '#BAE6FD',
+    padding: 16,
+    gap: 14,
   },
-  bannerImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+  confirmBannerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  bannerGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(16, 36, 63, 0.45)',
+  confirmBannerText: {
+    flex: 1,
   },
-  bannerTextWrap: {
-    zIndex: 2,
-  },
-  bannerTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: AppColors.white,
-    letterSpacing: -0.3,
+  confirmBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
     marginBottom: 4,
   },
-  bannerDesc: {
+  confirmBannerDesc: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 16,
+    color: AppColors.textMuted,
+    lineHeight: 17,
   },
 
   bottomSpacer: {

@@ -14,128 +14,117 @@ import {
   Lightbulb,
   ArrowRight,
 } from 'lucide-react-native';
-import { AppStackParamList } from '../../../core/navigation/types';
+import { AppStackParamList, TravelStyle } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { TripFlowProgressHeader } from '../components/TripFlowProgressHeader';
-import { PreferenceIllustration } from '../components/PreferenceIllustration';
 
-interface PreferenceItem {
-  id: string;
+// ── Travel Style options (product-spec) ──────────────────────────────────────
+interface TravelStyleOption {
+  id: TravelStyle;
   label: string;
+  description: string;
+  emoji: string;
   bgTint: string;
 }
 
-const PREFERENCE_ROWS: PreferenceItem[][] = [
-  [
-    { id: 'Adventure', label: 'Adventure', bgTint: '#F0F9FF' },
-    { id: 'Nature', label: 'Nature', bgTint: '#F0FDF4' },
-    { id: 'Culture', label: 'Culture', bgTint: '#FFF7ED' },
-  ],
-  [
-    { id: 'Food', label: 'Food', bgTint: '#FFFBEB' },
-    { id: 'Shopping', label: 'Shopping', bgTint: '#FAF5FF' },
-    { id: 'Budget', label: 'Budget', bgTint: '#FEFCE8' },
-  ],
-  [
-    { id: 'Relaxation', label: 'Relaxation', bgTint: '#F0F9FF' },
-  ],
+const TRAVEL_STYLES: TravelStyleOption[] = [
+  {
+    id: 'Budget Friendly',
+    label: 'Budget Friendly',
+    description: 'Smart travel on a tight budget',
+    emoji: '💰',
+    bgTint: '#F0FDF4',
+  },
+  {
+    id: 'Fast Travel',
+    label: 'Fast Travel',
+    description: 'Pack in as many experiences as possible',
+    emoji: '⚡',
+    bgTint: '#FFF7ED',
+  },
+  {
+    id: 'Relaxed Vacation',
+    label: 'Relaxed Vacation',
+    description: 'Slow-paced and refreshing escape',
+    emoji: '🌅',
+    bgTint: '#F0F9FF',
+  },
+  {
+    id: 'Explore Everything',
+    label: 'Explore Everything',
+    description: 'Balanced mix of sights & experiences',
+    emoji: '🗺️',
+    bgTint: '#FAF5FF',
+  },
 ];
 
 export default function TripPreferencesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'TripPreferences'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'TripPreferences'>>();
+  const tripParams = route.params;
 
-  const [selected, setSelected] = useState<string[]>(['Adventure', 'Relaxation']);
-
-  const toggleSelect = (optId: string) => {
-    if (selected.includes(optId)) {
-      setSelected((prev) => prev.filter((item) => item !== optId));
-    } else {
-      setSelected((prev) => [...prev, optId]);
-    }
-  };
+  const [selectedStyle, setSelectedStyle] = useState<TravelStyle>('Explore Everything');
 
   const handleNext = () => {
     navigation.navigate('TripSummary', {
-      destination: route.params?.destination || 'Paris, France',
-      startDate: route.params?.startDate || 'Sept 12, 2026',
-      endDate: route.params?.endDate || 'Sept 17, 2026',
-      travelers: route.params?.travelers || 2,
-      preferences: selected.length > 0 ? selected : ['Adventure', 'Relaxation'],
+      // carry forward all PlanTrip params
+      ...tripParams,
+      travelStyle: selectedStyle,
     });
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* ── PROGRESS HEADER ───────────────────────────────────────── */}
       <TripFlowProgressHeader
         currentStep={2}
+        totalSteps={6}
+        stepLabel="Step 2 of 6 · Travel Style"
         onBack={() => navigation.goBack()}
-        showCloseIcon={true}
+        showCloseIcon={false}
       />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── HERO TITLE ───────────────────────────────────────────── */}
+        {/* ── HERO ─────────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
-          <Text style={styles.heroTitle}>Your Preferences</Text>
+          <Text style={styles.heroTitle}>How do you like to travel?</Text>
           <Text style={styles.heroSubtitle}>
-            Select what matches your interests{'\n'}so we can create a personalized plan
+            Your travel style shapes the entire itinerary{'\n'}Pick the one that fits you best
           </Text>
         </View>
 
-        {/* ── PREFERENCE CARDS GRID (3-COLUMN ROWS) ────────────────── */}
-        <View style={styles.gridContainer}>
-          {PREFERENCE_ROWS.map((row, rowIndex) => (
-            <View key={`pref-row-${rowIndex}`} style={styles.gridRow}>
-              {row.map((item) => {
-                const isSelected = selected.includes(item.id);
+        {/* ── TRAVEL STYLE CARDS ───────────────────────────────────── */}
+        <View style={styles.styleCardsGrid}>
+          {TRAVEL_STYLES.map((style) => {
+            const isSelected = selectedStyle === style.id;
+            return (
+              <TouchableOpacity
+                key={style.id}
+                style={[
+                  styles.styleCard,
+                  { backgroundColor: style.bgTint },
+                  isSelected && styles.styleCardSelected,
+                ]}
+                onPress={() => setSelectedStyle(style.id)}
+                activeOpacity={0.8}
+              >
+                {/* Check badge */}
+                {isSelected && (
+                  <View style={styles.checkBadge}>
+                    <Check size={11} color={AppColors.white} strokeWidth={3} />
+                  </View>
+                )}
 
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[
-                      styles.prefCard,
-                      { backgroundColor: item.bgTint },
-                      isSelected && styles.prefCardSelected,
-                    ]}
-                    onPress={() => toggleSelect(item.id)}
-                    activeOpacity={0.8}
-                  >
-                    {/* Top Right Checkmark Badge (if selected) */}
-                    {isSelected && (
-                      <View style={styles.checkBadge}>
-                        <Check size={11} color={AppColors.white} strokeWidth={3} />
-                      </View>
-                    )}
-
-                    {/* Artwork / Illustration */}
-                    <View style={styles.illustrationWrap}>
-                      <PreferenceIllustration id={item.id} />
-                    </View>
-
-                    {/* Preference Label */}
-                    <Text
-                      style={[
-                        styles.prefCardLabel,
-                        isSelected && styles.prefCardLabelSelected,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-
-              {/* Empty placeholder slots to maintain equal column width */}
-              {Array.from({ length: 3 - row.length }).map((_, i) => (
-                <View key={`empty-slot-${i}`} style={styles.emptySlot} />
-              ))}
-            </View>
-          ))}
+                <Text style={styles.styleEmoji}>{style.emoji}</Text>
+                <Text style={[styles.styleLabel, isSelected && styles.styleLabelSelected]}>
+                  {style.label}
+                </Text>
+                <Text style={styles.styleDesc}>{style.description}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* ── INFO BOX ─────────────────────────────────────────────── */}
@@ -144,19 +133,19 @@ export default function TripPreferencesScreen() {
             <Lightbulb size={18} color={AppColors.primary} />
           </View>
           <Text style={styles.infoText}>
-            Don't worry, you can always update{'\n'}these preferences later.
+            This preference influences which places, timing, and{'\n'}pace we build into your itinerary.
           </Text>
         </View>
 
         <View style={styles.bottomSpacer} />
 
-        {/* ── PRIMARY CTA BUTTON ───────────────────────────────────── */}
+        {/* ── CTA ──────────────────────────────────────────────────── */}
         <TouchableOpacity
           style={styles.primaryCtaBtn}
           onPress={handleNext}
           activeOpacity={0.88}
         >
-          <Text style={styles.primaryCtaText}>Build Itinerary</Text>
+          <Text style={styles.primaryCtaText}>Next: Review Trip</Text>
           <ArrowRight size={18} color={AppColors.white} />
         </TouchableOpacity>
       </ScrollView>
@@ -192,71 +181,61 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
 
-  /* Grid */
-  gridContainer: {
-    marginBottom: 16,
-  },
-  gridRow: {
+  /* Style Cards 2x2 grid */
+  styleCardsGrid: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10,
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 18,
   },
-  prefCard: {
-    flex: 1,
-    height: 112,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+  styleCard: {
+    width: '47%',
+    borderRadius: 20,
     borderWidth: 1.5,
     borderColor: '#EAE5DC',
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 18,
     position: 'relative',
     shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
     shadowRadius: 5,
     elevation: 1,
+    minHeight: 130,
+    justifyContent: 'flex-end',
   },
-  prefCardSelected: {
+  styleCardSelected: {
     borderColor: AppColors.primary,
     borderWidth: 2,
-    backgroundColor: '#F0F9FF',
   },
   checkBadge: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: 10,
+    right: 10,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
-  illustrationWrap: {
-    width: '100%',
-    height: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
+  styleEmoji: {
+    fontSize: 30,
+    marginBottom: 8,
   },
-  prefCardLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: AppColors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  prefCardLabelSelected: {
-    color: AppColors.primary,
+  styleLabel: {
+    fontSize: 13,
     fontWeight: '800',
+    color: AppColors.textPrimary,
+    marginBottom: 4,
   },
-  emptySlot: {
-    flex: 1,
-    height: 112,
+  styleLabelSelected: {
+    color: AppColors.primary,
+  },
+  styleDesc: {
+    fontSize: 11,
+    color: AppColors.textMuted,
+    lineHeight: 15,
   },
 
   /* Info Box */
