@@ -9,7 +9,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, G } from 'react-native-svg';
@@ -26,84 +26,64 @@ import {
   MoreVertical,
   Plus,
 } from 'lucide-react-native';
+import { Share } from 'react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
+import { ConfirmationModal } from '../../../core/components/ConfirmationModal';
+import { FeedbackToast } from '../../../core/components/FeedbackToast';
 import { useNotificationState } from '../../notifications/data/notificationStore';
 import { useSubscription, FREE_ITINERARY_LIMIT } from '../../profile/data/subscriptionStore';
 import { UpgradeRequiredModal } from '../components/UpgradeRequiredModal';
+import { ItineraryActionModal } from '../components/ItineraryActionModal';
+import {
+  useItineraryState,
+  ItineraryTrip,
+} from '../data/itineraryStore';
+import {
+  formatDateRange,
+  formatDestinationLocation,
+  generateDefaultItineraryTitle,
+} from '../utils/itineraryFormatting';
+
+export type { ItineraryTrip };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export type ItineraryFilterTab = 'All' | 'Upcoming' | 'Past' | 'Saved';
 
-export interface ItineraryTrip {
-  id: string;
-  title: string;
-  destination: string;
-  location: string;
-  dates: string;
-  status: 'upcoming' | 'past' | 'saved';
-  placesCount: number;
-  activitiesCount: number;
-  travelersCount: number;
-  imageUri: string;
-  theme: 'sky' | 'peach' | 'mint';
-}
-
-const MOCK_ITINERARIES: ItineraryTrip[] = [
-  {
-    id: '1',
-    title: 'Paris Adventure',
-    destination: 'Paris, France',
-    location: 'Paris, France',
-    dates: 'Sept 12 - Sept 17, 2026',
-    status: 'upcoming',
-    placesCount: 5,
-    activitiesCount: 12,
-    travelersCount: 2,
-    imageUri:
-      'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&auto=format&fit=crop&q=80',
-    theme: 'sky',
-  },
-  {
-    id: '2',
-    title: 'Tokyo Explorer',
-    destination: 'Tokyo, Japan',
-    location: 'Tokyo, Japan',
-    dates: 'Oct 05 - Oct 12, 2026',
-    status: 'upcoming',
-    placesCount: 6,
-    activitiesCount: 14,
-    travelersCount: 3,
-    imageUri:
-      'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&auto=format&fit=crop&q=80',
-    theme: 'peach',
-  },
-  {
-    id: '3',
-    title: 'Kerala Weekend',
-    destination: 'Kerala, India',
-    location: 'Kerala, India',
-    dates: 'Nov 20 - Nov 23, 2026',
-    status: 'past',
-    placesCount: 4,
-    activitiesCount: 8,
-    travelersCount: 4,
-    imageUri:
-      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&auto=format&fit=crop&q=80',
-    theme: 'mint',
-  },
-];
-
 export default function MyItinerariesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'MyItineraries'>>();
+  const insets = useSafeAreaInsets();
   const { unreadCount } = useNotificationState();
   const { isPremium } = useSubscription();
+  const {
+    itineraries,
+    counts,
+    deleteItinerary,
+    toggleSaveItinerary,
+  } = useItineraryState();
 
   const [activeTab, setActiveTab] = useState<ItineraryFilterTab>('All');
-  const [itineraries, setItineraries] = useState<ItineraryTrip[]>(MOCK_ITINERARIES);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Custom Action Modal & Delete Confirmation State
+  const [actionModalItinerary, setActionModalItinerary] = useState<ItineraryTrip | null>(null);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [deleteModalItinerary, setDeleteModalItinerary] = useState<ItineraryTrip | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Toast feedback state
+  const [toast, setToast] = useState<{
+    visible: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
+    visible: false,
+    message: '',
+    type: 'success',
+  });
 
   const handleCreateTrip = () => {
     if (isPremium || itineraries.length < FREE_ITINERARY_LIMIT) {
@@ -113,11 +93,11 @@ export default function MyItinerariesScreen() {
     }
   };
 
-  // Counts for tabs
-  const allCount = itineraries.length;
-  const upcomingCount = itineraries.filter((i) => i.status === 'upcoming').length;
-  const pastCount = itineraries.filter((i) => i.status === 'past').length;
-  const savedCount = itineraries.filter((i) => i.status === 'saved').length;
+  // Counts for tabs derived directly from source of truth
+  const allCount = counts.all;
+  const upcomingCount = counts.upcoming;
+  const pastCount = counts.past;
+  const savedCount = counts.saved;
 
   const filteredTrips = useMemo(() => {
     if (activeTab === 'Upcoming') {
@@ -133,34 +113,74 @@ export default function MyItinerariesScreen() {
   }, [activeTab, itineraries]);
 
   const handleOverflowMenu = (item: ItineraryTrip) => {
-    Alert.alert(
-      item.title,
-      'Choose an action for this itinerary',
-      [
-        {
-          text: 'View Details',
-          onPress: () => navigation.navigate('TripDetails', { tripId: item.id }),
-        },
-        {
-          text: 'Share Itinerary',
-          onPress: () => {},
-        },
-        {
-          text: item.status === 'saved' ? 'Unsave' : 'Save Itinerary',
-          onPress: () => {
-            setItineraries((prev) =>
-              prev.map((i) =>
-                i.id === item.id
-                  ? { ...i, status: i.status === 'saved' ? 'upcoming' : 'saved' }
-                  : i
-              )
-            );
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ],
-      { cancelable: true }
-    );
+    setActionModalItinerary(item);
+    setShowActionModal(true);
+  };
+
+  const handleViewDetails = (item: ItineraryTrip) => {
+    setShowActionModal(false);
+    navigation.navigate('TripDetails', { tripId: item.id });
+  };
+
+  const handleShare = async (item: ItineraryTrip) => {
+    setShowActionModal(false);
+    try {
+      await Share.share({
+        title: item.title,
+        message: `Check out my itinerary "${item.title}" in ${item.location} on Tourbhook!`,
+      });
+    } catch {
+      // Ignored
+    }
+  };
+
+  const handleToggleSave = (item: ItineraryTrip) => {
+    setShowActionModal(false);
+    toggleSaveItinerary(item.id);
+    const newSaved = item.status !== 'saved';
+    setToast({
+      visible: true,
+      message: newSaved ? 'Saved to your collection' : 'Removed from saved trips',
+      type: 'success',
+    });
+  };
+
+  const handleDeleteRequest = (item: ItineraryTrip) => {
+    setShowActionModal(false);
+    setDeleteModalItinerary(item);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModalItinerary) return;
+    setIsDeleting(true);
+    try {
+      const success = await deleteItinerary(deleteModalItinerary.id);
+      if (success) {
+        setShowDeleteConfirm(false);
+        setDeleteModalItinerary(null);
+        setActionModalItinerary(null);
+        setToast({
+          visible: true,
+          message: 'Itinerary deleted',
+          type: 'success',
+        });
+      } else {
+        setToast({
+          visible: true,
+          message: 'Failed to delete itinerary',
+          type: 'error',
+        });
+      }
+    } catch {
+      setToast({
+        visible: true,
+        message: 'Failed to delete itinerary',
+        type: 'error',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const renderDecorativeSvg = (theme: 'sky' | 'peach' | 'mint') => {
@@ -234,24 +254,13 @@ export default function MyItinerariesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── SCREEN HEADER ────────────────────────────────────────── */}
+      {/* ── FIXED HEADER AREA (Title + Actions + Filter Tabs) ─────── */}
+      <View style={styles.fixedHeaderContainer}>
+        {/* Title + Subtitle + Notification Bell & Profile Avatar */}
         <View style={styles.headerRow}>
           <View style={styles.headerTitleCol}>
             <Text style={styles.headerTitle}>My Itineraries</Text>
             <Text style={styles.headerSubtitle}>Your travel plans, all in one place</Text>
-            {__DEV__ && (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('DevScreenTester')}
-                activeOpacity={0.7}
-                style={styles.devTesterLink}
-              >
-                <Text style={styles.devTesterText}>⚡ Developer: Screen Tester</Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           <View style={styles.headerActionsRow}>
@@ -281,7 +290,7 @@ export default function MyItinerariesScreen() {
           </View>
         </View>
 
-        {/* ── FILTER TABS ROW ──────────────────────────────────────── */}
+        {/* ── FILTER TABS ROW (Horizontally Scrollable) ────────────── */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -358,8 +367,17 @@ export default function MyItinerariesScreen() {
             </Text>
           </TouchableOpacity>
         </ScrollView>
+      </View>
 
-        {/* ── ITINERARY CARDS LIST ─────────────────────────────────── */}
+      {/* ── SCROLLABLE ITINERARY CARDS LIST ───────────────────────── */}
+      <ScrollView
+        style={styles.listContainer}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 90 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {filteredTrips.length === 0 ? (
           <View style={styles.emptyStateCard}>
             <View style={styles.emptyIconCircle}>
@@ -383,9 +401,23 @@ export default function MyItinerariesScreen() {
           filteredTrips.map((item) => {
             const isUpcoming = item.status === 'upcoming';
             const isPast = item.status === 'past';
+            const displayTitle =
+              item.title ||
+              generateDefaultItineraryTitle(item.destination, item.customName);
+            const displayLocation = formatDestinationLocation(
+              item.location || item.destination
+            );
+            const displayDates = formatDateRange(item.dates);
 
             return (
-              <View key={item.id} style={styles.itineraryCard}>
+              <TouchableOpacity
+                key={item.id}
+                style={styles.itineraryCard}
+                onPress={() => handleViewDetails(item)}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={`${displayTitle}, ${displayLocation}, ${displayDates}`}
+              >
                 {/* TOP HALF: LEFT INFO + RIGHT IMAGE */}
                 <View style={styles.cardTopArea}>
                   {/* Left Column */}
@@ -416,19 +448,19 @@ export default function MyItinerariesScreen() {
 
                     {/* Itinerary Title */}
                     <Text style={styles.cardTripTitle} numberOfLines={1}>
-                      {item.title}
+                      {displayTitle}
                     </Text>
 
                     {/* Location Row */}
                     <View style={styles.infoLineRow}>
                       <MapPin size={13} color={AppColors.textPrimary} />
-                      <Text style={styles.locationText}>{item.location}</Text>
+                      <Text style={styles.locationText}>{displayLocation}</Text>
                     </View>
 
                     {/* Dates Row */}
                     <View style={styles.infoLineRow}>
                       <Calendar size={13} color={AppColors.textMuted} />
-                      <Text style={styles.datesText}>{item.dates}</Text>
+                      <Text style={styles.datesText}>{displayDates}</Text>
                     </View>
                   </View>
 
@@ -462,18 +494,22 @@ export default function MyItinerariesScreen() {
                       style={styles.overflowBtn}
                       onPress={() => handleOverflowMenu(item)}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Options for ${item.title}`}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <MoreVertical size={18} color={AppColors.textPrimary} />
                     </TouchableOpacity>
 
-                    {/* Circular Arrow Navigation Button */}
-                    <TouchableOpacity
+                    {/* Circular Arrow Navigation Affordance Indicator */}
+                    <View
                       style={styles.circularArrowBtn}
-                      onPress={() => navigation.navigate('TripDetails', { tripId: item.id })}
-                      activeOpacity={0.85}
+                      pointerEvents="none"
+                      accessibilityElementsHidden={true}
+                      importantForAccessibility="no-hide-descendants"
                     >
                       <ChevronRight size={18} color={AppColors.textPrimary} />
-                    </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
 
@@ -512,7 +548,7 @@ export default function MyItinerariesScreen() {
                     </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })
         )}
@@ -520,7 +556,7 @@ export default function MyItinerariesScreen() {
 
       {/* ── FLOATING ADD (+) BUTTON ──────────────────────────────── */}
       <TouchableOpacity
-        style={styles.floatingAddBtn}
+        style={[styles.floatingAddBtn, { bottom: insets.bottom + 70 }]}
         onPress={handleCreateTrip}
         activeOpacity={0.85}
         accessibilityLabel="Create Itinerary"
@@ -540,6 +576,41 @@ export default function MyItinerariesScreen() {
         maxLimit={FREE_ITINERARY_LIMIT}
       />
 
+      {/* ── ITINERARY ACTION MODAL (Custom Tourbhook Modal) ─────── */}
+      <ItineraryActionModal
+        visible={showActionModal}
+        itinerary={actionModalItinerary}
+        onClose={() => setShowActionModal(false)}
+        onViewDetails={handleViewDetails}
+        onShare={handleShare}
+        onToggleSave={handleToggleSave}
+      />
+
+      {/* ── DELETE CONFIRMATION MODAL ────────────────────────────── */}
+      <ConfirmationModal
+        visible={showDeleteConfirm}
+        onClose={() => {
+          if (!isDeleting) setShowDeleteConfirm(false);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete itinerary?"
+        message={`Are you sure you want to delete ${
+          deleteModalItinerary?.title || 'this itinerary'
+        }? This action cannot be undone.`}
+        confirmText="Delete Itinerary"
+        cancelText="Cancel"
+        isDestructive={true}
+        loading={isDeleting}
+      />
+
+      {/* ── TOAST FEEDBACK ────────────────────────────────────────── */}
+      <FeedbackToast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onDismiss={() => setToast((prev) => ({ ...prev, visible: false }))}
+      />
+
       {/* ── BOTTOM NAVIGATION (My Trips active) ─────────────────── */}
       <BottomNavBar active="trips" />
     </SafeAreaView>
@@ -551,8 +622,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAF7F2',
   },
+  fixedHeaderContainer: {
+    backgroundColor: '#FAF7F2',
+    zIndex: 10,
+  },
+  listContainer: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 4,
     paddingBottom: 90,
   },
 
@@ -561,6 +640,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
     marginTop: 8,
     marginBottom: 16,
   },
@@ -579,14 +659,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: AppColors.textMuted,
     lineHeight: 18,
-  },
-  devTesterLink: {
-    marginTop: 6,
-  },
-  devTesterText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: AppColors.primary,
   },
   headerActionsRow: {
     flexDirection: 'row',
@@ -648,7 +720,8 @@ const styles = StyleSheet.create({
   filtersRow: {
     flexDirection: 'row',
     gap: 8,
-    paddingBottom: 18,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   filterChip: {
     flexDirection: 'row',

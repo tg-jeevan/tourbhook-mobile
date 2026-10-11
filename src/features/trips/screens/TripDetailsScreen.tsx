@@ -15,6 +15,7 @@ import {
 import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { UGCContentDisplay } from '../../ugc/components/UGCContentDisplay';
+import { itineraryStore } from '../data/itineraryStore';
 
 /**
  * Hero Travel Illustration (Map, plane route, postcard sketch)
@@ -90,7 +91,10 @@ export default function TripDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'TripDetails'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'TripDetails'>>();
   const tripId = route.params?.tripId || '1';
-  const destination = 'Paris, France';
+  const trip = itineraryStore.getItineraryById(tripId);
+  const destination = trip?.location || trip?.destination || 'Paris, France';
+  const tripTitle = trip?.title || destination;
+  const tripDates = trip?.dates || 'Sep 10 – Sep 17, 2026';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -113,14 +117,14 @@ export default function TripDetailsScreen() {
         {/* Destination Hero Row */}
         <View style={styles.heroRow}>
           <View style={styles.heroTextCol}>
-            <Text style={styles.destTitle}>{destination}</Text>
+            <Text style={styles.destTitle}>{tripTitle}</Text>
             <View style={styles.dateRow}>
               <Calendar size={14} color={AppColors.textMuted} />
-              <Text style={styles.destDates}>Sept 10 - Sept 17, 2026</Text>
+              <Text style={styles.destDates}>{tripDates}</Text>
             </View>
             <View style={styles.daysBadge}>
               <Plane size={12} color={AppColors.primary} />
-              <Text style={styles.daysBadgeText}>7 Days • 6 Nights</Text>
+              <Text style={styles.daysBadgeText}>{destination}</Text>
             </View>
           </View>
           <TripHeroGraphic />

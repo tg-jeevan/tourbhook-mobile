@@ -28,5 +28,5 @@ export interface NotificationItem {
   newsContent?: TravelNewsContent;
 }
 
-export type NotificationFilterType = 'all' | 'travel_news' | 'itinerary';
+export type NotificationFilterType = 'all' | 'travel_news' | 'itinerary' | 'travel_tips';
 

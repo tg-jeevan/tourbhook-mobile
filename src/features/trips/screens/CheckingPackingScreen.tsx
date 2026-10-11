@@ -11,23 +11,27 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
+import { itineraryStore, ItineraryTrip } from '../data/itineraryStore';
+import {
+  formatDateRange,
+  formatDestinationLocation,
+  generateDefaultItineraryTitle,
+  calculateTravelerCount,
+  getDestinationImage,
+} from '../utils/itineraryFormatting';
 
 /**
  * CheckingPackingScreen — Step 6 of the creation flow.
  *
  * Acts as the "blank / building itinerary" loading state.
  * Shows a pulsing animation while the itinerary is "generating",
- * then auto-navigates to ItineraryView.
- *
- * NOTE: No real backend call is made here — it simulates the expected
- * blank-state UX while the existing generation mechanism works.
- * Replace the setTimeout with the actual generation hook/call when
- * the backend integration is wired.
+ * registers the new trip into the store, then auto-navigates to ItineraryView.
  */
 export default function CheckingPackingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'CheckingPacking'>>();
   const route = useRoute<RouteProp<AppStackParamList, 'CheckingPacking'>>();
-  const tripId = route.params?.tripId || '1';
+  const params = route.params;
+  const tripId = params?.tripId || `trip-${Date.now()}`;
 
   // ── Animations ──────────────────────────────────────────────────────────
   const pulseAnim  = useRef(new Animated.Value(0.8)).current;
@@ -36,6 +40,46 @@ export default function CheckingPackingScreen() {
   const dotAnim3   = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // If this is a newly planned trip, add it to the itineraryStore source of truth
+    if (params?.destination && params.destination !== 'Your Destination') {
+      const existing = itineraryStore.getItineraryById(tripId);
+      if (!existing) {
+        const formattedLocation = formatDestinationLocation(params.destination);
+        const customTitle = params.itineraryName?.trim();
+        const finalTitle = generateDefaultItineraryTitle(params.destination, customTitle);
+        const formattedDates = formatDateRange(params.startDate, params.endDate);
+        const destImage = getDestinationImage(params.destination);
+        const placesCount = params.selectedPlaceIds ? params.selectedPlaceIds.length : 0;
+        const activitiesCount = 0;
+        const travelersCount = calculateTravelerCount(
+          params.travelerType,
+          params.adults,
+          params.kids
+        );
+
+        const newTrip: ItineraryTrip = {
+          id: tripId,
+          title: finalTitle,
+          customName: customTitle || undefined,
+          destination: formattedLocation,
+          location: formattedLocation,
+          dates: formattedDates,
+          status: 'upcoming',
+          placesCount,
+          activitiesCount,
+          travelersCount,
+          imageUri: destImage,
+          theme:
+            params.travelStyle === 'Budget Friendly'
+              ? 'mint'
+              : params.travelStyle === 'Fast Travel'
+              ? 'peach'
+              : 'sky',
+        };
+        itineraryStore.addItinerary(newTrip);
+      }
+    }
+
     // Soft pulse ring
     Animated.loop(
       Animated.sequence([
@@ -75,7 +119,7 @@ export default function CheckingPackingScreen() {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [navigation, tripId, pulseAnim, dotAnim1, dotAnim2, dotAnim3]);
+  }, [navigation, tripId, params, pulseAnim, dotAnim1, dotAnim2, dotAnim3]);
 
   const dotStyle = (anim: Animated.Value) => ({
     opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }),

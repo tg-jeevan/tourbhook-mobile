@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { LayoutGrid, Newspaper, Map } from 'lucide-react-native';
+import { LayoutGrid, Newspaper, Map, Star } from 'lucide-react-native';
 import { NotificationFilterType } from '../types/notificationTypes';
 import { AppColors } from '../../../core/theme/colors';
 
@@ -90,6 +90,31 @@ export const NotificationFilters: React.FC<NotificationFiltersProps> = ({
             ]}
           >
             Itinerary
+          </Text>
+        </TouchableOpacity>
+
+        {/* Filter 4: Travel Tips */}
+        <TouchableOpacity
+          style={[
+            styles.pillBtn,
+            activeFilter === 'travel_tips' ? styles.pillBtnActive : styles.pillBtnInactive,
+          ]}
+          onPress={() => onSelectFilter('travel_tips')}
+          activeOpacity={0.8}
+        >
+          <Star
+            size={16}
+            color={activeFilter === 'travel_tips' ? AppColors.white : AppColors.textPrimary}
+          />
+          <Text
+            style={[
+              styles.pillText,
+              activeFilter === 'travel_tips'
+                ? styles.pillTextActive
+                : styles.pillTextInactive,
+            ]}
+          >
+            Travel Tips
           </Text>
         </TouchableOpacity>
       </ScrollView>

@@ -36,6 +36,7 @@ import { AppColors } from '../../../core/theme/colors';
 import { NotificationHeader } from '../components/NotificationHeader';
 import { NotificationFilters } from '../components/NotificationFilters';
 import { NotificationCard } from '../components/NotificationCard';
+import { buildTravelNewsShareMessage } from '../utils/newsShareFormatting';
 
 interface TimelineSection {
   id: 'today' | 'this_week' | 'earlier';
@@ -71,7 +72,10 @@ export default function NotificationsScreen() {
         return item.type === 'travel_news' || item.type === 'destination_alert';
       }
       if (activeFilter === 'itinerary') {
-        return item.type === 'itinerary_update' || item.type === 'travel_tip';
+        return item.type === 'itinerary_update';
+      }
+      if (activeFilter === 'travel_tips') {
+        return item.type === 'travel_tip';
       }
       return true;
     });
@@ -157,7 +161,7 @@ export default function NotificationsScreen() {
     try {
       await Share.share({
         title: selectedNews.content.headline,
-        message: `${selectedNews.content.headline}\n\n${selectedNews.content.fullArticle}\n\nVia Tourbhook Travel Notifications`,
+        message: buildTravelNewsShareMessage(selectedNews.content),
       });
     } catch {
       // Ignored
@@ -195,6 +199,8 @@ export default function NotificationsScreen() {
                 ? 'No recent travel news or advisory notifications for your destinations.'
                 : activeFilter === 'itinerary'
                 ? 'No recent itinerary updates or booking notices.'
+                : activeFilter === 'travel_tips'
+                ? 'No recent travel tips or packing recommendations.'
                 : 'You are all caught up with your notifications.'}
             </Text>
           </View>

@@ -26,6 +26,8 @@ import {
   Heart,
   ShieldCheck,
   UserPlus,
+  Sparkles,
+  X,
 } from 'lucide-react-native';
 import { AppStackParamList, TravelerType, TravelPurpose } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
@@ -152,6 +154,7 @@ export default function PlanTripScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'PlanTrip'>>();
 
   // Core fields
+  const [itineraryName, setItineraryName] = useState('');
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -212,6 +215,7 @@ export default function PlanTripScreen() {
     }
 
     navigation.navigate('TripPreferences', {
+      itineraryName: itineraryName.trim() || undefined,
       destination: destination.trim(),
       startDate: startDate.trim(),
       endDate: endDate.trim(),
@@ -270,6 +274,39 @@ export default function PlanTripScreen() {
                 <Circle cx="70" cy="28" r="8" fill="#FF6B4A" opacity={0.2} />
                 <Circle cx="70" cy="28" r="4" fill="#FF6B4A" />
               </Svg>
+            </View>
+          </View>
+
+          {/* ── ITINERARY NAME (Optional) ────────────────────────────── */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionLabelRow}>
+              <Sparkles size={15} color={AppColors.primary} />
+              <Text style={styles.sectionLabel}>Itinerary Name</Text>
+              <View style={styles.optionalBadge}>
+                <Text style={styles.optionalBadgeText}>Optional</Text>
+              </View>
+            </View>
+            <Text style={styles.fieldSupportingText}>
+              Choose a name now. It cannot be changed after creation.
+            </Text>
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Give your trip a name"
+                placeholderTextColor={AppColors.textMuted}
+                value={itineraryName}
+                onChangeText={setItineraryName}
+                maxLength={60}
+              />
+              {itineraryName.length > 0 && (
+                <TouchableOpacity
+                  style={styles.inputActionBtn}
+                  onPress={() => setItineraryName('')}
+                  activeOpacity={0.7}
+                >
+                  <X size={16} color={AppColors.textMuted} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -553,6 +590,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#DC2626',
+  },
+  optionalBadge: {
+    marginLeft: 4,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  optionalBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: AppColors.textMuted,
+  },
+  fieldSupportingText: {
+    fontSize: 12,
+    color: AppColors.textMuted,
+    lineHeight: 16,
+    marginBottom: 8,
   },
 
   /* Input row */

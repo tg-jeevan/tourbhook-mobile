@@ -14,6 +14,7 @@ import ItineraryMapScreen from '../../features/trips/screens/ItineraryMapScreen'
 import CheckingPackingScreen from '../../features/trips/screens/CheckingPackingScreen';
 import ProfileMenuScreen from '../../features/profile/screens/ProfileMenuScreen';
 import ProfileSettingsScreen from '../../features/profile/screens/ProfileSettingsScreen';
+import LanguageScreen from '../../features/profile/screens/LanguageScreen';
 import UserLevelsScreen from '../../features/profile/screens/UserLevelsScreen';
 import UpgradePlanScreen from '../../features/profile/screens/UpgradePlanScreen';
 import PaymentMethodsScreen from '../../features/profile/screens/PaymentMethodsScreen';
@@ -23,6 +24,9 @@ import PrivacyPolicyScreen from '../../features/profile/screens/PrivacyPolicyScr
 import TermsScreen from '../../features/profile/screens/TermsScreen';
 import UGCPostingScreen from '../../features/ugc/screens/UGCPostingScreen';
 import GroupMatchingScreen from '../../features/groups/screens/GroupMatchingScreen';
+import GroupDetailsScreen from '../../features/groups/screens/GroupDetailsScreen';
+import GroupChatScreen from '../../features/groups/screens/GroupChatScreen';
+import GroupInfoScreen from '../../features/groups/screens/GroupInfoScreen';
 import ImportDataScreen from '../../features/imports/screens/ImportDataScreen';
 import ImportReviewScreen from '../../features/imports/screens/ImportReviewScreen';
 import ReviewsScreen from '../../features/reviews/screens/ReviewsScreen';
@@ -30,23 +34,22 @@ import EventsFeedScreen from '../../features/events/screens/EventsFeedScreen';
 import EventDetailsScreen from '../../features/events/screens/EventDetailsScreen';
 import NotificationsScreen from '../../features/notifications/screens/NotificationsScreen';
 import InstagramConnectScreen from '../../features/ugc/screens/InstagramConnectScreen';
-import DevScreenTester from './DevScreenNavigator';
-import SplashScreen from '../../features/auth/screens/SplashScreen';
-import WelcomeScreen from '../../features/auth/screens/WelcomeScreen';
-import SignInScreen from '../../features/auth/screens/SignInScreen';
-import SignUpScreen from '../../features/auth/screens/SignUpScreen';
-import ForgotPasswordScreen from '../../features/auth/screens/ForgotPasswordScreen';
-import OTPVerificationScreen from '../../features/auth/screens/OTPVerificationScreen';
-import ResetPasswordScreen from '../../features/auth/screens/ResetPasswordScreen';
 import ExploreFeedScreen from '../../features/explore/screens/ExploreFeedScreen';
 import ReelViewerScreen from '../../features/explore/screens/ReelViewerScreen';
 import DestinationDetailsScreen from '../../features/explore/screens/DestinationDetailsScreen';
+import { AppColors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export const AppNavigator = () => {
   return (
-    <Stack.Navigator initialRouteName="DevScreenTester" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      initialRouteName="MyItineraries"
+      screenOptions={{
+        headerShown: false,
+        navigationBarColor: AppColors.surface,
+      }}
+    >
       {/* ── Main App ── */}
       <Stack.Screen name="MyItineraries" component={MyItinerariesScreen} />
 
@@ -70,6 +73,7 @@ export const AppNavigator = () => {
       {/* ── Profile & Settings ── */}
       <Stack.Screen name="ProfileMenu" component={ProfileMenuScreen} />
       <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+      <Stack.Screen name="Language" component={LanguageScreen} />
       <Stack.Screen name="UserLevels" component={UserLevelsScreen} />
       <Stack.Screen name="UpgradePlan" component={UpgradePlanScreen} />
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
@@ -82,6 +86,9 @@ export const AppNavigator = () => {
       <Stack.Screen name="UGCPosting" component={UGCPostingScreen} />
       <Stack.Screen name="InstagramConnect" component={InstagramConnectScreen} />
       <Stack.Screen name="GroupMatching" component={GroupMatchingScreen} />
+      <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
+      <Stack.Screen name="GroupChat" component={GroupChatScreen} />
+      <Stack.Screen name="GroupInfo" component={GroupInfoScreen} />
 
       {/* ── Imports ── */}
       <Stack.Screen name="ImportData" component={ImportDataScreen} />
@@ -99,16 +106,6 @@ export const AppNavigator = () => {
       <Stack.Screen name="ExploreFeed" component={ExploreFeedScreen} />
       <Stack.Screen name="ReelViewer" component={ReelViewerScreen} />
       <Stack.Screen name="DestinationDetails" component={DestinationDetailsScreen} />
-
-      {/* ── Dev / Auth ── */}
-      <Stack.Screen name="DevScreenTester" component={DevScreenTester} />
-      <Stack.Screen name="Splash" component={SplashScreen} />
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      <Stack.Screen name="SignIn" component={SignInScreen} />
-      <Stack.Screen name="SignUp" component={SignUpScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
-      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 };

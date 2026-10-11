@@ -99,7 +99,19 @@ export const RAW_MOCK_NOTIFICATIONS: NotificationItem[] = [
     },
   },
 
-  // 5. Itinerary / Booking - 6 days ago (Earlier / This Week)
+  // 5. Travel Tip - 1 day ago (This Week)
+  {
+    id: 'notif-tip-1',
+    title: 'Pack Smart for Your Paris Trip',
+    message: 'Carry comfortable walking shoes and keep a light jacket handy for changing weather.',
+    timestamp: getTimestamp(1, 4),
+    type: 'travel_tip',
+    destination: 'Paris, France',
+    tripId: '1',
+    isRead: false,
+  },
+
+  // 6. Itinerary / Booking - 6 days ago (Earlier / This Week)
   {
     id: 'notif-5',
     title: 'Bookings Confirmed',

@@ -4,16 +4,27 @@ import { NavigationContainer } from '@react-navigation/native';
 import { RootStackParamList } from './types';
 import { AuthNavigator } from './AuthNavigator';
 import { AppNavigator } from './AppNavigator';
+import SplashScreen from '../../features/auth/screens/SplashScreen';
 import { useAuth } from '../auth/AuthContext';
+import { AppColors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator = () => {
-  const { isAuthenticated } = useAuth();
+  const { isInitializing, isAuthenticated } = useAuth();
+
+  if (isInitializing) {
+    return <SplashScreen />;
+  }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          navigationBarColor: AppColors.surface,
+        }}
+      >
         {isAuthenticated ? (
           <Stack.Screen name="App" component={AppNavigator} />
         ) : (
@@ -23,4 +34,3 @@ export const RootNavigator = () => {
     </NavigationContainer>
   );
 };
-

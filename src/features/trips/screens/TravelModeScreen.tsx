@@ -89,9 +89,9 @@ export default function TravelModeScreen() {
 
   const handleNext = () => {
     navigation.navigate('CheckingPacking', {
-      tripId: tripParams?.tripId || 'new',
-      // Pass all trip context as serialised string for packing screen
-      // (CheckingPacking will use tripId; full params context preserved in earlier screens)
+      ...tripParams,
+      travelModes: Array.from(selectedModes),
+      tripId: tripParams?.tripId || `trip-${Date.now()}`,
     });
   };
 

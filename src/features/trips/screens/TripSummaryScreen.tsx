@@ -18,10 +18,15 @@ import {
   ArrowRight,
   Heart,
   Zap,
+  Sparkles,
 } from 'lucide-react-native';
 import { AppStackParamList, TravelerType } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { TripFlowProgressHeader } from '../components/TripFlowProgressHeader';
+import {
+  formatDateRange,
+  formatDestinationLocation,
+} from '../utils/itineraryFormatting';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function travelerLabel(type: TravelerType, adults: number, kids: number): string {
@@ -33,11 +38,13 @@ function travelerLabel(type: TravelerType, adults: number, kids: number): string
   };
 
   let base = typeLabel[type];
-  if (type === 'solo') return 'Solo Traveler';
+  if (type === 'solo') return 'Solo Traveler (1 Traveler)';
+  if (type === 'couple') return 'Couple (2 Travelers)';
 
   const parts: string[] = [`${adults} Adult${adults !== 1 ? 's' : ''}`];
   if (kids > 0) parts.push(`${kids} Kid${kids !== 1 ? 's' : ''}`);
-  return `${base} · ${parts.join(' + ')}`;
+  const total = adults + kids;
+  return `${base} · ${parts.join(' + ')} (${total} Travelers)`;
 }
 
 function travelStyleEmoji(style: string): string {
@@ -129,7 +136,8 @@ export default function TripSummaryScreen() {
   const route = useRoute<RouteProp<AppStackParamList, 'TripSummary'>>();
   const params = route.params;
 
-  const destination    = params?.destination   || '—';
+  const rawDestination = params?.destination   || '—';
+  const destination    = formatDestinationLocation(rawDestination);
   const startDate      = params?.startDate     || '—';
   const endDate        = params?.endDate       || '—';
   const travelerType   = params?.travelerType  || 'couple';
@@ -137,7 +145,9 @@ export default function TripSummaryScreen() {
   const kids           = params?.kids          ?? 0;
   const purpose        = params?.purpose       || 'Leisure';
   const travelStyle    = params?.travelStyle   || 'Explore Everything';
+  const itineraryName  = params?.itineraryName?.trim();
 
+  const formattedDates = formatDateRange(startDate, endDate);
   const travelersText = travelerLabel(travelerType, adults, kids);
 
   const goBackToStep1 = () => navigation.navigate('PlanTrip');
@@ -173,6 +183,19 @@ export default function TripSummaryScreen() {
 
         {/* ── SUMMARY CARD ─────────────────────────────────────────── */}
         <View style={styles.summaryCard}>
+          {itineraryName ? (
+            <>
+              <SummaryRow
+                iconBg="#F3E8FF"
+                icon={<Sparkles size={18} color="#7C3AED" />}
+                label="Itinerary Name"
+                value={itineraryName}
+                onEdit={goBackToStep1}
+              />
+              <View style={styles.divider} />
+            </>
+          ) : null}
+
           <SummaryRow
             iconBg="#E0F2FE"
             icon={<MapPin size={18} color="#0284C7" />}
@@ -187,7 +210,7 @@ export default function TripSummaryScreen() {
             iconBg="#DCFCE7"
             icon={<Calendar size={18} color="#059669" />}
             label="Travel Dates"
-            value={`${startDate} – ${endDate}`}
+            value={formattedDates}
             onEdit={goBackToStep1}
           />
 

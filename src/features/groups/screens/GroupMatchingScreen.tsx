@@ -173,7 +173,7 @@ export default function GroupMatchingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'GroupMatching'>>();
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
-  const { groups, isLoading, isError, retry, joinedGroupIds, joinGroup } = useGroupMatches(activeCategory);
+  const { groups, isLoading, isError, retry, isJoined, joinGroup } = useGroupMatches(activeCategory);
   const verificationStatus = useVerificationStatus();
 
   // Helper to render Category Panel Icon & Styling
@@ -307,10 +307,15 @@ export default function GroupMatchingScreen() {
   };
 
   const renderGroupCard = (group: TravelGroup) => {
-    const isJoined = joinedGroupIds.includes(group.id);
+    const joined = isJoined(group.id);
 
     return (
-      <View key={group.id} style={styles.groupCard}>
+      <TouchableOpacity
+        key={group.id}
+        style={styles.groupCard}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('GroupDetails', { groupId: group.id })}
+      >
         {/* Left Category Icon Panel */}
         {renderCategoryPanel(group)}
 
@@ -359,15 +364,21 @@ export default function GroupMatchingScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.arrowButton, isJoined && styles.arrowButtonJoined]}
+              style={[styles.arrowButton, joined && styles.arrowButtonJoined]}
               activeOpacity={0.8}
-              onPress={() => joinGroup(group.id)}
+              onPress={() => {
+                if (joined) {
+                  navigation.navigate('GroupChat', { groupId: group.id });
+                } else {
+                  navigation.navigate('GroupDetails', { groupId: group.id });
+                }
+              }}
             >
-              <ChevronRight size={18} color={isJoined ? AppColors.success : AppColors.primary} />
+              <ChevronRight size={18} color={joined ? AppColors.success : AppColors.primary} />
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

@@ -20,6 +20,42 @@ jest.mock('react-native-maps', () => {
 });
 
 // Mock async storage
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
-);
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const store = new Map();
+  return {
+    __esModule: true,
+    default: {
+      setItem: jest.fn((key, value) => {
+        store.set(key, String(value));
+        return Promise.resolve(null);
+      }),
+      getItem: jest.fn(key => {
+        return Promise.resolve(store.has(key) ? store.get(key) : null);
+      }),
+      removeItem: jest.fn(key => {
+        store.delete(key);
+        return Promise.resolve(null);
+      }),
+      clear: jest.fn(() => {
+        store.clear();
+        return Promise.resolve(null);
+      }),
+      setMany: jest.fn(entries => {
+        Object.entries(entries).forEach(([k, v]) => store.set(k, String(v)));
+        return Promise.resolve(null);
+      }),
+      getMany: jest.fn(keys => {
+        const result = {};
+        keys.forEach(k => {
+          result[k] = store.has(k) ? store.get(k) : null;
+        });
+        return Promise.resolve(result);
+      }),
+      removeMany: jest.fn(keys => {
+        keys.forEach(k => store.delete(k));
+        return Promise.resolve(null);
+      }),
+    },
+  };
+});
+

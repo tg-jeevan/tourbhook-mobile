@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { X, MoreVertical } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { UGCContentDisplay } from '../../ugc/components/UGCContentDisplay';
@@ -27,9 +27,7 @@ export default function PlaceDetailsScreen() {
           <X size={24} color={AppColors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Place Details</Text>
-        <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
-          <MoreVertical size={22} color={AppColors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.headerIconBtn} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

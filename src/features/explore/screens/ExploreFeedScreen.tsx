@@ -32,6 +32,9 @@ import {
   Check,
   ChevronRight,
   X,
+  Sparkles,
+  ArrowRight,
+  Plus,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
@@ -262,12 +265,25 @@ export default function ExploreFeedScreen() {
               <Text style={styles.sectionTitle}>Travel Reels</Text>
             </View>
 
-            <TouchableOpacity
-              onPress={() => handleReelPress(reels[0] || MOCK_EXPLORE_REELS[0])}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.seeAllText}>See all →</Text>
-            </TouchableOpacity>
+            <View style={styles.headerRightActions}>
+              <TouchableOpacity
+                style={styles.shareReelHeaderBtn}
+                onPress={() => navigation.navigate('UGCPosting')}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Share a Travel Reel"
+              >
+                <Plus size={13} color={AppColors.accent} />
+                <Text style={styles.shareReelHeaderText}>Share Reel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => handleReelPress(reels[0] || MOCK_EXPLORE_REELS[0])}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAllText}>See all →</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView
@@ -371,6 +387,30 @@ export default function ExploreFeedScreen() {
               );
             })}
           </ScrollView>
+
+          {/* ── SHARE A TRAVEL REEL CALLOUT BANNER ─────────────────────── */}
+          <TouchableOpacity
+            style={styles.shareTravelReelBanner}
+            onPress={() => navigation.navigate('UGCPosting')}
+            activeOpacity={0.88}
+            accessibilityRole="button"
+            accessibilityLabel="Share a Travel Reel. Discover new places with the videos you love."
+          >
+            <View style={styles.shareBannerLeft}>
+              <View style={styles.shareBannerIconBox}>
+                <Sparkles size={18} color={AppColors.primary} />
+              </View>
+              <View style={styles.shareBannerTextWrap}>
+                <Text style={styles.shareBannerTitle}>Share a Travel Reel</Text>
+                <Text style={styles.shareBannerSubtitle}>
+                  Discover new places with the videos you love.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.shareBannerActionBtn}>
+              <ArrowRight size={16} color={AppColors.textOnPrimary} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* ── SECTION 2: POPULAR DESTINATIONS ──────────────────────── */}
@@ -764,6 +804,81 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: AppColors.primary,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  shareReelHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFF1EE',
+    borderWidth: 1,
+    borderColor: '#FFD0C5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+  },
+  shareReelHeaderText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: AppColors.accent,
+  },
+  shareTravelReelBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: AppColors.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#EAE5DC',
+    padding: 14,
+    marginTop: 14,
+    shadowColor: AppColors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  shareBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    paddingRight: 8,
+  },
+  shareBannerIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareBannerTextWrap: {
+    flex: 1,
+  },
+  shareBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    letterSpacing: -0.2,
+  },
+  shareBannerSubtitle: {
+    fontSize: 11,
+    color: AppColors.textMuted,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  shareBannerActionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: AppColors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   /* ── REELS SECTION ──────────────────────────────────────────────── */

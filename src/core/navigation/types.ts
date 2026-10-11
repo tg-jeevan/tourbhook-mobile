@@ -5,7 +5,6 @@ export type AuthStackParamList = {
   Splash: undefined;
   Welcome: undefined;
   SignIn: undefined;
-  DevScreenTester: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;
   OTPVerification: { email: string };
@@ -20,6 +19,7 @@ export type TravelMode = 'Airplane' | 'Boat' | 'Bus' | 'Car' | 'Public Transport
 
 /** Core trip info collected on PlanTrip */
 export interface TripCreationParams {
+  itineraryName?: string;
   destination: string;
   startDate: string;
   endDate: string;
@@ -41,17 +41,8 @@ export interface TripCreationFullParams extends TripCreationParams {
 }
 
 export type AppStackParamList = {
-  // --- AUTH SCREENS (accessible from DevScreenTester) ---
-  Splash: undefined;
-  Welcome: undefined;
-  SignIn: undefined;
-  SignUp: undefined;
-  ForgotPassword: undefined;
-  OTPVerification: { email: string };
-  ResetPassword: { email: string; otp: string };
   // --- APP SCREENS ---
   MyItineraries: undefined;
-  DevScreenTester: undefined;
   /** Step 1: core trip info */
   PlanTrip: undefined;
   /** Step 2: travel style / preferences — receives PlanTrip data */
@@ -62,8 +53,8 @@ export type AppStackParamList = {
   AddPlaces: TripCreationFullParams & { tripId?: string };
   /** Step 5: Travel Mode selection */
   TravelMode: TripCreationFullParams & { selectedPlaceIds?: string[]; tripId?: string };
-  /** Step 6+: Packing list in creation flow */
-  CheckingPacking: { tripId: string };
+  /** Step 6+: Packing list / generation in creation flow */
+  CheckingPacking: TripCreationFullParams & { tripId?: string };
   /** Itinerary view / packing tabs (existing trip) */
   TripDetails: { tripId: string };
   PlaceDetails: { placeId: string; placeName: string };
@@ -72,6 +63,7 @@ export type AppStackParamList = {
   PackingList: { tripId: string };
   ProfileMenu: undefined;
   ProfileSettings: undefined;
+  Language: undefined;
   UserLevels: undefined;
   UpgradePlan: undefined;
   PaymentMethods: { planId: string };
@@ -81,6 +73,9 @@ export type AppStackParamList = {
   Terms: undefined;
   UGCPosting: { destination?: string; tripId?: string; placeName?: string } | undefined;
   GroupMatching: undefined;
+  GroupDetails: { groupId: string };
+  GroupChat: { groupId: string };
+  GroupInfo: { groupId: string };
   ImportData: undefined;
   ImportReview: { draft: ImportedTripDraft };
   Reviews: { placeId: string; placeName: string };

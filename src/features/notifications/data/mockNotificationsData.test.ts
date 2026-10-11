@@ -90,5 +90,48 @@ describe('Notifications & Travel News (SCRUM-34)', () => {
     const newNotif = notifs.find((n) => n.id === 'notif-new-1');
     expect(newNotif?.isRead).toBe(false);
   });
+
+  it('travel tips notifications should have valid title, message, and destination', () => {
+    const active = getActiveNotifications();
+    const travelTips = active.filter((n) => n.type === 'travel_tip');
+    expect(travelTips.length).toBeGreaterThan(0);
+
+    const packSmartTip = travelTips.find((n) => n.title.includes('Pack Smart'));
+    expect(packSmartTip).toBeDefined();
+    expect(packSmartTip?.type).toBe('travel_tip');
+    expect(packSmartTip?.destination).toBe('Paris, France');
+    expect(packSmartTip?.message).toContain('walking shoes');
+  });
+
+  it('category filtering should isolate travel_tips, itinerary, and travel_news properly', () => {
+    const active = getActiveNotifications();
+
+    // Travel Tips filter returns only travel_tip
+    const travelTipsOnly = active.filter((item) => item.type === 'travel_tip');
+    expect(travelTipsOnly.length).toBeGreaterThan(0);
+    travelTipsOnly.forEach((item) => {
+      expect(item.type).toBe('travel_tip');
+      expect(item.type).not.toBe('itinerary_update');
+      expect(item.type).not.toBe('travel_news');
+      expect(item.type).not.toBe('destination_alert');
+    });
+
+    // Itinerary filter returns only itinerary_update and excludes travel_tip
+    const itineraryOnly = active.filter((item) => item.type === 'itinerary_update');
+    expect(itineraryOnly.length).toBeGreaterThan(0);
+    itineraryOnly.forEach((item) => {
+      expect(item.type).toBe('itinerary_update');
+      expect(item.type).not.toBe('travel_tip');
+    });
+
+    // All filter includes all categories
+    const allCount = active.length;
+    expect(allCount).toBe(
+      travelTipsOnly.length +
+        itineraryOnly.length +
+        active.filter((i) => i.type === 'travel_news' || i.type === 'destination_alert').length
+    );
+  });
 });
+
 

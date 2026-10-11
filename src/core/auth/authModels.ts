@@ -28,6 +28,8 @@ export interface User {
   phone?: string;
   premium?: boolean;
   profilePictureUrl?: string;
+  level?: string;
+  isVerified?: boolean;
 }
 
 export function userFromJson(json: Record<string, unknown>): User {
@@ -38,5 +40,7 @@ export function userFromJson(json: Record<string, unknown>): User {
     phone: json.phone as string | undefined,
     premium: json.premium as boolean | undefined,
     profilePictureUrl: json.profilePictureUrl as string | undefined,
+    level: (json.level ?? json.explorerLevel) as string | undefined,
+    isVerified: (json.isVerified ?? json.verified) as boolean | undefined,
   };
 }

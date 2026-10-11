@@ -85,14 +85,16 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.shareReelBtn}
-          onPress={handleShareClick}
-          activeOpacity={0.8}
-        >
-          <Upload size={13} color={AppColors.accent} />
-          <Text style={styles.shareReelBtnText}>Share Reel</Text>
-        </TouchableOpacity>
+        {onPostClick && (
+          <TouchableOpacity
+            style={styles.shareReelBtn}
+            onPress={handleShareClick}
+            activeOpacity={0.8}
+          >
+            <Upload size={13} color={AppColors.accent} />
+            <Text style={styles.shareReelBtnText}>Share Reel</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* ── FILTER & SORT PILLS ROW ────────────────────────────────── */}
@@ -166,32 +168,11 @@ export const UGCContentDisplay: React.FC<UGCContentDisplayProps> = ({
         </ScrollView>
       </View>
 
-      {/* ── REELS CARDS LIST OR MODERATION EMPTY STATE ─────────────── */}
+      {/* ── REELS CARDS LIST OR UNOBTRUSIVE EMPTY STATE ─────────────── */}
       {approvedItems.length === 0 ? (
-        /* Empty / Zero-Tolerance Moderation Proof State */
-        <View style={styles.emptyCard}>
-          <View style={styles.emptyIconContainer}>
-            <Video size={28} color={AppColors.primary} />
-          </View>
-          <Text style={styles.emptyTitle}>No approved reels yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Travel reels for this destination will appear here once they pass our moderation review.
-          </Text>
-
-          <View style={styles.moderationNoticeBox}>
-            <ShieldCheck size={16} color={AppColors.success} />
-            <Text style={styles.moderationNoticeText}>
-              Zero-Tolerance Content Safety: Pending or unapproved submissions remain hidden.
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.emptySubmitBtn}
-            onPress={handleShareClick}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.emptySubmitBtnText}>+ Submit a Reel / Short</Text>
-          </TouchableOpacity>
+        /* Small, unobtrusive message when no community videos exist */
+        <View style={styles.unobtrusiveEmptyBox}>
+          <Text style={styles.unobtrusiveEmptyText}>No community videos yet.</Text>
         </View>
       ) : (
         /* Content Cards List (Horizontal split-card design) */
@@ -773,19 +754,21 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
-  /* ── EMPTY / MODERATION PROOF STATE ────────────────────────────── */
-  emptyCard: {
+  /* ── UNOBTRUSIVE EMPTY STATE ──────────────────────────────────── */
+  unobtrusiveEmptyBox: {
     backgroundColor: AppColors.surface,
-    borderRadius: 22,
-    padding: 24,
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#EAE5DC',
-    shadowColor: AppColors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1,
+  },
+  unobtrusiveEmptyText: {
+    fontSize: 13,
+    color: AppColors.textMuted,
+    fontWeight: '500',
   },
   emptyIconContainer: {
     width: 60,

@@ -48,6 +48,7 @@ export const ApiPaths = {
   paymentMethods: '/profile/payments',
   addPaymentMethod: '/profile/Addpayments',
   subscription: '/profile/subscription',
+  languagePreference: '/user/preferences/language',
 
   // Weather
   weather: '/weather', // ?city={city}&date={date}

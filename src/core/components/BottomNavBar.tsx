@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Home, Compass, Users, Briefcase, User, LucideIcon } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Compass, Users, Briefcase, User, LucideIcon } from 'lucide-react-native';
 import { AppStackParamList } from '../navigation/types';
 import { AppColors } from '../theme/colors';
 
-export type BottomNavTab = 'home' | 'explore' | 'trips' | 'groups' | 'profile';
+export type BottomNavTab = 'explore' | 'trips' | 'groups' | 'profile';
 
 interface TabConfig {
   key: BottomNavTab;
@@ -16,12 +17,6 @@ interface TabConfig {
 }
 
 const TABS: TabConfig[] = [
-  {
-    key: 'home',
-    label: 'Home',
-    Icon: Home,
-    onPress: navigation => navigation.navigate('MyItineraries'),
-  },
   {
     key: 'explore',
     label: 'Explore',
@@ -54,9 +49,10 @@ interface BottomNavBarProps {
 
 export function BottomNavBar({ active }: BottomNavBarProps) {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {TABS.map(tab => {
         const isActive = tab.key === active;
         return (
@@ -87,7 +83,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: AppColors.borderLight,
     paddingTop: 10,
-    paddingBottom: 6,
     backgroundColor: AppColors.surface,
   },
   item: { flex: 1, alignItems: 'center', gap: 2 },
