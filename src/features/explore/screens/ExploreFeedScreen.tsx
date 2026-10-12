@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -41,15 +40,10 @@ import { AppColors } from '../../../core/theme/colors';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
 import { ExploreCategory, DestinationItem } from '../types/exploreTypes';
 import {
-  MOCK_DESTINATIONS,
-  MOCK_EXPLORE_REELS,
   getFilteredExploreContent,
   searchExploreContent,
 } from '../data/mockExploreData';
 import { UGCItem } from '../../ugc/types/ugcTypes';
-import { TravelGroup } from '../../groups/types/groupTypes';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CATEGORIES: { label: ExploreCategory; icon: React.ComponentType<{ size: number; color: string }> }[] = [
   { label: 'All', icon: LayoutGrid },
@@ -278,7 +272,9 @@ export default function ExploreFeedScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => handleReelPress(reels[0] || MOCK_EXPLORE_REELS[0])}
+                onPress={() =>
+                  navigation.navigate('ExploreCollection', { contentType: 'reels' })
+                }
                 activeOpacity={0.7}
               >
                 <Text style={styles.seeAllText}>See all →</Text>
@@ -424,7 +420,9 @@ export default function ExploreFeedScreen() {
             </View>
 
             <TouchableOpacity
-              onPress={() => handleDestinationPress(destinations[0] || MOCK_DESTINATIONS[0])}
+              onPress={() =>
+                navigation.navigate('ExploreCollection', { contentType: 'destinations' })
+              }
               activeOpacity={0.7}
             >
               <Text style={styles.seeAllText}>See all →</Text>
