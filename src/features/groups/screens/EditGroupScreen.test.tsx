@@ -6,24 +6,32 @@ import CreateGroupScreen, {
 } from './CreateGroupScreen';
 import EditGroupScreen from './EditGroupScreen';
 import { groupStore } from '../data/groupStore';
+import { subscriptionStore } from '../../profile/data/subscriptionStore';
 
 const mockGoBack = jest.fn();
+const mockNavigate = jest.fn();
 let mockRouteParams: any = {};
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     goBack: mockGoBack,
-    navigate: jest.fn(),
+    navigate: mockNavigate,
   }),
   useRoute: () => ({
     params: mockRouteParams,
   }),
 }));
 
+jest.mock('../../profile/data/subscriptionStore', () => ({
+  useSubscription: () => ({ plan: 'free', isPremium: false }),
+  subscriptionStore: { reset: jest.fn() },
+}));
+
 describe('EditGroupScreen / CreateGroupScreen Multi-Category Selection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     groupStore.reset();
+    subscriptionStore.reset();
     mockRouteParams = {};
   });
 
@@ -206,6 +214,62 @@ describe('EditGroupScreen / CreateGroupScreen Multi-Category Selection', () => {
       expect(paris?.categories).toContain('adventure');
       expect(paris?.tags).toContain('Hiking');
       expect(paris?.tags).toContain('Photography');
+    });
+
+    it('edits group visibility and KYC requirement', () => {
+      mockRouteParams = { groupId: 'group-paris' };
+      let renderer: ReactTestRenderer.ReactTestRenderer;
+      ReactTestRenderer.act(() => {
+        renderer = ReactTestRenderer.create(<CreateGroupScreen />);
+      });
+
+      const root = renderer!.root;
+      expect(
+        root.findByProps({ testID: 'visibility-public' }).props.accessibilityState
+          .selected,
+      ).toBe(true);
+      expect(root.findByProps({ testID: 'requires-kyc-switch' }).props.value).toBe(
+        true,
+      );
+
+      ReactTestRenderer.act(() => {
+        root.findByProps({ testID: 'visibility-private' }).props.onPress();
+        root.findByProps({ testID: 'requires-kyc-switch' }).props.onValueChange(false);
+      });
+      ReactTestRenderer.act(() => {
+        root.findByProps({ testID: 'group-save-btn' }).props.onPress();
+      });
+
+      const paris = groupStore.getGroupById('group-paris');
+      expect(paris?.visibility).toBe('private');
+      expect(paris?.requiresKyc).toBe(false);
+    });
+
+    it('shows the upgrade prompt when a free user reaches the create limit', () => {
+      groupStore.createGroup({ name: 'Created Group One' });
+      groupStore.createGroup({ name: 'Created Group Two' });
+      mockRouteParams = {};
+
+      let renderer: ReactTestRenderer.ReactTestRenderer;
+      ReactTestRenderer.act(() => {
+        renderer = ReactTestRenderer.create(<CreateGroupScreen />);
+      });
+
+      const root = renderer!.root;
+      ReactTestRenderer.act(() => {
+        root.findByProps({ testID: 'group-name-input' }).props.onChangeText(
+          'Blocked Third Group',
+        );
+      });
+      ReactTestRenderer.act(() => {
+        root.findByProps({ testID: 'group-save-btn' }).props.onPress();
+      });
+
+      expect(
+        root.findAllByProps({ children: 'Group creation limit reached' }).length,
+      ).toBeGreaterThan(0);
+      expect(groupStore.getCreatedGroupCount()).toBe(2);
+      expect(mockGoBack).not.toHaveBeenCalled();
     });
   });
 });

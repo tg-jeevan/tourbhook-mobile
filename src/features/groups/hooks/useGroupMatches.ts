@@ -16,7 +16,7 @@ export function useGroupMatches(category: CategoryFilter) {
     const timer = setTimeout(() => {
       if (cancelled) return;
       try {
-        setAllGroups(groupStore.getGroups());
+        setAllGroups(groupStore.getDiscoverableGroups());
       } catch {
         setIsError(true);
       } finally {
@@ -26,7 +26,7 @@ export function useGroupMatches(category: CategoryFilter) {
 
     const unsubscribe = groupStore.subscribe(() => {
       setTick(t => t + 1);
-      setAllGroups(groupStore.getGroups());
+      setAllGroups(groupStore.getDiscoverableGroups());
     });
 
     return () => {
@@ -55,7 +55,7 @@ export function useGroupMatches(category: CategoryFilter) {
     setIsLoading(true);
     setIsError(false);
     setTimeout(() => {
-      setAllGroups(groupStore.getGroups());
+      setAllGroups(groupStore.getDiscoverableGroups());
       setIsLoading(false);
     }, 300);
   };

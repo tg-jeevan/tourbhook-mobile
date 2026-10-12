@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   Share,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -40,6 +42,8 @@ import { ErrorState } from '../../../core/components/ErrorState';
 import { AppColors } from '../../../core/theme/colors';
 import { CATEGORY_FILTERS, CategoryFilter, TravelGroup } from '../types/groupTypes';
 import { useGroupMatches } from '../hooks/useGroupMatches';
+import { GroupAccessBadges } from '../components/GroupAccessBadges';
+import { buildGroupShareContent } from '../utils/groupAccess';
 
 const PAGE_SIZE = 4;
 
@@ -185,6 +189,7 @@ export default function GroupMatchingScreen() {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [sharingGroupId, setSharingGroupId] = useState<string | null>(null);
 
   // Hook returns all groups and joined status
   const { groups: categoryGroups, isLoading, isError, retry, isJoined } = useGroupMatches(activeCategory);
@@ -223,17 +228,22 @@ export default function GroupMatchingScreen() {
   const hasMoreGroups = displayedGroups.length < filteredGroups.length;
 
   const handleShareGroup = async (group: TravelGroup) => {
+    if (sharingGroupId) return;
+    const shareContent = buildGroupShareContent(group);
+    if (!shareContent) {
+      Alert.alert(
+        'Invite link unavailable',
+        'This group does not have a shareable invitation link yet.',
+      );
+      return;
+    }
+    setSharingGroupId(group.id);
     try {
-      const destText = group.location ? `\n📍 Destination: ${group.location}` : '';
-      const datesText = group.travelDates ? `\n📅 Dates: ${group.travelDates}` : '';
-      const message = `Check out this travel group on Tourbhook!\n\n👥 ${group.name}\n${group.description || 'Join fellow travelers exploring together.'}${destText}${datesText}\n\nDownload the Tour Bhook app to connect and travel together.`;
-
-      await Share.share({
-        title: `Tourbhook: ${group.name}`,
-        message,
-      });
+      await Share.share(shareContent);
     } catch {
-      // Ignored
+      Alert.alert('Unable to share', 'Please try sharing this group again.');
+    } finally {
+      setSharingGroupId(null);
     }
   };
 
@@ -490,6 +500,7 @@ export default function GroupMatchingScreen() {
           <Text style={styles.groupDesc} numberOfLines={2}>
             {group.description || 'Exploring together with fellow travelers 🌍'}
           </Text>
+          <GroupAccessBadges group={group} />
 
           {/* Member Avatars & Count */}
           {renderAvatarInitials(group)}
@@ -505,13 +516,18 @@ export default function GroupMatchingScreen() {
               <TouchableOpacity
                 style={styles.shareIconButton}
                 activeOpacity={0.7}
+                disabled={sharingGroupId === group.id}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 onPress={(e) => {
                   e.stopPropagation();
                   handleShareGroup(group);
                 }}
               >
-                <Share2 size={16} color={AppColors.textSecondary} />
+                {sharingGroupId === group.id ? (
+                  <ActivityIndicator size="small" color={AppColors.primary} />
+                ) : (
+                  <Share2 size={16} color={AppColors.textSecondary} />
+                )}
               </TouchableOpacity>
 
               {/* View / Chat Navigation Arrow */}

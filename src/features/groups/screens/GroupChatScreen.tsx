@@ -31,24 +31,31 @@ export default function GroupChatScreen() {
   const route = useRoute<RouteProp<AppStackParamList, 'GroupChat'>>();
   const groupId = route.params?.groupId || 'group-paris';
 
-  const { group, messages, sendMessage, isJoined, joinGroup } = useGroupState(groupId);
+  const { group, messages, sendMessage, isJoined } = useGroupState(groupId);
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList<GroupMessage>>(null);
 
   useEffect(() => {
-    // If not already joined, automatically join when chat is entered
+    // Direct navigation must not bypass KYC or plan-limit checks on Group Details.
     if (!isJoined) {
-      joinGroup(groupId);
+      navigation.replace('GroupDetails', { groupId });
     }
-  }, [isJoined, groupId, joinGroup]);
+  }, [isJoined, groupId, navigation]);
 
   useEffect(() => {
     // Auto scroll to bottom when messages update
+    if (!isJoined) {
+      return;
+    }
     const timer = setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 150);
     return () => clearTimeout(timer);
-  }, [messages.length]);
+  }, [isJoined, messages.length]);
+
+  if (!isJoined) {
+    return <SafeAreaView style={styles.safeArea} testID="group-chat-access-guard" />;
+  }
 
   const handleSend = () => {
     if (!inputText.trim()) return;

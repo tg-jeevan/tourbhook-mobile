@@ -4,7 +4,7 @@ import ExploreFeedScreen from './ExploreFeedScreen';
 import AllDestinationsScreen from './AllDestinationsScreen';
 import ReelViewerScreen from './ReelViewerScreen';
 import GroupMatchingScreen from '../../groups/screens/GroupMatchingScreen';
-import { MOCK_DESTINATIONS } from '../data/mockExploreData';
+import { MOCK_DESTINATIONS, searchExploreContent } from '../data/mockExploreData';
 import { MOCK_UGC_ITEMS } from '../../ugc/data/mockUGCData';
 import { getMockTravelGroups } from '../../groups/types/groupTypes';
 
@@ -24,6 +24,14 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: any) => children,
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+
+jest.mock('../../../core/auth/AuthContext', () => ({
+  useAuth: () => ({ user: { isVerified: false } }),
+}));
+
+jest.mock('../../profile/data/subscriptionStore', () => ({
+  useSubscription: () => ({ plan: 'free', isPremium: false }),
 }));
 
 describe('Explore Section See All Navigation and Collection Screens', () => {
@@ -155,9 +163,19 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
           .map((n) => n.props.testID)
       );
 
-      const totalPublicGroups = getMockTravelGroups();
+      const totalPublicGroups = getMockTravelGroups().filter(
+        group => group.visibility !== 'private',
+      );
       expect(totalPublicGroups.length).toBeGreaterThan(5);
       expect(uniquePreviewGroupIds.size).toBe(5);
+    });
+
+    it('does not expose private groups through Explore search', () => {
+      const results = searchExploreContent('Rome Antiquities');
+
+      expect(
+        results.some(result => result.type === 'group' && result.id === 'group-12'),
+      ).toBe(false);
     });
   });
 
@@ -368,7 +386,9 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
         jest.advanceTimersByTime(500);
       });
 
-      const totalPublicGroups = getMockTravelGroups();
+      const totalPublicGroups = getMockTravelGroups().filter(
+        group => group.visibility !== 'private',
+      );
       expect(totalPublicGroups.length).toBeGreaterThan(5);
 
       const matchingCards = renderer!.root.findAll(

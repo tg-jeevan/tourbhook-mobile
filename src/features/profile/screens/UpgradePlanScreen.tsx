@@ -15,7 +15,6 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  Compass,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
@@ -73,6 +72,20 @@ export default function UpgradePlanScreen() {
           {/* Section: Community & Discovery */}
           <Text style={styles.sectionHeader}>COMMUNITY & DISCOVERY</Text>
           <View style={styles.featuresList}>
+            <View style={styles.featureItem}>
+              <View style={styles.checkWrap}>
+                <Check size={14} color="#059669" strokeWidth={3} />
+              </View>
+              <Text style={styles.featureText}>Create up to 2 travel groups</Text>
+            </View>
+
+            <View style={styles.featureItem}>
+              <View style={styles.checkWrap}>
+                <Check size={14} color="#059669" strokeWidth={3} />
+              </View>
+              <Text style={styles.featureText}>Join up to 2 travel groups</Text>
+            </View>
+
             <View style={styles.featureItem}>
               <View style={styles.checkWrap}>
                 <Check size={14} color="#059669" strokeWidth={3} />
@@ -196,6 +209,20 @@ export default function UpgradePlanScreen() {
           {/* Section: Community & Discovery */}
           <Text style={styles.sectionHeaderPremium}>COMMUNITY & DISCOVERY</Text>
           <View style={styles.featuresList}>
+            <View style={styles.featureItem}>
+              <View style={styles.checkWrapPremium}>
+                <Check size={14} color={AppColors.primary} strokeWidth={3} />
+              </View>
+              <Text style={styles.featureText}>Create up to 5 travel groups</Text>
+            </View>
+
+            <View style={styles.featureItem}>
+              <View style={styles.checkWrapPremium}>
+                <Check size={14} color={AppColors.primary} strokeWidth={3} />
+              </View>
+              <Text style={styles.featureText}>Join up to 5 travel groups</Text>
+            </View>
+
             <View style={styles.featureItem}>
               <View style={styles.checkWrapPremium}>
                 <Check size={14} color={AppColors.primary} strokeWidth={3} />

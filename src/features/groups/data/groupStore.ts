@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { GroupMember, GroupMessage, TravelGroup, getMockTravelGroups } from '../types/groupTypes';
+import {
+  GroupMember,
+  GroupMessage,
+  GroupVisibility,
+  TravelGroup,
+  getMockTravelGroups,
+} from '../types/groupTypes';
 import {
   MOCK_GROUP_MEMBERS,
   INITIAL_MOCK_MESSAGES,
@@ -14,6 +20,8 @@ export interface CreateGroupInput {
   categories?: string[];
   travelDates?: string;
   maxMembers?: number;
+  visibility?: GroupVisibility;
+  requiresKyc?: boolean;
 }
 
 export interface UpdateGroupInput {
@@ -24,6 +32,8 @@ export interface UpdateGroupInput {
   categories?: string[];
   travelDates?: string;
   maxMembers?: number;
+  visibility?: GroupVisibility;
+  requiresKyc?: boolean;
 }
 
 class GroupStore {
@@ -57,6 +67,29 @@ class GroupStore {
 
   getGroups(): TravelGroup[] {
     return [...this.groups];
+  }
+
+  getPublicGroups(): TravelGroup[] {
+    return this.groups.filter(group => group.visibility !== 'private');
+  }
+
+  getDiscoverableGroups(): TravelGroup[] {
+    return this.groups.filter(
+      group =>
+        group.visibility !== 'private' ||
+        group.isOwnedByCurrentUser ||
+        this.joinedGroupIds.has(group.id),
+    );
+  }
+
+  getCreatedGroupCount(): number {
+    return this.groups.filter(group => group.isOwnedByCurrentUser).length;
+  }
+
+  getJoinedGroupCount(): number {
+    return this.groups.filter(
+      group => this.joinedGroupIds.has(group.id) && !group.isOwnedByCurrentUser,
+    ).length;
   }
 
   getGroupById(groupId: string): TravelGroup | undefined {
@@ -121,6 +154,10 @@ class GroupStore {
       tags,
       categories,
       notificationsEnabled: true,
+      visibility: input.visibility || 'public',
+      requiresKyc: input.requiresKyc || false,
+      inviteUrl: `https://tourbhook.app/join/${id}`,
+      isOwnedByCurrentUser: true,
     };
 
     this.groups = [newGroup, ...this.groups];
@@ -214,6 +251,8 @@ class GroupStore {
       categories,
       tags,
       categoryLabel,
+      visibility: input.visibility ?? existing.visibility ?? 'public',
+      requiresKyc: input.requiresKyc ?? existing.requiresKyc ?? false,
     };
 
     this.groups[index] = updatedGroup;
@@ -360,6 +399,8 @@ export function useGroupState(groupId?: string) {
     messages,
     members,
     notificationsEnabled,
+    createdGroupCount: groupStore.getCreatedGroupCount(),
+    joinedGroupCount: groupStore.getJoinedGroupCount(),
     joinGroup: (id: string) => groupStore.joinGroup(id),
     leaveGroup: (id: string) => groupStore.leaveGroup(id),
     createGroup: (input: CreateGroupInput) => groupStore.createGroup(input),

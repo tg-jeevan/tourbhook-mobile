@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -26,11 +27,18 @@ import {
   Car,
   Backpack,
   Sparkles,
+  Globe2,
+  LockKeyhole,
+  ShieldCheck,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
 import { AppColors } from '../../../core/theme/colors';
+import { ConfirmationModal } from '../../../core/components/ConfirmationModal';
+import { useSubscription } from '../../profile/data/subscriptionStore';
 import { groupStore } from '../data/groupStore';
+import { GroupVisibility } from '../types/groupTypes';
+import { getCreateGroupBlockReason, getGroupLimits } from '../utils/groupAccess';
 
 export const GROUP_CATEGORIES = [
   { name: 'Adventure', icon: Mountain, color: '#0284C7' },
@@ -82,6 +90,7 @@ export default function CreateGroupScreen() {
   const isEditMode = Boolean(groupId);
 
   const existingGroup = groupId ? groupStore.getGroupById(groupId) : undefined;
+  const { plan } = useSubscription();
 
   const [name, setName] = useState(existingGroup?.name || '');
   const [destination, setDestination] = useState(
@@ -99,10 +108,17 @@ export default function CreateGroupScreen() {
       : '',
   );
   const [maxMembers, setMaxMembers] = useState(existingGroup?.maxMembers || 8);
+  const [visibility, setVisibility] = useState<GroupVisibility>(
+    existingGroup?.visibility || 'public',
+  );
+  const [requiresKyc, setRequiresKyc] = useState(
+    existingGroup?.requiresKyc || false,
+  );
 
   const [errorName, setErrorName] = useState<string | null>(null);
   const [errorCategory, setErrorCategory] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreateLimit, setShowCreateLimit] = useState(false);
 
   const handleToggleCategory = (catName: string) => {
     setSelectedCategories(prev => {
@@ -135,6 +151,14 @@ export default function CreateGroupScreen() {
       return;
     }
 
+    if (
+      !isEditMode &&
+      getCreateGroupBlockReason(plan, groupStore.getCreatedGroupCount())
+    ) {
+      setShowCreateLimit(true);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (isEditMode && groupId) {
@@ -146,6 +170,8 @@ export default function CreateGroupScreen() {
           category: selectedCategories[0],
           travelDates: travelDates.trim() || undefined,
           maxMembers,
+          visibility,
+          requiresKyc,
         });
       } else {
         groupStore.createGroup({
@@ -156,6 +182,8 @@ export default function CreateGroupScreen() {
           category: selectedCategories[0],
           travelDates: travelDates.trim() || undefined,
           maxMembers,
+          visibility,
+          requiresKyc,
         });
       }
 
@@ -341,6 +369,65 @@ export default function CreateGroupScreen() {
             </View>
           </View>
 
+          {/* Group Access */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Group Access</Text>
+            <View style={styles.visibilityRow}>
+              {(['public', 'private'] as GroupVisibility[]).map(option => {
+                const isSelected = visibility === option;
+                const Icon = option === 'public' ? Globe2 : LockKeyhole;
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    testID={`visibility-${option}`}
+                    style={[
+                      styles.visibilityOption,
+                      isSelected && styles.visibilityOptionActive,
+                    ]}
+                    onPress={() => setVisibility(option)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    activeOpacity={0.8}
+                  >
+                    <Icon
+                      size={18}
+                      color={isSelected ? AppColors.primary : AppColors.textMuted}
+                    />
+                    <View style={styles.visibilityTextCol}>
+                      <Text style={styles.visibilityTitle}>
+                        {option === 'public' ? 'Public' : 'Private'}
+                      </Text>
+                      <Text style={styles.visibilitySubtitle}>
+                        {option === 'public'
+                          ? 'Visible in Explore and group search'
+                          : 'Only accessible through an invite link'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <View style={styles.kycRow}>
+              <View style={styles.kycIconCircle}>
+                <ShieldCheck size={19} color={AppColors.primary} />
+              </View>
+              <View style={styles.kycTextCol}>
+                <Text style={styles.kycTitle}>Require KYC verification</Text>
+                <Text style={styles.kycSubtitle}>
+                  Only verified travelers can join this group.
+                </Text>
+              </View>
+              <Switch
+                testID="requires-kyc-switch"
+                value={requiresKyc}
+                onValueChange={setRequiresKyc}
+                trackColor={{ false: AppColors.borderDark, true: AppColors.primaryLight }}
+                thumbColor={requiresKyc ? AppColors.primary : AppColors.textLight}
+              />
+            </View>
+          </View>
+
           {/* Actions */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity
@@ -366,6 +453,25 @@ export default function CreateGroupScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmationModal
+        visible={showCreateLimit}
+        onClose={() => setShowCreateLimit(false)}
+        onConfirm={() => {
+          setShowCreateLimit(false);
+          if (plan === 'free') {
+            navigation.navigate('UpgradePlan');
+          }
+        }}
+        title="Group creation limit reached"
+        message={
+          plan === 'free'
+            ? `Your free plan allows ${getGroupLimits(plan).created} created groups. Upgrade to increase your allowance.`
+            : `Your Voyager plan allows ${getGroupLimits(plan).created} created groups. You have reached this limit.`
+        }
+        confirmText={plan === 'free' ? 'View plans' : 'Okay'}
+        cancelText="Not now"
+        isDestructive={false}
+      />
     </SafeAreaView>
   );
 }
@@ -520,6 +626,70 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+  },
+  visibilityRow: {
+    gap: 8,
+  },
+  visibilityOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E8E3DA',
+    backgroundColor: AppColors.surface,
+  },
+  visibilityOptionActive: {
+    borderColor: AppColors.primary,
+    backgroundColor: AppColors.surfaceHighlight,
+  },
+  visibilityTextCol: {
+    flex: 1,
+  },
+  visibilityTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    textTransform: 'capitalize',
+  },
+  visibilitySubtitle: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
+    color: AppColors.textMuted,
+  },
+  kycRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E8E3DA',
+    backgroundColor: AppColors.surface,
+  },
+  kycIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: AppColors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kycTextCol: {
+    flex: 1,
+  },
+  kycTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+  },
+  kycSubtitle: {
+    marginTop: 2,
+    fontSize: 11,
+    color: AppColors.textMuted,
   },
   memberChip: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Share,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -28,6 +30,15 @@ import { BackButton } from '../../../core/components/BackButton';
 import { AppColors } from '../../../core/theme/colors';
 import { useGroupState } from '../data/groupStore';
 import { GroupMember } from '../types/groupTypes';
+import { useAuth } from '../../../core/auth/AuthContext';
+import { useSubscription } from '../../profile/data/subscriptionStore';
+import { GroupAccessBadges } from '../components/GroupAccessBadges';
+import { GroupAccessGateModal } from '../components/GroupAccessGateModal';
+import {
+  buildGroupShareContent,
+  GroupAccessBlockReason,
+  getJoinGroupBlockReason,
+} from '../utils/groupAccess';
 
 export default function GroupDetailsScreen() {
   const navigation =
@@ -35,7 +46,13 @@ export default function GroupDetailsScreen() {
   const route = useRoute<RouteProp<AppStackParamList, 'GroupDetails'>>();
   const groupId = route.params?.groupId || 'group-paris';
 
-  const { group, isJoined, members, joinGroup } = useGroupState(groupId);
+  const { group, isJoined, members, joinGroup, joinedGroupCount } =
+    useGroupState(groupId);
+  const { user } = useAuth();
+  const { plan } = useSubscription();
+  const [accessBlockReason, setAccessBlockReason] =
+    useState<GroupAccessBlockReason | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   if (!group) {
     return (
@@ -54,6 +71,17 @@ export default function GroupDetailsScreen() {
 
   const handleJoinOrChat = () => {
     if (!isJoined) {
+      const reason = getJoinGroupBlockReason({
+        group,
+        isVerified: user?.isVerified === true,
+        isAlreadyJoined: false,
+        joinedCount: joinedGroupCount,
+        plan,
+      });
+      if (reason) {
+        setAccessBlockReason(reason);
+        return;
+      }
       joinGroup(groupId);
     }
     // Navigate directly into the Group Chat screen
@@ -61,18 +89,22 @@ export default function GroupDetailsScreen() {
   };
 
   const handleShareGroup = async () => {
-    if (!group) return;
+    if (!group || isSharing) return;
+    const shareContent = buildGroupShareContent(group);
+    if (!shareContent) {
+      Alert.alert(
+        'Invite link unavailable',
+        'This group does not have a shareable invitation link yet.',
+      );
+      return;
+    }
+    setIsSharing(true);
     try {
-      const destText = group.location ? `\n📍 Destination: ${group.location}` : '';
-      const datesText = group.travelDates ? `\n📅 Dates: ${group.travelDates}` : '';
-      const message = `Check out this travel group on Tourbhook!\n\n👥 ${group.name}\n${group.description || 'Join fellow travelers exploring together.'}${destText}${datesText}\n\nDownload the Tour Bhook app to connect and travel together.`;
-
-      await Share.share({
-        title: `Tourbhook: ${group.name}`,
-        message,
-      });
+      await Share.share(shareContent);
     } catch {
-      // Ignored
+      Alert.alert('Unable to share', 'Please try sharing this group again.');
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -95,14 +127,19 @@ export default function GroupDetailsScreen() {
           <TouchableOpacity
             style={styles.headerActionBtn}
             onPress={handleShareGroup}
+            disabled={isSharing}
             activeOpacity={0.7}
             accessibilityLabel="Share Group"
           >
-            <Share2 size={20} color={AppColors.textSecondary} />
+            {isSharing ? (
+              <ActivityIndicator size="small" color={AppColors.primary} />
+            ) : (
+              <Share2 size={20} color={AppColors.textSecondary} />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerActionBtn}
-            onPress={() => navigation.navigate('GroupChat', { groupId })}
+            onPress={handleJoinOrChat}
             activeOpacity={0.7}
             accessibilityLabel="Group Chat"
           >
@@ -160,6 +197,7 @@ export default function GroupDetailsScreen() {
           </View>
 
           <Text style={styles.groupTitle}>{group.name}</Text>
+          <GroupAccessBadges group={group} />
 
           {/* Location & Dates */}
           <View style={styles.metaRow}>
@@ -229,9 +267,13 @@ export default function GroupDetailsScreen() {
             <ShieldCheck size={20} color={AppColors.primary} />
           </View>
           <View style={styles.guidelinesTextCol}>
-            <Text style={styles.guidelinesTitle}>Verified Travel Community</Text>
+            <Text style={styles.guidelinesTitle}>
+              {group.requiresKyc ? 'Verified Travel Community' : 'Travel Community'}
+            </Text>
             <Text style={styles.guidelinesDesc}>
-              Be respectful, share genuine travel recommendations, and enjoy planning adventures together.
+              {group.requiresKyc
+                ? 'All members must complete KYC. Be respectful and share genuine travel recommendations.'
+                : 'Be respectful, share genuine travel recommendations, and enjoy planning adventures together.'}
             </Text>
           </View>
         </View>
@@ -301,6 +343,17 @@ export default function GroupDetailsScreen() {
           </TouchableOpacity>
         )}
       </View>
+      <GroupAccessGateModal
+        reason={accessBlockReason}
+        plan={plan}
+        onClose={() => setAccessBlockReason(null)}
+        onPrimaryAction={reason => {
+          setAccessBlockReason(null);
+          if (reason === 'join_limit_reached' && plan === 'free') {
+            navigation.navigate('UpgradePlan');
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
