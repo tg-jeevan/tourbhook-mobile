@@ -252,9 +252,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   rightActionsCol: {
+    alignSelf: 'stretch',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    height: '100%',
     minHeight: 64,
   },
   menuBtn: {

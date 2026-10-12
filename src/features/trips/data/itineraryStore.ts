@@ -7,6 +7,8 @@ export interface ItineraryTrip {
   destination: string;
   location: string;
   dates: string;
+  startDate?: string;
+  endDate?: string;
   status: 'upcoming' | 'past' | 'saved';
   placesCount: number;
   activitiesCount: number;
@@ -22,6 +24,8 @@ export const INITIAL_ITINERARIES: ItineraryTrip[] = [
     destination: 'Paris, France',
     location: 'Paris, France',
     dates: 'Sep 12 – Sep 17, 2026',
+    startDate: '2026-09-12',
+    endDate: '2026-09-17',
     status: 'upcoming',
     placesCount: 5,
     activitiesCount: 12,
@@ -36,6 +40,8 @@ export const INITIAL_ITINERARIES: ItineraryTrip[] = [
     destination: 'Tokyo, Japan',
     location: 'Tokyo, Japan',
     dates: 'Oct 5 – Oct 12, 2026',
+    startDate: '2026-10-05',
+    endDate: '2026-10-12',
     status: 'upcoming',
     placesCount: 6,
     activitiesCount: 14,
@@ -50,6 +56,8 @@ export const INITIAL_ITINERARIES: ItineraryTrip[] = [
     destination: 'Kerala, India',
     location: 'Kerala, India',
     dates: 'Nov 20 – Nov 23, 2026',
+    startDate: '2026-11-20',
+    endDate: '2026-11-23',
     status: 'past',
     placesCount: 4,
     activitiesCount: 8,

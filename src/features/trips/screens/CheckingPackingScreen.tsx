@@ -64,6 +64,8 @@ export default function CheckingPackingScreen() {
           destination: formattedLocation,
           location: formattedLocation,
           dates: formattedDates,
+          startDate: params.startDate,
+          endDate: params.endDate,
           status: 'upcoming',
           placesCount,
           activitiesCount,

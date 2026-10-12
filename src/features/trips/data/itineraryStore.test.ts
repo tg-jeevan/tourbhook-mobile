@@ -1,4 +1,5 @@
 import { itineraryStore, INITIAL_ITINERARIES } from './itineraryStore';
+import { getMockItineraryDays } from '../types/itineraryPackingTypes';
 
 describe('itineraryStore', () => {
   beforeEach(() => {
@@ -40,7 +41,7 @@ describe('itineraryStore', () => {
 
     const listAfter = itineraryStore.getItineraries();
     expect(listAfter.length).toBe(2);
-    expect(listAfter.find((i) => i.id === '1')).toBeUndefined();
+    expect(listAfter.find(i => i.id === '1')).toBeUndefined();
 
     const countsAfter = itineraryStore.getCounts();
     expect(countsAfter.all).toBe(2);
@@ -75,11 +76,14 @@ describe('itineraryStore', () => {
       destination: 'Bangalore, India',
       location: 'Bangalore, India',
       dates: 'Aug 5 – Aug 7, 2027',
+      startDate: '2027-08-05',
+      endDate: '2027-08-07',
       status: 'upcoming' as const,
       placesCount: 2,
       activitiesCount: 0,
       travelersCount: 1,
-      imageUri: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=600&auto=format&fit=crop&q=80',
+      imageUri:
+        'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=600&auto=format&fit=crop&q=80',
       theme: 'sky' as const,
     };
 
@@ -93,5 +97,15 @@ describe('itineraryStore', () => {
     expect(retrieved?.travelersCount).toBe(1);
     expect(retrieved?.location).toBe('Bangalore, India');
     expect(retrieved?.dates).toBe('Aug 5 – Aug 7, 2027');
+
+    const generatedDays = getMockItineraryDays(
+      retrieved?.startDate,
+      retrieved?.endDate,
+    );
+    expect(generatedDays.map(day => day.dateLabel)).toEqual([
+      'Aug 5',
+      'Aug 6',
+      'Aug 7',
+    ]);
   });
 });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getMockItineraryDays, ItineraryDay } from '../types/itineraryPackingTypes';
+import { itineraryStore } from '../data/itineraryStore';
 
 export function useItineraryDays(tripId: string) {
   const [days, setDays] = useState<ItineraryDay[]>([]);
@@ -15,7 +16,8 @@ export function useItineraryDays(tripId: string) {
     const timer = setTimeout(() => {
       if (cancelled) return;
       try {
-        setDays(getMockItineraryDays());
+        const trip = itineraryStore.getItineraryById(tripId);
+        setDays(getMockItineraryDays(trip?.startDate, trip?.endDate));
       } catch {
         setIsError(true);
       } finally {

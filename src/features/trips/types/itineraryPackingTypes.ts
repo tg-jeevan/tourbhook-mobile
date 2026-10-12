@@ -1,3 +1,5 @@
+import { MONTH_NAMES, parseDateComponents } from '../utils/itineraryFormatting';
+
 export type TimelineItemType = 'activity' | 'break';
 
 export interface TimelineItem {
@@ -19,134 +21,195 @@ export interface ItineraryDay {
   items: TimelineItem[];
 }
 
-export function getMockItineraryDays(): ItineraryDay[] {
-  return [
-    {
-      id: 'day-1',
-      dayLabel: 'Day 1',
-      dateLabel: 'Sep 12',
-      items: [
-        {
-          id: 'd1-1',
-          type: 'activity',
-          time: '09:00 AM',
-          title: 'Ubud Monkey Forest',
-          subtitle: 'Explore the sacred forest',
-          thumbnailEmoji: '🐒',
-        },
-        {
-          id: 'd1-2',
-          type: 'activity',
-          time: '12:00 PM',
-          title: 'Local Lunch',
-          subtitle: 'Try authentic Balinese cuisine',
-          thumbnailEmoji: '🍛',
-        },
-        {
-          id: 'd1-break',
-          type: 'break',
-          time: '01:00 PM',
-          title: 'Rest & Travel Break',
-          subtitle: 'Recharge before the next stop',
-          thumbnailEmoji: '⏸',
-          durationMinutes: 45,
-        },
-        {
-          id: 'd1-3',
-          type: 'activity',
-          time: '02:00 PM',
-          title: 'Tegallalang Rice Terrace',
-          subtitle: 'Stunning views and photo spots',
-          thumbnailEmoji: '🌾',
-        },
-        {
-          id: 'd1-4',
-          type: 'activity',
-          time: '06:00 PM',
-          title: 'Sunset at Tanah Lot',
-          subtitle: "Don't miss the sunset!",
-          thumbnailEmoji: '🌅',
-        },
-      ],
-    },
-    {
-      id: 'day-2',
-      dayLabel: 'Day 2',
-      dateLabel: 'Sep 13',
-      items: [
-        {
-          id: 'd2-1',
-          type: 'activity',
-          time: '08:30 AM',
-          title: 'Mount Batur Sunrise Trek',
-          subtitle: 'Guided hike to the summit',
-          thumbnailEmoji: '⛰️',
-        },
-        {
-          id: 'd2-break',
-          type: 'break',
-          time: '11:00 AM',
-          title: 'Rest & Travel Break',
-          subtitle: 'Recharge before the next stop',
-          thumbnailEmoji: '⏸',
-          durationMinutes: 30,
-        },
-        {
-          id: 'd2-2',
-          type: 'activity',
-          time: '01:00 PM',
-          title: 'Coffee Plantation Tour',
-          subtitle: 'Sample local Luwak coffee',
-          thumbnailEmoji: '☕',
-        },
-      ],
-    },
-    {
-      id: 'day-3',
-      dayLabel: 'Day 3',
-      dateLabel: 'Sep 14',
-      items: [
-        {
-          id: 'd3-1',
-          type: 'activity',
-          time: '10:00 AM',
-          title: 'Uluwatu Temple',
-          subtitle: 'Clifftop views over the ocean',
-          thumbnailEmoji: '🛕',
-        },
-        {
-          id: 'd3-break',
-          type: 'break',
-          time: '12:30 PM',
-          title: 'Rest & Travel Break',
-          subtitle: 'Recharge before the next stop',
-          thumbnailEmoji: '⏸',
-          durationMinutes: 45,
-        },
-        {
-          id: 'd3-2',
-          type: 'activity',
-          time: '03:00 PM',
-          title: 'Kecak Fire Dance',
-          subtitle: 'Traditional evening performance',
-          thumbnailEmoji: '🔥',
-        },
-      ],
-    },
-    {
-      id: 'day-4',
-      dayLabel: 'Day 4',
-      dateLabel: 'Sep 15',
-      items: [
-        {
-          id: 'd4-1',
-          type: 'activity',
-          time: '09:30 AM',
-          title: 'Seminyak Beach',
-          subtitle: 'Relax before departure',
-          thumbnailEmoji: '🏖️',
-        },
-      ],
-    },
-  ];
+const MOCK_ITINERARY_DAY_TEMPLATES: ItineraryDay[] = [
+  {
+    id: 'day-1',
+    dayLabel: 'Day 1',
+    dateLabel: 'Sep 12',
+    items: [
+      {
+        id: 'd1-1',
+        type: 'activity',
+        time: '09:00 AM',
+        title: 'Ubud Monkey Forest',
+        subtitle: 'Explore the sacred forest',
+        thumbnailEmoji: '🐒',
+      },
+      {
+        id: 'd1-2',
+        type: 'activity',
+        time: '12:00 PM',
+        title: 'Local Lunch',
+        subtitle: 'Try authentic Balinese cuisine',
+        thumbnailEmoji: '🍛',
+      },
+      {
+        id: 'd1-break',
+        type: 'break',
+        time: '01:00 PM',
+        title: 'Rest & Travel Break',
+        subtitle: 'Recharge before the next stop',
+        thumbnailEmoji: '⏸',
+        durationMinutes: 45,
+      },
+      {
+        id: 'd1-3',
+        type: 'activity',
+        time: '02:00 PM',
+        title: 'Tegallalang Rice Terrace',
+        subtitle: 'Stunning views and photo spots',
+        thumbnailEmoji: '🌾',
+      },
+      {
+        id: 'd1-4',
+        type: 'activity',
+        time: '06:00 PM',
+        title: 'Sunset at Tanah Lot',
+        subtitle: "Don't miss the sunset!",
+        thumbnailEmoji: '🌅',
+      },
+    ],
+  },
+  {
+    id: 'day-2',
+    dayLabel: 'Day 2',
+    dateLabel: 'Sep 13',
+    items: [
+      {
+        id: 'd2-1',
+        type: 'activity',
+        time: '08:30 AM',
+        title: 'Mount Batur Sunrise Trek',
+        subtitle: 'Guided hike to the summit',
+        thumbnailEmoji: '⛰️',
+      },
+      {
+        id: 'd2-break',
+        type: 'break',
+        time: '11:00 AM',
+        title: 'Rest & Travel Break',
+        subtitle: 'Recharge before the next stop',
+        thumbnailEmoji: '⏸',
+        durationMinutes: 30,
+      },
+      {
+        id: 'd2-2',
+        type: 'activity',
+        time: '01:00 PM',
+        title: 'Coffee Plantation Tour',
+        subtitle: 'Sample local Luwak coffee',
+        thumbnailEmoji: '☕',
+      },
+    ],
+  },
+  {
+    id: 'day-3',
+    dayLabel: 'Day 3',
+    dateLabel: 'Sep 14',
+    items: [
+      {
+        id: 'd3-1',
+        type: 'activity',
+        time: '10:00 AM',
+        title: 'Uluwatu Temple',
+        subtitle: 'Clifftop views over the ocean',
+        thumbnailEmoji: '🛕',
+      },
+      {
+        id: 'd3-break',
+        type: 'break',
+        time: '12:30 PM',
+        title: 'Rest & Travel Break',
+        subtitle: 'Recharge before the next stop',
+        thumbnailEmoji: '⏸',
+        durationMinutes: 45,
+      },
+      {
+        id: 'd3-2',
+        type: 'activity',
+        time: '03:00 PM',
+        title: 'Kecak Fire Dance',
+        subtitle: 'Traditional evening performance',
+        thumbnailEmoji: '🔥',
+      },
+    ],
+  },
+  {
+    id: 'day-4',
+    dayLabel: 'Day 4',
+    dateLabel: 'Sep 15',
+    items: [
+      {
+        id: 'd4-1',
+        type: 'activity',
+        time: '09:30 AM',
+        title: 'Seminyak Beach',
+        subtitle: 'Relax before departure',
+        thumbnailEmoji: '🏖️',
+      },
+    ],
+  },
+];
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+const MAX_ITINERARY_DAYS = 90;
+
+function cloneFallbackDays(): ItineraryDay[] {
+  return MOCK_ITINERARY_DAY_TEMPLATES.map(day => ({
+    ...day,
+    items: day.items.map(item => ({ ...item })),
+  }));
+}
+
+function toUtcTimestamp(dateString?: string): number | null {
+  const parsed = parseDateComponents(dateString);
+  if (!parsed) return null;
+
+  const timestamp = Date.UTC(parsed.year, parsed.month - 1, parsed.day);
+  const normalized = new Date(timestamp);
+
+  if (
+    normalized.getUTCFullYear() !== parsed.year ||
+    normalized.getUTCMonth() !== parsed.month - 1 ||
+    normalized.getUTCDate() !== parsed.day
+  ) {
+    return null;
+  }
+
+  return timestamp;
+}
+
+export function getMockItineraryDays(
+  startDate?: string,
+  endDate?: string,
+): ItineraryDay[] {
+  const startTimestamp = toUtcTimestamp(startDate);
+  const endTimestamp = toUtcTimestamp(endDate);
+
+  if (
+    startTimestamp === null ||
+    endTimestamp === null ||
+    endTimestamp < startTimestamp
+  ) {
+    return cloneFallbackDays();
+  }
+
+  const dayCount =
+    Math.floor((endTimestamp - startTimestamp) / MILLISECONDS_PER_DAY) + 1;
+
+  if (dayCount > MAX_ITINERARY_DAYS) {
+    return cloneFallbackDays();
+  }
+
+  return Array.from({ length: dayCount }, (_, index) => {
+    const date = new Date(startTimestamp + index * MILLISECONDS_PER_DAY);
+    const template = MOCK_ITINERARY_DAY_TEMPLATES[index];
+
+    return {
+      id: `day-${index + 1}`,
+      dayLabel: `Day ${index + 1}`,
+      dateLabel: `${MONTH_NAMES[date.getUTCMonth()]} ${date.getUTCDate()}`,
+      items: template ? template.items.map(item => ({ ...item })) : [],
+    };
+  });
 }
