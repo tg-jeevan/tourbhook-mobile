@@ -23,6 +23,7 @@ import {
 import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { TripFlowProgressHeader } from '../components/TripFlowProgressHeader';
+import { itineraryStore } from '../data/itineraryStore';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Place {
@@ -134,7 +135,18 @@ export default function AddPlacesScreen() {
 
   const destination = tripParams?.destination || 'Your Destination';
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
+    if (tripParams?.selectedPlaceIds && tripParams.selectedPlaceIds.length > 0) {
+      return new Set(tripParams.selectedPlaceIds);
+    }
+    if (tripParams?.tripId) {
+      const existing = itineraryStore.getItineraryById(tripParams.tripId);
+      if (existing?.selectedPlaceIds && existing.selectedPlaceIds.length > 0) {
+        return new Set(existing.selectedPlaceIds);
+      }
+    }
+    return new Set();
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 

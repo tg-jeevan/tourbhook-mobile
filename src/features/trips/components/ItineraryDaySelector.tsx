@@ -27,6 +27,7 @@ export const ItineraryDaySelector: React.FC<ItineraryDaySelectorProps> = ({
           return (
             <TouchableOpacity
               key={day.id}
+              testID={`itinerary-day-pill-${index}`}
               style={[
                 styles.dayCard,
                 isSelected ? styles.dayCardActive : styles.dayCardInactive,

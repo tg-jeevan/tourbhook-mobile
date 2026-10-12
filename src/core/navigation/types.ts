@@ -1,8 +1,10 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { ImportedTripDraft } from '../../features/imports/types/importTypes';
+import { ExploreCategory } from '../../features/explore/types/exploreTypes';
 
 export type AuthStackParamList = {
   Splash: undefined;
+  Onboarding: undefined;
   Welcome: undefined;
   SignIn: undefined;
   SignUp: undefined;
@@ -19,6 +21,9 @@ export type TravelMode = 'Airplane' | 'Boat' | 'Bus' | 'Car' | 'Public Transport
 
 /** Core trip info collected on PlanTrip */
 export interface TripCreationParams {
+  tripId?: string;
+  mode?: 'edit' | 'create';
+  isEditing?: boolean;
   itineraryName?: string;
   destination: string;
   startDate: string;
@@ -27,6 +32,8 @@ export interface TripCreationParams {
   adults: number;
   kids: number;
   purpose: TravelPurpose;
+  /** Structured destination metadata (ID, coordinates, hierarchy) */
+  destinationMetadata?: any;
   /** Age of primary traveler (from profile or inline input). -1 = not collected. */
   primaryAge: number;
   /** Only required when primaryAge >= 60 */
@@ -44,7 +51,7 @@ export type AppStackParamList = {
   // --- APP SCREENS ---
   MyItineraries: undefined;
   /** Step 1: core trip info */
-  PlanTrip: undefined;
+  PlanTrip: { tripId?: string; mode?: 'edit' | 'create'; isEditing?: boolean } | undefined;
   /** Step 2: travel style / preferences — receives PlanTrip data */
   TripPreferences: TripCreationParams;
   /** Step 3: Review summary — receives full params after travel style */
@@ -73,6 +80,8 @@ export type AppStackParamList = {
   Terms: undefined;
   UGCPosting: { destination?: string; tripId?: string; placeName?: string } | undefined;
   GroupMatching: undefined;
+  CreateGroup: { groupId?: string } | undefined;
+  EditGroup: { groupId: string };
   GroupDetails: { groupId: string };
   GroupChat: { groupId: string };
   GroupInfo: { groupId: string };
@@ -84,7 +93,14 @@ export type AppStackParamList = {
   Notifications: undefined;
   InstagramConnect: undefined;
   ExploreFeed: undefined;
-  ReelViewer: { reelId?: string; reel?: any } | undefined;
+  AllDestinations: { category?: ExploreCategory } | undefined;
+  ReelViewer: {
+    reelId?: string;
+    reel?: any;
+    initialIndex?: number;
+    filter?: 'all' | 'instagram' | 'youtube';
+    destination?: string;
+  } | undefined;
   DestinationDetails: { destinationId?: string; destinationName: string; country?: string };
 };
 

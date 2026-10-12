@@ -36,6 +36,7 @@ import { useNotificationState } from '../../notifications/data/notificationStore
 import { useSubscription, FREE_ITINERARY_LIMIT } from '../../profile/data/subscriptionStore';
 import { UpgradeRequiredModal } from '../components/UpgradeRequiredModal';
 import { ItineraryActionModal } from '../components/ItineraryActionModal';
+import { TripQuickActionMenuModal } from '../components/TripQuickActionMenuModal';
 import {
   useItineraryState,
   ItineraryTrip,
@@ -85,12 +86,38 @@ export default function MyItinerariesScreen() {
     type: 'success',
   });
 
+  const [showQuickActionMenu, setShowQuickActionMenu] = useState(false);
+
+  const handleFabPress = () => {
+    setShowQuickActionMenu(true);
+  };
+
   const handleCreateTrip = () => {
     if (isPremium || itineraries.length < FREE_ITINERARY_LIMIT) {
       navigation.navigate('PlanTrip');
     } else {
       setShowUpgradeModal(true);
     }
+  };
+
+  const handleQuickCreateItinerary = () => {
+    setShowQuickActionMenu(false);
+    handleCreateTrip();
+  };
+
+  const handleQuickAddInstagramReel = () => {
+    setShowQuickActionMenu(false);
+    navigation.navigate('UGCPosting', { platform: 'instagram' } as any);
+  };
+
+  const handleQuickAddYouTubeShorts = () => {
+    setShowQuickActionMenu(false);
+    navigation.navigate('UGCPosting', { platform: 'youtube' } as any);
+  };
+
+  const handleQuickUpgradePlan = () => {
+    setShowQuickActionMenu(false);
+    navigation.navigate('UpgradePlan');
   };
 
   // Counts for tabs derived directly from source of truth
@@ -122,12 +149,18 @@ export default function MyItinerariesScreen() {
     navigation.navigate('TripDetails', { tripId: item.id });
   };
 
+  const handleEditItinerary = (item: ItineraryTrip) => {
+    setShowActionModal(false);
+    navigation.navigate('PlanTrip', { tripId: item.id, mode: 'edit' });
+  };
+
   const handleShare = async (item: ItineraryTrip) => {
     setShowActionModal(false);
+    const titleToShare = item.customName || item.title;
     try {
       await Share.share({
-        title: item.title,
-        message: `Check out my itinerary "${item.title}" in ${item.location} on Tourbhook!`,
+        title: titleToShare,
+        message: `Check out my itinerary "${titleToShare}" in ${item.location} on Tourbhook!`,
       });
     } catch {
       // Ignored
@@ -402,12 +435,16 @@ export default function MyItinerariesScreen() {
             const isUpcoming = item.status === 'upcoming';
             const isPast = item.status === 'past';
             const displayTitle =
+              item.customName ||
               item.title ||
               generateDefaultItineraryTitle(item.destination, item.customName);
             const displayLocation = formatDestinationLocation(
               item.location || item.destination
             );
-            const displayDates = formatDateRange(item.dates);
+            const displayDates =
+              item.startDate && item.endDate
+                ? formatDateRange(item.startDate, item.endDate)
+                : formatDateRange(item.dates);
 
             return (
               <TouchableOpacity
@@ -495,7 +532,7 @@ export default function MyItinerariesScreen() {
                       onPress={() => handleOverflowMenu(item)}
                       activeOpacity={0.7}
                       accessibilityRole="button"
-                      accessibilityLabel={`Options for ${item.title}`}
+                      accessibilityLabel={`Options for ${displayTitle}`}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <MoreVertical size={18} color={AppColors.textPrimary} />
@@ -557,12 +594,23 @@ export default function MyItinerariesScreen() {
       {/* ── FLOATING ADD (+) BUTTON ──────────────────────────────── */}
       <TouchableOpacity
         style={[styles.floatingAddBtn, { bottom: insets.bottom + 70 }]}
-        onPress={handleCreateTrip}
+        onPress={handleFabPress}
         activeOpacity={0.85}
         accessibilityLabel="Create Itinerary"
+        testID="trips-fab-button"
       >
         <Plus size={26} color={AppColors.white} />
       </TouchableOpacity>
+
+      {/* ── QUICK-ACTION MENU (What would you like to do?) ──────── */}
+      <TripQuickActionMenuModal
+        visible={showQuickActionMenu}
+        onClose={() => setShowQuickActionMenu(false)}
+        onCreateItinerary={handleQuickCreateItinerary}
+        onAddInstagramReel={handleQuickAddInstagramReel}
+        onAddYouTubeShorts={handleQuickAddYouTubeShorts}
+        onUpgradePlan={handleQuickUpgradePlan}
+      />
 
       {/* ── UPGRADE REQUIRED MODAL (3-TRIP LIMIT) ────────────────── */}
       <UpgradeRequiredModal
@@ -584,6 +632,7 @@ export default function MyItinerariesScreen() {
         onViewDetails={handleViewDetails}
         onShare={handleShare}
         onToggleSave={handleToggleSave}
+        onEdit={handleEditItinerary}
       />
 
       {/* ── DELETE CONFIRMATION MODAL ────────────────────────────── */}
@@ -595,7 +644,7 @@ export default function MyItinerariesScreen() {
         onConfirm={handleConfirmDelete}
         title="Delete itinerary?"
         message={`Are you sure you want to delete ${
-          deleteModalItinerary?.title || 'this itinerary'
+          deleteModalItinerary?.customName || deleteModalItinerary?.title || 'this itinerary'
         }? This action cannot be undone.`}
         confirmText="Delete Itinerary"
         cancelText="Cancel"

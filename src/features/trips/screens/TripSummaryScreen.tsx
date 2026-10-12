@@ -19,6 +19,8 @@ import {
   Heart,
   Zap,
   Sparkles,
+  Lock,
+  ShieldCheck,
 } from 'lucide-react-native';
 import { AppStackParamList, TravelerType } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
@@ -39,7 +41,7 @@ function travelerLabel(type: TravelerType, adults: number, kids: number): string
 
   let base = typeLabel[type];
   if (type === 'solo') return 'Solo Traveler (1 Traveler)';
-  if (type === 'couple') return 'Couple (2 Travelers)';
+  if (type === 'couple') return `Couple (${adults} Travelers)`;
 
   const parts: string[] = [`${adults} Adult${adults !== 1 ? 's' : ''}`];
   if (kids > 0) parts.push(`${kids} Kid${kids !== 1 ? 's' : ''}`);
@@ -64,12 +66,14 @@ function SummaryRow({
   label,
   value,
   onEdit,
+  readOnlyBadge,
 }: {
   iconBg: string;
   icon: React.ReactNode;
   label: string;
   value: string;
-  onEdit: () => void;
+  onEdit?: () => void;
+  readOnlyBadge?: string;
 }) {
   return (
     <View style={rowStyles.row}>
@@ -78,10 +82,17 @@ function SummaryRow({
         <Text style={rowStyles.label}>{label}</Text>
         <Text style={rowStyles.value}>{value}</Text>
       </View>
-      <TouchableOpacity style={rowStyles.editBtn} onPress={onEdit} activeOpacity={0.7}>
-        <Pencil size={13} color={AppColors.textMuted} />
-        <Text style={rowStyles.editText}>Edit</Text>
-      </TouchableOpacity>
+      {onEdit ? (
+        <TouchableOpacity style={rowStyles.editBtn} onPress={onEdit} activeOpacity={0.7}>
+          <Pencil size={13} color={AppColors.textMuted} />
+          <Text style={rowStyles.editText}>Edit</Text>
+        </TouchableOpacity>
+      ) : readOnlyBadge ? (
+        <View style={rowStyles.readOnlyBadge}>
+          <Lock size={11} color={AppColors.textMuted} />
+          <Text style={rowStyles.readOnlyBadgeText}>{readOnlyBadge}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -128,6 +139,22 @@ const rowStyles = StyleSheet.create({
     fontWeight: '700',
     color: AppColors.textMuted,
   },
+  readOnlyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  readOnlyBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
 });
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
@@ -146,16 +173,24 @@ export default function TripSummaryScreen() {
   const purpose        = params?.purpose       || 'Leisure';
   const travelStyle    = params?.travelStyle   || 'Explore Everything';
   const itineraryName  = params?.itineraryName?.trim();
+  const primaryAge     = params?.primaryAge;
 
+  const isEditMode = Boolean(params?.tripId || params?.mode === 'edit' || params?.isEditing === true);
   const formattedDates = formatDateRange(startDate, endDate);
   const travelersText = travelerLabel(travelerType, adults, kids);
 
-  const goBackToStep1 = () => navigation.navigate('PlanTrip');
+  const goBackToStep1 = () =>
+    navigation.navigate('PlanTrip', {
+      tripId: params?.tripId,
+      mode: params?.mode,
+      isEditing: isEditMode,
+    });
   const goBackToStep2 = () => navigation.goBack();
 
   const handleConfirm = () => {
     navigation.navigate('AddPlaces', {
       ...params,
+      isEditing: isEditMode,
     });
   };
 
@@ -190,7 +225,8 @@ export default function TripSummaryScreen() {
                 icon={<Sparkles size={18} color="#7C3AED" />}
                 label="Itinerary Name"
                 value={itineraryName}
-                onEdit={goBackToStep1}
+                onEdit={isEditMode ? undefined : goBackToStep1}
+                readOnlyBadge={isEditMode ? 'Permanent' : undefined}
               />
               <View style={styles.divider} />
             </>
@@ -201,10 +237,25 @@ export default function TripSummaryScreen() {
             icon={<MapPin size={18} color="#0284C7" />}
             label="Destination"
             value={destination}
-            onEdit={goBackToStep1}
+            onEdit={isEditMode ? undefined : goBackToStep1}
+            readOnlyBadge={isEditMode ? 'Permanent' : undefined}
           />
 
           <View style={styles.divider} />
+
+          {typeof primaryAge === 'number' ? (
+            <>
+              <SummaryRow
+                iconBg="#E0F2FE"
+                icon={<ShieldCheck size={18} color={AppColors.primary} />}
+                label="Primary Age"
+                value={`${primaryAge} years old`}
+                onEdit={isEditMode ? undefined : goBackToStep1}
+                readOnlyBadge={isEditMode ? 'Permanent' : undefined}
+              />
+              <View style={styles.divider} />
+            </>
+          ) : null}
 
           <SummaryRow
             iconBg="#DCFCE7"

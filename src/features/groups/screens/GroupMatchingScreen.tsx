@@ -1,27 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, Circle, Rect, G, Text as SvgText } from 'react-native-svg';
 import {
-  X,
   LayoutGrid,
   Mountain,
   Landmark,
   Utensils,
   Palmtree,
+  Trees,
+  Footprints,
+  Camera,
+  Car,
+  Backpack,
   ChevronRight,
   Users,
-  ShieldCheck,
   TrendingUp,
   Flame,
+  Search,
+  X,
+  Plus,
+  Share2,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
@@ -31,7 +40,8 @@ import { ErrorState } from '../../../core/components/ErrorState';
 import { AppColors } from '../../../core/theme/colors';
 import { CATEGORY_FILTERS, CategoryFilter, TravelGroup } from '../types/groupTypes';
 import { useGroupMatches } from '../hooks/useGroupMatches';
-import { useVerificationStatus } from '../hooks/useVerificationStatus';
+
+const PAGE_SIZE = 4;
 
 /**
  * Torii Gate / Culture SVG Icon
@@ -173,8 +183,59 @@ export default function GroupMatchingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList, 'GroupMatching'>>();
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
-  const { groups, isLoading, isError, retry, isJoined, joinGroup } = useGroupMatches(activeCategory);
-  const verificationStatus = useVerificationStatus();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+
+  // Hook returns all groups and joined status
+  const { groups: categoryGroups, isLoading, isError, retry, isJoined } = useGroupMatches(activeCategory);
+
+  // Filter groups by search query
+  const filteredGroups = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return categoryGroups;
+    }
+
+    return categoryGroups.filter((group) => {
+      const matchName = group.name.toLowerCase().includes(query);
+      const matchDesc = group.description ? group.description.toLowerCase().includes(query) : false;
+      const matchLocation = group.location ? group.location.toLowerCase().includes(query) : false;
+      const matchTags = group.tags.some((tag) => tag.toLowerCase().includes(query));
+      const matchCategories = group.categories.some((cat) => cat.toLowerCase().includes(query));
+      const matchCategoryLabel = group.categoryLabel ? group.categoryLabel.toLowerCase().includes(query) : false;
+
+      return (
+        matchName ||
+        matchDesc ||
+        matchLocation ||
+        matchTags ||
+        matchCategories ||
+        matchCategoryLabel
+      );
+    });
+  }, [categoryGroups, searchQuery]);
+
+  // Paginated slice
+  const displayedGroups = useMemo(() => {
+    return filteredGroups.slice(0, page * PAGE_SIZE);
+  }, [filteredGroups, page]);
+
+  const hasMoreGroups = displayedGroups.length < filteredGroups.length;
+
+  const handleShareGroup = async (group: TravelGroup) => {
+    try {
+      const destText = group.location ? `\n📍 Destination: ${group.location}` : '';
+      const datesText = group.travelDates ? `\n📅 Dates: ${group.travelDates}` : '';
+      const message = `Check out this travel group on Tourbhook!\n\n👥 ${group.name}\n${group.description || 'Join fellow travelers exploring together.'}${destText}${datesText}\n\nDownload the Tour Bhook app to connect and travel together.`;
+
+      await Share.share({
+        title: `Tourbhook: ${group.name}`,
+        message,
+      });
+    } catch {
+      // Ignored
+    }
+  };
 
   // Helper to render Category Panel Icon & Styling
   const renderCategoryPanel = (group: TravelGroup) => {
@@ -194,6 +255,26 @@ export default function GroupMatchingScreen() {
       group.categoryLabel === 'FOOD' ||
       group.tags.some((t) => t.toLowerCase() === 'food') ||
       group.categories.includes('food');
+    const isNature =
+      group.categoryLabel === 'NATURE' ||
+      group.tags.some((t) => t.toLowerCase() === 'nature') ||
+      group.categories.includes('nature');
+    const isHiking =
+      group.categoryLabel === 'HIKING' ||
+      group.tags.some((t) => t.toLowerCase() === 'hiking') ||
+      group.categories.includes('hiking');
+    const isPhotography =
+      group.categoryLabel === 'PHOTOGRAPHY' ||
+      group.tags.some((t) => t.toLowerCase() === 'photography') ||
+      group.categories.includes('photography');
+    const isRoadTrips =
+      group.categoryLabel === 'ROAD TRIPS' ||
+      group.tags.some((t) => t.toLowerCase().includes('road trip')) ||
+      group.categories.some((c) => c.includes('road trip'));
+    const isBackpacking =
+      group.categoryLabel === 'BACKPACKING' ||
+      group.tags.some((t) => t.toLowerCase().includes('backpack')) ||
+      group.categories.some((c) => c.includes('backpack'));
 
     if (isBeach) {
       return (
@@ -227,6 +308,46 @@ export default function GroupMatchingScreen() {
         </View>
       );
     }
+    if (isNature) {
+      return (
+        <View style={[styles.categoryPanel, { backgroundColor: '#DCFCE7' }]}>
+          <Trees size={34} color="#16A34A" />
+          <Text style={[styles.categoryPanelLabel, { color: '#16A34A' }]}>NATURE</Text>
+        </View>
+      );
+    }
+    if (isHiking) {
+      return (
+        <View style={[styles.categoryPanel, { backgroundColor: '#CCFBF1' }]}>
+          <Footprints size={34} color="#0D9488" />
+          <Text style={[styles.categoryPanelLabel, { color: '#0D9488' }]}>HIKING</Text>
+        </View>
+      );
+    }
+    if (isPhotography) {
+      return (
+        <View style={[styles.categoryPanel, { backgroundColor: '#EDE9FE' }]}>
+          <Camera size={34} color="#8B5CF6" />
+          <Text style={[styles.categoryPanelLabel, { color: '#8B5CF6' }]}>PHOTO</Text>
+        </View>
+      );
+    }
+    if (isRoadTrips) {
+      return (
+        <View style={[styles.categoryPanel, { backgroundColor: '#FFE4E6' }]}>
+          <Car size={34} color="#E11D48" />
+          <Text style={[styles.categoryPanelLabel, { color: '#E11D48' }]}>ROAD TRIP</Text>
+        </View>
+      );
+    }
+    if (isBackpacking) {
+      return (
+        <View style={[styles.categoryPanel, { backgroundColor: '#EEF2FF' }]}>
+          <Backpack size={34} color="#6366F1" />
+          <Text style={[styles.categoryPanelLabel, { color: '#6366F1' }]}>BACKPACK</Text>
+        </View>
+      );
+    }
 
     // Default fallback
     return (
@@ -257,6 +378,21 @@ export default function GroupMatchingScreen() {
     } else if (t === 'food') {
       bg = '#FFEDD5';
       color = '#EA580C';
+    } else if (t === 'nature') {
+      bg = '#DCFCE7';
+      color = '#16A34A';
+    } else if (t === 'hiking') {
+      bg = '#CCFBF1';
+      color = '#0D9488';
+    } else if (t === 'photography' || t === 'photo') {
+      bg = '#EDE9FE';
+      color = '#8B5CF6';
+    } else if (t === 'road trips' || t === 'road trip' || t === 'roadtrips') {
+      bg = '#FFE4E6';
+      color = '#E11D48';
+    } else if (t === 'backpacking' || t === 'backpacker') {
+      bg = '#EEF2FF';
+      color = '#6366F1';
     }
 
     return (
@@ -357,25 +493,41 @@ export default function GroupMatchingScreen() {
           {/* Member Avatars & Count */}
           {renderAvatarInitials(group)}
 
-          {/* Bottom Tags & Navigation Arrow */}
+          {/* Bottom Tags & Actions */}
           <View style={styles.cardBottomRow}>
             <View style={styles.tagsContainer}>
               {group.tags.map((tag) => renderTagPill(tag))}
             </View>
 
-            <TouchableOpacity
-              style={[styles.arrowButton, joined && styles.arrowButtonJoined]}
-              activeOpacity={0.8}
-              onPress={() => {
-                if (joined) {
-                  navigation.navigate('GroupChat', { groupId: group.id });
-                } else {
-                  navigation.navigate('GroupDetails', { groupId: group.id });
-                }
-              }}
-            >
-              <ChevronRight size={18} color={joined ? AppColors.success : AppColors.primary} />
-            </TouchableOpacity>
+            <View style={styles.cardActionsRow}>
+              {/* Share Group Button */}
+              <TouchableOpacity
+                style={styles.shareIconButton}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleShareGroup(group);
+                }}
+              >
+                <Share2 size={16} color={AppColors.textSecondary} />
+              </TouchableOpacity>
+
+              {/* View / Chat Navigation Arrow */}
+              <TouchableOpacity
+                style={[styles.arrowButton, joined && styles.arrowButtonJoined]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (joined) {
+                    navigation.navigate('GroupChat', { groupId: group.id });
+                  } else {
+                    navigation.navigate('GroupDetails', { groupId: group.id });
+                  }
+                }}
+              >
+                <ChevronRight size={18} color={joined ? AppColors.success : AppColors.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -388,16 +540,7 @@ export default function GroupMatchingScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── SCREEN TOP CLOSE BUTTON ──────────────────────────────── */}
-        <TouchableOpacity
-          style={styles.closeBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <X size={24} color={AppColors.textPrimary} />
-        </TouchableOpacity>
-
-        {/* ── HERO HEADER AREA ─────────────────────────────────────── */}
+        {/* ── HERO HEADER AREA (NO CLOSE BUTTON) ───────────────────── */}
         <View style={styles.heroSection}>
           <View style={styles.heroTextCol}>
             <Text style={styles.eyebrowText}>TRAVEL TOGETHER</Text>
@@ -407,6 +550,36 @@ export default function GroupMatchingScreen() {
             </Text>
           </View>
           <GroupsHeaderGraphic />
+        </View>
+
+        {/* ── SEARCH INPUT ─────────────────────────────────────────── */}
+        <View style={styles.searchContainer}>
+          <Search size={18} color={AppColors.textMuted} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search groups by name, destination or interest"
+            placeholderTextColor={AppColors.textMuted}
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              setPage(1); // Reset pagination on search
+            }}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearSearchBtn}
+              onPress={() => {
+                setSearchQuery('');
+                setPage(1);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <X size={16} color={AppColors.textMuted} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* ── CATEGORY FILTERS ROW ─────────────────────────────────── */}
@@ -421,7 +594,10 @@ export default function GroupMatchingScreen() {
               <TouchableOpacity
                 key={category}
                 style={[styles.filterChip, isActive && styles.filterChipActive]}
-                onPress={() => setActiveCategory(category)}
+                onPress={() => {
+                  setActiveCategory(category);
+                  setPage(1); // Reset pagination on category change
+                }}
                 activeOpacity={0.8}
               >
                 {category === 'All' && (
@@ -463,7 +639,7 @@ export default function GroupMatchingScreen() {
           })}
         </ScrollView>
 
-        {/* ── GROUPS LIST OR SKELETON / ERROR ──────────────────────── */}
+        {/* ── GROUPS LIST OR SKELETON / ERROR / EMPTY ─────────────── */}
         {isError ? (
           <ErrorState message="We couldn't load groups. Try again." onRetry={retry} />
         ) : isLoading ? (
@@ -472,41 +648,57 @@ export default function GroupMatchingScreen() {
             <SkeletonGroupCard />
             <SkeletonGroupCard />
           </>
-        ) : groups.length === 0 ? (
-          <EmptyState icon="🧭" message="No travel groups found for this category." />
+        ) : filteredGroups.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <EmptyState
+              icon="🧭"
+              message={
+                searchQuery.trim()
+                  ? `No groups match "${searchQuery.trim()}". Try a different keyword or category.`
+                  : `No travel groups found for ${activeCategory}.`
+              }
+            />
+            {searchQuery.trim().length > 0 && (
+              <TouchableOpacity
+                style={styles.clearFilterBtn}
+                onPress={() => {
+                  setSearchQuery('');
+                  setPage(1);
+                }}
+              >
+                <Text style={styles.clearFilterBtnText}>Clear Search Filter</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         ) : (
-          groups.map(renderGroupCard)
+          <>
+            {displayedGroups.map(renderGroupCard)}
+
+            {/* ── PAGINATION / LOAD MORE ───────────────────────────── */}
+            {hasMoreGroups && (
+              <TouchableOpacity
+                style={styles.loadMoreBtn}
+                onPress={() => setPage((p) => p + 1)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.loadMoreBtnText}>
+                  Load More Groups ({filteredGroups.length - displayedGroups.length} remaining)
+                </Text>
+              </TouchableOpacity>
+            )}
+          </>
         )}
-
-        {/* ── VERIFICATION STATUS CARD ─────────────────────────────── */}
-        <View style={styles.verificationCard}>
-          <View style={styles.verificationIconBox}>
-            <ShieldCheck size={26} color={AppColors.white} />
-          </View>
-
-          <View style={styles.verificationTextCol}>
-            <Text style={styles.verificationEyebrow}>VERIFICATION STATUS</Text>
-            <Text style={styles.verificationTitle}>
-              {verificationStatus === 'verified'
-                ? 'Verified Profile'
-                : verificationStatus === 'rejected'
-                ? 'Verification Needed'
-                : 'Pending Verification'}
-            </Text>
-            <Text style={styles.verificationSubtitle}>
-              {verificationStatus === 'verified'
-                ? 'Your profile is verified. You can now join groups and connect with travelers.'
-                : verificationStatus === 'rejected'
-                ? 'Please complete document verification to join groups.'
-                : 'Your profile is currently under review.'}
-            </Text>
-          </View>
-
-          <View style={styles.verifiedPill}>
-            <Text style={styles.verifiedPillText}>✓ Verified</Text>
-          </View>
-        </View>
       </ScrollView>
+
+      {/* ── FLOATING CREATE GROUP (+) BUTTON ───────────────────────── */}
+      <TouchableOpacity
+        style={styles.floatingCreateBtn}
+        onPress={() => navigation.navigate('CreateGroup')}
+        activeOpacity={0.88}
+        accessibilityLabel="Create Travel Group"
+      >
+        <Plus size={26} color={AppColors.white} strokeWidth={2.6} />
+      </TouchableOpacity>
 
       {/* ── BOTTOM NAVIGATION ────────────────────────────────────── */}
       <BottomNavBar active="groups" />
@@ -521,15 +713,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
-  },
-  closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    marginTop: 4,
+    paddingTop: 12,
+    paddingBottom: 110, // Generous padding so floating button doesn't obscure content
   },
 
   /* ── HERO HEADER ───────────────────────────────────────────────── */
@@ -537,8 +722,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginTop: 6,
-    marginBottom: 16,
+    marginTop: 4,
+    marginBottom: 14,
     position: 'relative',
   },
   heroTextCol: {
@@ -573,6 +758,37 @@ const styles = StyleSheet.create({
     marginTop: -10,
   },
 
+  /* ── SEARCH CONTAINER ─────────────────────────────────────────── */
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E8E3DA',
+    paddingHorizontal: 12,
+    height: 48,
+    marginBottom: 14,
+    shadowColor: AppColors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  searchIcon: {
+    marginRight: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
+    paddingVertical: 8,
+  },
+  clearSearchBtn: {
+    padding: 4,
+  },
+
   /* ── FILTER PILLS ──────────────────────────────────────────────── */
   filterRow: {
     flexDirection: 'row',
@@ -583,71 +799,72 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: AppColors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#EAE5DC',
+    borderColor: '#E8E3DA',
   },
   filterChipActive: {
     backgroundColor: AppColors.primary,
     borderColor: AppColors.primary,
   },
   filterChipText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: AppColors.textPrimary,
   },
   filterChipTextActive: {
     color: AppColors.white,
-    fontWeight: '700',
   },
 
   /* ── GROUP CARDS ───────────────────────────────────────────────── */
   groupCard: {
     flexDirection: 'row',
-    backgroundColor: AppColors.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 22,
     borderWidth: 1,
     borderColor: '#EAE5DC',
-    padding: 12,
     marginBottom: 14,
+    overflow: 'hidden',
     shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 2,
   },
   categoryPanel: {
-    width: 96,
-    height: 128,
-    borderRadius: 18,
+    width: 90,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-    marginRight: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
   },
   categoryPanelLabel: {
     fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1.2,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    marginTop: 8,
+    textAlign: 'center',
   },
   groupRightCol: {
     flex: 1,
+    padding: 14,
     justifyContent: 'space-between',
-    paddingVertical: 2,
   },
   groupHeaderRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
   },
   groupName: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 15,
     fontWeight: '800',
     color: AppColors.textPrimary,
-    flex: 1,
     letterSpacing: -0.2,
   },
   statusBadge: {
@@ -657,11 +874,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
-    marginLeft: 6,
   },
   statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
   },
   greenDot: {
     width: 6,
@@ -671,17 +887,14 @@ const styles = StyleSheet.create({
   },
   groupDesc: {
     fontSize: 12,
-    color: AppColors.textMuted,
+    color: AppColors.textSecondary,
     lineHeight: 16,
-    marginTop: 2,
-    marginBottom: 6,
+    marginBottom: 10,
   },
-
-  /* ── AVATARS ROW ───────────────────────────────────────────────── */
   avatarStackRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   initialCircle: {
     width: 22,
@@ -689,7 +902,9 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 4,
+    marginRight: -4,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   initialLetter: {
     fontSize: 10,
@@ -699,24 +914,23 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F1ECE4',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 4,
+    marginLeft: 8,
   },
   overflowText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     color: AppColors.textMuted,
-    marginRight: 6,
+    marginLeft: 4,
   },
   memberCountText: {
     fontSize: 11,
+    fontWeight: '600',
     color: AppColors.textMuted,
-    fontWeight: '500',
+    marginLeft: 6,
   },
-
-  /* ── CARD BOTTOM ROW ───────────────────────────────────────────── */
   cardBottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -724,93 +938,106 @@ const styles = StyleSheet.create({
   },
   tagsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
     flex: 1,
-    flexWrap: 'wrap',
+    paddingRight: 6,
   },
   tagPill: {
-    paddingHorizontal: 9,
+    paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
   },
   tagPillText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  shareIconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FAF7F2',
+    borderWidth: 1,
+    borderColor: '#EAE5DC',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   arrowButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
   },
   arrowButtonJoined: {
     backgroundColor: '#DCFCE7',
   },
 
-  /* ── VERIFICATION STATUS CARD ──────────────────────────────────── */
-  verificationCard: {
-    flexDirection: 'row',
+  /* ── PAGINATION LOAD MORE ───────────────────────────────────────── */
+  loadMoreBtn: {
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E8E3DA',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    padding: 16,
-    marginTop: 10,
+    justifyContent: 'center',
+    marginTop: 4,
     marginBottom: 16,
   },
-  verificationIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#10B981',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  verificationTextCol: {
-    flex: 1,
-  },
-  verificationEyebrow: {
-    fontSize: 10,
+  loadMoreBtnText: {
+    fontSize: 13,
     fontWeight: '800',
-    color: '#059669',
-    letterSpacing: 1.0,
-    marginBottom: 2,
-  },
-  verificationTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: AppColors.textPrimary,
-    marginBottom: 2,
-  },
-  verificationSubtitle: {
-    fontSize: 11,
-    color: '#047857',
-    lineHeight: 15,
-  },
-  verifiedPill: {
-    backgroundColor: '#047857',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    marginLeft: 8,
-  },
-  verifiedPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: AppColors.white,
+    color: AppColors.primary,
   },
 
-  /* ── SKELETON STYLES ───────────────────────────────────────────── */
+  /* ── EMPTY WRAP ─────────────────────────────────────────────────── */
+  emptyWrap: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  clearFilterBtn: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#E0F2FE',
+  },
+  clearFilterBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: AppColors.primary,
+  },
+
+  /* ── FLOATING CREATE GROUP BUTTON ───────────────────────────────── */
+  floatingCreateBtn: {
+    position: 'absolute',
+    right: 20,
+    bottom: 84, // Positioned above the BottomNavBar
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: AppColors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: AppColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 50,
+  },
+
+  /* ── SKELETONS ─────────────────────────────────────────────────── */
   skeletonPanel: {
-    width: 96,
-    height: 128,
-    borderRadius: 18,
-    marginRight: 12,
+    width: 90,
+    height: 120,
   },
   skeletonTitle: {
     width: '60%',
@@ -824,7 +1051,7 @@ const styles = StyleSheet.create({
   },
   skeletonAvatarRow: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 6,
     marginBottom: 10,
   },
   skeletonAvatar: {
@@ -837,13 +1064,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   skeletonTagSmall: {
-    width: 50,
-    height: 20,
-    borderRadius: 8,
+    width: 45,
+    height: 16,
+    borderRadius: 6,
   },
   skeletonTagLarge: {
-    width: 70,
-    height: 20,
-    borderRadius: 8,
+    width: 65,
+    height: 16,
+    borderRadius: 6,
   },
 });

@@ -1,31 +1,216 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Linking,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import {
+  Mail,
+  MessageCircle,
+  ChevronRight,
+  X,
+  Clock,
+  Phone,
+  Send,
+} from 'lucide-react-native';
 import { BackButton } from '../../../core/components/BackButton';
 import { AppColors } from '../../../core/theme/colors';
+import { useAuth } from '../../../core/auth/AuthContext';
+
+export const SUPPORT_EMAIL = 'hello.tourbhook@gmail.com';
+export const SUPPORT_PHONE_RAW = '919986474527';
+export const SUPPORT_PHONE_DISPLAY = '+91 99864 74527';
+export const SUPPORT_EMAIL_SUBJECT = 'Tourbhook App Support';
+
+export function getEmailBody(userName?: string): string {
+  const name = userName?.trim() || '[Your Name]';
+  return `Heyy, I am ${name}. I need your assistance with the Tourbhook Application.\n\nIssue/Query:\n[Please describe how we can help you.]\n\nThank you.`;
+}
+
+export function getWhatsAppMessage(userName?: string): string {
+  const name = userName?.trim() || '[Your Name]';
+  return `Heyy, I am ${name}. I need your assistance with the Tourbhook Application.`;
+}
+
+export function getEmailUrl(userName?: string): string {
+  const subject = SUPPORT_EMAIL_SUBJECT;
+  const body = getEmailBody(userName);
+  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+export function getWhatsAppUrls(userName?: string): { directUrl: string; webUrl: string } {
+  const message = getWhatsAppMessage(userName);
+  const encoded = encodeURIComponent(message);
+  return {
+    directUrl: `whatsapp://send?phone=${SUPPORT_PHONE_RAW}&text=${encoded}`,
+    webUrl: `https://wa.me/${SUPPORT_PHONE_RAW}?text=${encoded}`,
+  };
+}
 
 export default function HelpSupportScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
+
+  const handleEmailSupport = async () => {
+    const emailUrl = getEmailUrl(user?.name);
+    try {
+      const canOpen = await Linking.canOpenURL(emailUrl);
+      if (canOpen) {
+        await Linking.openURL(emailUrl);
+      } else {
+        Alert.alert(
+          'Unable to Open Email',
+          `No compatible email application was found. Please write directly to ${SUPPORT_EMAIL}.`
+        );
+      }
+    } catch {
+      Alert.alert(
+        'Unable to Open Email',
+        `No compatible email application was found. Please write directly to ${SUPPORT_EMAIL}.`
+      );
+    }
+  };
+
+  const handleWhatsAppSupport = async () => {
+    const { directUrl, webUrl } = getWhatsAppUrls(user?.name);
+    try {
+      const canOpenDirect = await Linking.canOpenURL(directUrl);
+      if (canOpenDirect) {
+        try {
+          await Linking.openURL(directUrl);
+          return;
+        } catch {
+          // Fallback to web link if direct open fails
+        }
+      }
+      const canOpenWeb = await Linking.canOpenURL(webUrl);
+      if (canOpenWeb) {
+        await Linking.openURL(webUrl);
+        return;
+      }
+      Alert.alert(
+        'Unable to Open WhatsApp',
+        `WhatsApp could not be opened. Please message our team at ${SUPPORT_PHONE_DISPLAY}.`
+      );
+    } catch {
+      Alert.alert(
+        'Unable to Open WhatsApp',
+        `WhatsApp could not be opened. Please message our team at ${SUPPORT_PHONE_DISPLAY}.`
+      );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>Help & Support</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Close Help & Support"
+        >
+          <X size={20} color={AppColors.textPrimary} />
+        </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.section}>FAQs</Text>
-        <Text style={styles.faqTitle}>How to plan a new trip?</Text>
-        <Text style={styles.faqBody}>Go to My Itineraries list, tap the "+" floating button, and follow details.</Text>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* ── Hero Info Banner ───────────────────────────────────────────── */}
+        <View style={styles.bannerContainer}>
+          <Text style={styles.bannerTitle}>Need a hand?</Text>
+          <Text style={styles.bannerSubtitle}>Our support team is ready to help.</Text>
+          <Text style={styles.bannerNote}>We typically respond within 5 minutes.</Text>
+          <View style={styles.hoursRow}>
+            <Clock size={13} color="#FF6B4A" style={styles.hoursIcon} />
+            <Text style={styles.bannerHours}>
+              Support working hours: Mon – Sat: 11 AM to 7 PM
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Option A: Email Support ───────────────────────────────────── */}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={handleEmailSupport}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`Email Support: ${SUPPORT_EMAIL}. Send our team a message.`}
+          testID="email-support-card"
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#E0F2FE' }]}>
+              <Mail size={22} color="#0E7490" strokeWidth={2.2} />
+            </View>
+            <View style={styles.cardTitleCol}>
+              <Text style={styles.cardTitle}>Email Support</Text>
+              <Text style={styles.cardSubtitle}>{SUPPORT_EMAIL}</Text>
+            </View>
+            <ChevronRight size={20} color={AppColors.textMuted} />
+          </View>
+
+          <Text style={styles.cardDescription}>
+            Need help with Tourbhook? Send our team a message.
+          </Text>
+
+          <View style={styles.actionBtnRow}>
+            <View style={styles.primaryActionButton}>
+              <Send size={14} color={AppColors.white} />
+              <Text style={styles.primaryActionText}>Send Email</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* ── Option B: Live Chat (WhatsApp) ────────────────────────────── */}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={handleWhatsAppSupport}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`Live Chat: Chat with us on WhatsApp Business at ${SUPPORT_PHONE_DISPLAY}.`}
+          testID="whatsapp-support-card"
+        >
+          <View style={styles.cardHeaderRow}>
+            <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
+              <MessageCircle size={22} color="#16A34A" strokeWidth={2.2} />
+            </View>
+            <View style={styles.cardTitleCol}>
+              <Text style={styles.cardTitle}>Live Chat</Text>
+              <Text style={styles.cardSubtitle}>Chat with us on WhatsApp Business</Text>
+            </View>
+            <ChevronRight size={20} color={AppColors.textMuted} />
+          </View>
+
+          <View style={styles.phoneBadgeRow}>
+            <Phone size={13} color="#16A34A" />
+            <Text style={styles.phoneBadgeText}>{SUPPORT_PHONE_DISPLAY}</Text>
+          </View>
+
+          <View style={styles.actionBtnRow}>
+            <View style={[styles.primaryActionButton, { backgroundColor: '#16A34A' }]}>
+              <MessageCircle size={14} color={AppColors.white} />
+              <Text style={styles.primaryActionText}>Chat on WhatsApp</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: AppColors.background },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FAF7F2',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -36,10 +221,144 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: AppColors.borderLight,
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: AppColors.textPrimary },
-  placeholder: { width: 44 },
-  content: { padding: 24 },
-  section: { fontSize: 20, fontWeight: '700', color: AppColors.textPrimary, marginBottom: 16 },
-  faqTitle: { fontSize: 16, fontWeight: '600', color: AppColors.primary },
-  faqBody: { fontSize: 14, color: AppColors.textSecondary, marginTop: 4 },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.textPrimary,
+  },
+  closeBtn: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  /* ── Banner ── */
+  bannerContainer: {
+    backgroundColor: '#FFF1F2',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#FFE4E6',
+  },
+  bannerTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    marginBottom: 4,
+  },
+  bannerSubtitle: {
+    fontSize: 13,
+    color: AppColors.textPrimary,
+    lineHeight: 18,
+    marginBottom: 2,
+  },
+  bannerNote: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.primary,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  hoursRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  hoursIcon: {
+    marginRight: 2,
+  },
+  bannerHours: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FF6B4A',
+  },
+  /* ── Support Cards ── */
+  card: {
+    backgroundColor: AppColors.surface,
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#EAE5DC',
+    shadowColor: AppColors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  cardTitleCol: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: AppColors.textPrimary,
+    marginBottom: 2,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textMuted,
+  },
+  cardDescription: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  phoneBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0FDF4',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    marginBottom: 14,
+  },
+  phoneBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#15803D',
+  },
+  actionBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  primaryActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: AppColors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  primaryActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppColors.white,
+  },
 });

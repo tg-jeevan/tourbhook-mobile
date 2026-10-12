@@ -5,6 +5,7 @@ import {
   Bookmark,
   Share2,
   FileText,
+  Edit3,
 } from 'lucide-react-native';
 import { CustomModal } from '../../../core/components/CustomModal';
 import { ActionOptionRow } from '../../../core/components/ActionOptionRow';
@@ -18,6 +19,7 @@ export interface ItineraryActionModalProps {
   onViewDetails: (itinerary: ItineraryTrip) => void;
   onShare: (itinerary: ItineraryTrip) => void;
   onToggleSave: (itinerary: ItineraryTrip) => void;
+  onEdit?: (itinerary: ItineraryTrip) => void;
 }
 
 export const ItineraryActionModal: React.FC<ItineraryActionModalProps> = ({
@@ -27,6 +29,7 @@ export const ItineraryActionModal: React.FC<ItineraryActionModalProps> = ({
   onViewDetails,
   onShare,
   onToggleSave,
+  onEdit,
 }) => {
   if (!itinerary) return null;
 
@@ -46,7 +49,7 @@ export const ItineraryActionModal: React.FC<ItineraryActionModalProps> = ({
       showDragHandle={true}
       dismissOnBackdropPress={true}
       headerIcon={headerIcon}
-      title={itinerary.title}
+      title={itinerary.customName || itinerary.title}
       subtitle="Choose an action for this itinerary"
     >
       <View style={styles.actionsContainer}>
@@ -83,6 +86,20 @@ export const ItineraryActionModal: React.FC<ItineraryActionModalProps> = ({
           }}
           testID="action-share-itinerary"
         />
+
+        {/* Edit / Modify Itinerary */}
+        {onEdit && (
+          <ActionOptionRow
+            icon={<Edit3 size={18} color={AppColors.primary} />}
+            title="Edit Itinerary"
+            description="Modify destination, dates, travellers, or preferences"
+            onPress={() => {
+              onClose();
+              onEdit(itinerary);
+            }}
+            testID="action-edit-itinerary"
+          />
+        )}
 
         {/* View Details */}
         <ActionOptionRow

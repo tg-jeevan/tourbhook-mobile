@@ -55,6 +55,16 @@ export const groupChatService = {
   },
 
   /**
+   * Updates an existing travel group metadata.
+   */
+  async updateGroup(
+    groupId: string,
+    input: import('../data/groupStore').UpdateGroupInput,
+  ): Promise<TravelGroup> {
+    return groupStore.updateGroup(groupId, input);
+  },
+
+  /**
    * Toggles notification settings for a group.
    */
   async toggleNotifications(groupId: string): Promise<boolean> {

@@ -108,18 +108,79 @@ export default function SignUpScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [obscurePassword, setObscurePassword] = useState(true);
+  const [obscureConfirmPassword, setObscureConfirmPassword] = useState(true);
 
   const [nameFocused, setNameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   // Responsive layout calculations
   const heroHeight = Math.max(160, Math.min(screenHeight * 0.24, 210));
   const bottomIllustrationHeight = Math.max(110, Math.min(screenHeight * 0.18, 160));
 
+  const handlePasswordChange = (val: string) => {
+    setPassword(val);
+    if (passwordError && val.trim().length > 0) {
+      setPasswordError('');
+    }
+    // Update or clear mismatch error as user corrects values
+    if (confirmPassword.length > 0) {
+      if (val === confirmPassword) {
+        setConfirmPasswordError('');
+      } else if (confirmPasswordError === 'Passwords do not match') {
+        setConfirmPasswordError('Passwords do not match');
+      }
+    }
+  };
+
+  const handleConfirmPasswordChange = (val: string) => {
+    setConfirmPassword(val);
+    if (val.trim().length > 0) {
+      if (password && val === password) {
+        setConfirmPasswordError('');
+      } else if (password && val !== password && confirmPasswordError) {
+        setConfirmPasswordError('Passwords do not match');
+      }
+    } else {
+      if (confirmPasswordError && confirmPasswordError !== 'Please confirm your password') {
+        setConfirmPasswordError('');
+      }
+    }
+  };
+
   const handleSignUp = () => {
-    // Retain existing behavior: navigate to SignIn or proceed
+    let hasError = false;
+
+    // Validate that Password is not empty
+    if (!password.trim()) {
+      setPasswordError('Password is required');
+      hasError = true;
+    } else {
+      setPasswordError('');
+    }
+
+    // Validate that Confirm Password is not empty and matches
+    if (!confirmPassword.trim()) {
+      setConfirmPasswordError('Please confirm your password');
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match');
+      hasError = true;
+    } else {
+      setConfirmPasswordError('');
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    // Retain existing behavior: navigate to SignIn. Confirm password is NOT sent or stored.
     navigation.navigate('SignIn');
   };
 
@@ -248,6 +309,7 @@ export default function SignUpScreen() {
                   style={[
                     styles.inputWrapper,
                     passwordFocused && styles.inputWrapperFocused,
+                    passwordError ? styles.inputWrapperError : null,
                   ]}
                 >
                   <View style={styles.inputPrefixIcon}>
@@ -258,22 +320,74 @@ export default function SignUpScreen() {
                     placeholder="••••••••"
                     placeholderTextColor={AppColors.textMuted}
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={handlePasswordChange}
                     secureTextEntry={obscurePassword}
                     autoCapitalize="none"
                     autoCorrect={false}
                     onFocus={() => setPasswordFocused(true)}
                     onBlur={() => setPasswordFocused(false)}
+                    testID="signup-password-input"
                   />
                   <TouchableOpacity
                     style={styles.suffixButton}
                     onPress={() => setObscurePassword(!obscurePassword)}
                     activeOpacity={0.7}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityLabel="Toggle password visibility"
                   >
                     {obscurePassword ? <EyeHiddenIcon /> : <EyeVisibleIcon />}
                   </TouchableOpacity>
                 </View>
+                {passwordError ? (
+                  <Text style={styles.errorText} testID="signup-password-error">
+                    {passwordError}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View style={styles.gap16} />
+
+              {/* Confirm Password Input Field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Confirm Password</Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    confirmPasswordFocused && styles.inputWrapperFocused,
+                    confirmPasswordError ? styles.inputWrapperError : null,
+                  ]}
+                >
+                  <View style={styles.inputPrefixIcon}>
+                    <LockIcon focused={confirmPasswordFocused} />
+                  </View>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="••••••••"
+                    placeholderTextColor={AppColors.textMuted}
+                    value={confirmPassword}
+                    onChangeText={handleConfirmPasswordChange}
+                    secureTextEntry={obscureConfirmPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setConfirmPasswordFocused(true)}
+                    onBlur={() => setConfirmPasswordFocused(false)}
+                    testID="signup-confirm-password-input"
+                  />
+                  <TouchableOpacity
+                    style={styles.suffixButton}
+                    onPress={() => setObscureConfirmPassword(!obscureConfirmPassword)}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityLabel="Toggle confirm password visibility"
+                  >
+                    {obscureConfirmPassword ? <EyeHiddenIcon /> : <EyeVisibleIcon />}
+                  </TouchableOpacity>
+                </View>
+                {confirmPasswordError ? (
+                  <Text style={styles.errorText} testID="signup-confirm-password-error">
+                    {confirmPasswordError}
+                  </Text>
+                ) : null}
               </View>
 
               <View style={styles.gap24} />
@@ -282,6 +396,7 @@ export default function SignUpScreen() {
               <TouchableOpacity
                 style={styles.primaryButton}
                 onPress={handleSignUp}
+                testID="signup-submit-btn"
                 activeOpacity={0.85}
               >
                 <Text style={styles.primaryButtonText}>Sign Up</Text>
@@ -444,6 +559,16 @@ const styles = StyleSheet.create({
   inputWrapperFocused: {
     borderColor: AppColors.primary,
     backgroundColor: AppColors.surface,
+  },
+  inputWrapperError: {
+    borderColor: AppColors.error,
+  },
+  errorText: {
+    fontSize: 12,
+    color: AppColors.error,
+    marginTop: 4,
+    marginLeft: 4,
+    fontFamily: Platform.OS === 'android' ? 'Inter-Medium' : undefined,
   },
   inputPrefixIcon: {
     marginRight: 10,

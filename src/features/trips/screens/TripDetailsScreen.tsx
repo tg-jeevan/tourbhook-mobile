@@ -6,7 +6,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, Circle, Rect, G, Text as SvgText } from 'react-native-svg';
 import {
   X,
-  MoreVertical,
   Calendar,
   Package,
   ChevronRight,
@@ -16,6 +15,7 @@ import { AppStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { UGCContentDisplay } from '../../ugc/components/UGCContentDisplay';
 import { itineraryStore } from '../data/itineraryStore';
+import { formatDateRange } from '../utils/itineraryFormatting';
 
 /**
  * Hero Travel Illustration (Map, plane route, postcard sketch)
@@ -93,8 +93,13 @@ export default function TripDetailsScreen() {
   const tripId = route.params?.tripId || '1';
   const trip = itineraryStore.getItineraryById(tripId);
   const destination = trip?.location || trip?.destination || 'Paris, France';
-  const tripTitle = trip?.title || destination;
-  const tripDates = trip?.dates || 'Sep 10 – Sep 17, 2026';
+  const tripTitle = trip?.customName || trip?.title || destination;
+  const tripDates =
+    trip?.startDate && trip?.endDate
+      ? formatDateRange(trip.startDate, trip.endDate)
+      : trip?.dates
+      ? formatDateRange(trip.dates)
+      : 'Dates TBD';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -108,9 +113,7 @@ export default function TripDetailsScreen() {
           <X size={24} color={AppColors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Trip Details</Text>
-        <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
-          <MoreVertical size={22} color={AppColors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.headerIconBtn} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -160,7 +163,7 @@ export default function TripDetailsScreen() {
         {/* Modify Itinerary Plan — navigates to PlanTrip in edit mode */}
         <TouchableOpacity
           style={styles.modifyBannerBtn}
-          onPress={() => navigation.navigate('PlanTrip')}
+          onPress={() => navigation.navigate('PlanTrip', { tripId, mode: 'edit' })}
           activeOpacity={0.85}
         >
           <View style={[styles.actionIconWrap, { backgroundColor: '#FEF3C7' }]}>

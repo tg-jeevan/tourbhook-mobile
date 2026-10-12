@@ -17,6 +17,7 @@ import {
 import { AppStackParamList, TravelStyle } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { TripFlowProgressHeader } from '../components/TripFlowProgressHeader';
+import { itineraryStore } from '../data/itineraryStore';
 
 // ── Travel Style options (product-spec) ──────────────────────────────────────
 interface TravelStyleOption {
@@ -63,11 +64,13 @@ export default function TripPreferencesScreen() {
   const route = useRoute<RouteProp<AppStackParamList, 'TripPreferences'>>();
   const tripParams = route.params;
 
-  const [selectedStyle, setSelectedStyle] = useState<TravelStyle>('Explore Everything');
+  const existingTrip = tripParams?.tripId ? itineraryStore.getItineraryById(tripParams.tripId) : undefined;
+  const initialStyle: TravelStyle = existingTrip?.travelStyle || 'Explore Everything';
+  const [selectedStyle, setSelectedStyle] = useState<TravelStyle>(initialStyle);
 
   const handleNext = () => {
     navigation.navigate('TripSummary', {
-      // carry forward all PlanTrip params
+      // carry forward all PlanTrip params including tripId and mode
       ...tripParams,
       travelStyle: selectedStyle,
     });

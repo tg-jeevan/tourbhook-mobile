@@ -20,13 +20,16 @@ describe('SplashScreen', () => {
     expect(logoImage.props.resizeMode).toBe('contain');
     expect(logoImage.props.accessibilityLabel).toBe('Tour Bhook Logo');
 
-    // Verify logo styling constraints
+    // Verify logo styling constraints for official TB symbol mark
     const logoStyle = logoImage.props.style;
-    expect(logoStyle.width).toBe('100%');
-    expect(logoStyle.maxWidth).toBe(320);
-    expect(logoStyle.aspectRatio).toBe(2);
+    expect(logoStyle.aspectRatio).toBe(1);
+    expect(logoStyle.width).toBeGreaterThanOrEqual(100);
+    expect(logoStyle.width).toBeLessThanOrEqual(140);
+    expect(logoStyle.height).toBeGreaterThanOrEqual(100);
+    expect(logoStyle.height).toBeLessThanOrEqual(140);
+    expect(logoStyle.maxWidth).toBe(140);
 
-    // Verify no redundant text titles exist on splash
+    // Verify no redundant text titles exist on splash (symbol alone, no wordmark text)
     const textNodes = root.findAllByType(Text);
     expect(textNodes.length).toBe(0);
   });

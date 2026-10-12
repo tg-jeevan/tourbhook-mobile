@@ -6,7 +6,28 @@ import {
   generateMockGroupResponse,
 } from './mockGroupsData';
 
+export interface CreateGroupInput {
+  name: string;
+  destination?: string;
+  description?: string;
+  category?: string;
+  categories?: string[];
+  travelDates?: string;
+  maxMembers?: number;
+}
+
+export interface UpdateGroupInput {
+  name?: string;
+  destination?: string;
+  description?: string;
+  category?: string;
+  categories?: string[];
+  travelDates?: string;
+  maxMembers?: number;
+}
+
 class GroupStore {
+  private groups: TravelGroup[] = getMockTravelGroups();
   private joinedGroupIds: Set<string> = new Set();
   private messagesByGroup: Record<string, GroupMessage[]> = {};
   private notificationsByGroup: Record<string, boolean> = {};
@@ -17,6 +38,7 @@ class GroupStore {
   }
 
   reset(): void {
+    this.groups = getMockTravelGroups();
     this.joinedGroupIds = new Set();
     this.messagesByGroup = {
       'group-paris': [...(INITIAL_MOCK_MESSAGES['group-paris'] || [])],
@@ -34,11 +56,11 @@ class GroupStore {
   }
 
   getGroups(): TravelGroup[] {
-    return getMockTravelGroups();
+    return [...this.groups];
   }
 
   getGroupById(groupId: string): TravelGroup | undefined {
-    return this.getGroups().find(g => g.id === groupId);
+    return this.groups.find(g => g.id === groupId);
   }
 
   isGroupJoined(groupId: string): boolean {
@@ -53,6 +75,151 @@ class GroupStore {
   leaveGroup(groupId: string): void {
     this.joinedGroupIds.delete(groupId);
     this.notify();
+  }
+
+  createGroup(input: CreateGroupInput): TravelGroup {
+    const trimmedName = input.name.trim();
+    if (!trimmedName) {
+      throw new Error('Group name is required');
+    }
+
+    const rawCategories: string[] =
+      input.categories && input.categories.length > 0
+        ? input.categories
+        : input.category?.trim()
+        ? [input.category.trim()]
+        : ['Adventure'];
+
+    if (rawCategories.length === 0) {
+      throw new Error('At least one category is required');
+    }
+
+    const id = `group-${Date.now()}`;
+    const primaryCategory = rawCategories[0].trim();
+    const categories = rawCategories.map(c => c.trim().toLowerCase());
+    const categoryLabel = primaryCategory.toUpperCase();
+
+    const categoryTags = rawCategories.map(c => c.trim());
+    const contextTag = input.destination?.trim() ? 'Trip' : 'Community';
+    const tags = Array.from(new Set([...categoryTags, contextTag]));
+
+    const newGroup: TravelGroup = {
+      id,
+      name: trimmedName,
+      description:
+        input.description?.trim() ||
+        `Connect and explore ${input.destination?.trim() || 'new places'} with fellow travelers 🌍`,
+      statusBadge: 'Active',
+      statusType: 'active',
+      categoryLabel,
+      location: input.destination?.trim() || 'Global',
+      travelDates: input.travelDates?.trim() || 'Flexible Dates',
+      memberCount: 1, // Creator is member #1
+      maxMembers: input.maxMembers || 8,
+      memberAvatarEmojis: ['✈️'],
+      memberInitials: ['Y'],
+      tags,
+      categories,
+      notificationsEnabled: true,
+    };
+
+    this.groups = [newGroup, ...this.groups];
+    // Creator automatically joins the new group
+    this.joinedGroupIds.add(id);
+
+    // Initialize messages for this group
+    this.messagesByGroup[id] = [
+      {
+        id: `msg-welcome-${id}`,
+        groupId: id,
+        senderId: 'system',
+        senderName: 'Tourbhook Community',
+        senderAvatarEmoji: '🎉',
+        senderInitials: 'TB',
+        senderColor: '#0E7490',
+        message: `Welcome to ${trimmedName}! Share itineraries, ask questions, and start planning together.`,
+        timestamp: 'Just now',
+        isCurrentUser: false,
+        type: 'system',
+      },
+    ];
+
+    this.notificationsByGroup[id] = true;
+    this.notify();
+
+    return newGroup;
+  }
+
+  updateGroup(groupId: string, input: UpdateGroupInput): TravelGroup {
+    const index = this.groups.findIndex(g => g.id === groupId);
+    if (index === -1) {
+      throw new Error(`Group with id ${groupId} not found`);
+    }
+
+    const existing = this.groups[index];
+
+    let name = existing.name;
+    if (input.name !== undefined) {
+      const trimmed = input.name.trim();
+      if (!trimmed) {
+        throw new Error('Group name is required');
+      }
+      name = trimmed;
+    }
+
+    let categories = existing.categories;
+    let tags = existing.tags;
+    let categoryLabel = existing.categoryLabel;
+
+    const rawCategories: string[] | undefined =
+      input.categories !== undefined
+        ? input.categories
+        : input.category !== undefined
+        ? [input.category.trim()]
+        : undefined;
+
+    if (rawCategories !== undefined) {
+      if (rawCategories.length === 0) {
+        throw new Error('At least one category is required');
+      }
+      categories = rawCategories.map(c => c.trim().toLowerCase());
+      const primaryCategory = rawCategories[0].trim();
+      categoryLabel = primaryCategory.toUpperCase();
+
+      const destination =
+        input.destination !== undefined
+          ? input.destination.trim()
+          : existing.location;
+      const contextTag = destination && destination !== 'Global' ? 'Trip' : 'Community';
+      tags = Array.from(new Set([...rawCategories.map(c => c.trim()), contextTag]));
+    }
+
+    const updatedGroup: TravelGroup = {
+      ...existing,
+      name,
+      description:
+        input.description !== undefined
+          ? input.description.trim() || undefined
+          : existing.description,
+      location:
+        input.destination !== undefined
+          ? input.destination.trim() || 'Global'
+          : existing.location,
+      travelDates:
+        input.travelDates !== undefined
+          ? input.travelDates.trim() || 'Flexible Dates'
+          : existing.travelDates,
+      maxMembers:
+        input.maxMembers !== undefined ? input.maxMembers : existing.maxMembers,
+      categories,
+      tags,
+      categoryLabel,
+    };
+
+    this.groups[index] = updatedGroup;
+    this.notify();
+
+    return updatedGroup;
   }
 
   getGroupMessages(groupId: string): GroupMessage[] {
@@ -195,6 +362,8 @@ export function useGroupState(groupId?: string) {
     notificationsEnabled,
     joinGroup: (id: string) => groupStore.joinGroup(id),
     leaveGroup: (id: string) => groupStore.leaveGroup(id),
+    createGroup: (input: CreateGroupInput) => groupStore.createGroup(input),
+    updateGroup: (id: string, input: UpdateGroupInput) => groupStore.updateGroup(id, input),
     sendMessage: (id: string, text: string) => {
       groupStore.sendUserMessage(id, text);
       groupStore.triggerMockAutoResponse(id, text);

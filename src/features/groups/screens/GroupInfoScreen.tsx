@@ -18,6 +18,7 @@ import {
   LogOut,
   ShieldCheck,
   Crown,
+  Edit3,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
@@ -66,7 +67,15 @@ export default function GroupInfoScreen() {
       <View style={styles.header}>
         <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>Group Info</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity
+          testID="group-info-edit-btn"
+          style={styles.headerEditBtn}
+          onPress={() => navigation.navigate('EditGroup', { groupId })}
+          activeOpacity={0.7}
+          accessibilityLabel="Edit Group"
+        >
+          <Edit3 size={20} color={AppColors.primary} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -82,10 +91,17 @@ export default function GroupInfoScreen() {
           </View>
           <Text style={styles.groupName}>{group?.name || 'Paris Explorers 🇫🇷'}</Text>
           <View style={styles.badgeRow}>
-            <View style={styles.categoryPill}>
-              <Text style={styles.categoryPillText}>
-                {group?.categoryLabel || 'ADVENTURE'}
-              </Text>
+            <View style={styles.categoryPillsRow}>
+              {(group?.categories && group.categories.length > 0
+                ? group.categories
+                : [group?.categoryLabel || 'ADVENTURE']
+              ).map((cat) => (
+                <View key={cat} style={styles.categoryPill}>
+                  <Text style={styles.categoryPillText}>
+                    {cat.toUpperCase()}
+                  </Text>
+                </View>
+              ))}
             </View>
             <View style={styles.memberPill}>
               <Users size={12} color={AppColors.primary} />
@@ -268,6 +284,12 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 44,
   },
+  headerEditBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
@@ -311,7 +333,16 @@ const styles = StyleSheet.create({
   },
   badgeRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
+  },
+  categoryPillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    justifyContent: 'center',
   },
   categoryPill: {
     backgroundColor: '#E0F2FE',

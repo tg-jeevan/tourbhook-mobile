@@ -1,28 +1,30 @@
 import React, { useEffect } from 'react';
-import { View, Image, StyleSheet, StatusBar, Platform } from 'react-native';
+import { View, StyleSheet, StatusBar, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppColors } from '../../../core/theme/colors';
+import { AppLogo } from '../../../core/components/AppLogo';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Responsive symbol sizing: ~30-32% of screen width, moderate size bounded between 100px and 140px
+const LOGO_SIZE = Math.max(100, Math.min(Math.round(SCREEN_WIDTH * 0.32), 140));
 
 export default function SplashScreen() {
   useEffect(() => {
+    StatusBar.setHidden(true);
     StatusBar.setBarStyle('light-content');
-    if (Platform.OS === 'android' && (StatusBar as any).setBackgroundColor) {
-      (StatusBar as any).setBackgroundColor(AppColors.textPrimary);
-    }
   }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar hidden={true} barStyle="light-content" />
       <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../../../assets/images/tourBhookOfficialLogoTransparent.png')}
-            style={styles.logo}
-            resizeMode="contain"
-            accessibilityLabel="Tour Bhook Logo"
-          />
-        </View>
+        <AppLogo
+          variant="symbol"
+          size="symbol"
+          accessibilityLabel="Tour Bhook Logo"
+          style={styles.logo}
+          containerStyle={styles.logoContainer}
+        />
       </View>
     </SafeAreaView>
   );
@@ -40,14 +42,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
   },
   logoContainer: {
-    width: '100%',
-    maxWidth: 340,
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
-    width: '100%',
-    maxWidth: 320,
-    aspectRatio: 2, // Intrinsic 1024 / 512 aspect ratio
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    maxWidth: 140,
+    aspectRatio: 1, // Intrinsic 1:1 aspect ratio for TB symbol mark
   },
 });

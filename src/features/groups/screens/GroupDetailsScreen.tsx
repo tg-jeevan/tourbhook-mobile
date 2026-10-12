@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -19,6 +20,8 @@ import {
   Flame,
   TrendingUp,
   Sparkles,
+  Share2,
+  Edit3,
 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
@@ -57,19 +60,55 @@ export default function GroupDetailsScreen() {
     navigation.navigate('GroupChat', { groupId });
   };
 
+  const handleShareGroup = async () => {
+    if (!group) return;
+    try {
+      const destText = group.location ? `\n📍 Destination: ${group.location}` : '';
+      const datesText = group.travelDates ? `\n📅 Dates: ${group.travelDates}` : '';
+      const message = `Check out this travel group on Tourbhook!\n\n👥 ${group.name}\n${group.description || 'Join fellow travelers exploring together.'}${destText}${datesText}\n\nDownload the Tour Bhook app to connect and travel together.`;
+
+      await Share.share({
+        title: `Tourbhook: ${group.name}`,
+        message,
+      });
+    } catch {
+      // Ignored
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       {/* Header */}
       <View style={styles.header}>
         <BackButton onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>Group Details</Text>
-        <TouchableOpacity
-          style={styles.chatIconBtn}
-          onPress={() => navigation.navigate('GroupChat', { groupId })}
-          activeOpacity={0.7}
-        >
-          <MessageCircle size={22} color={AppColors.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerActionsRow}>
+          <TouchableOpacity
+            testID="edit-group-header-btn"
+            style={styles.headerActionBtn}
+            onPress={() => navigation.navigate('EditGroup', { groupId })}
+            activeOpacity={0.7}
+            accessibilityLabel="Edit Group"
+          >
+            <Edit3 size={19} color={AppColors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerActionBtn}
+            onPress={handleShareGroup}
+            activeOpacity={0.7}
+            accessibilityLabel="Share Group"
+          >
+            <Share2 size={20} color={AppColors.textSecondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerActionBtn}
+            onPress={() => navigation.navigate('GroupChat', { groupId })}
+            activeOpacity={0.7}
+            accessibilityLabel="Group Chat"
+          >
+            <MessageCircle size={22} color={AppColors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -79,10 +118,17 @@ export default function GroupDetailsScreen() {
         {/* Top Hero Card */}
         <View style={styles.heroCard}>
           <View style={styles.heroTopRow}>
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryBadgeText}>
-                {group.categoryLabel || 'TRAVEL'}
-              </Text>
+            <View style={styles.categoryBadgesRow}>
+              {(group.categories && group.categories.length > 0
+                ? group.categories
+                : [group.categoryLabel || 'TRAVEL']
+              ).map((cat) => (
+                <View key={cat} style={styles.categoryBadge}>
+                  <Text style={styles.categoryBadgeText}>
+                    {cat.toUpperCase()}
+                  </Text>
+                </View>
+              ))}
             </View>
 
             {group.statusType === 'popular' && (
@@ -282,6 +328,16 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 44,
   },
+  headerActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerActionBtn: {
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   chatIconBtn: {
     width: 44,
     height: 44,
@@ -321,6 +377,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
+    gap: 8,
+  },
+  categoryBadgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    flex: 1,
   },
   categoryBadge: {
     backgroundColor: '#E0F2FE',
