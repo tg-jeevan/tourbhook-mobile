@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Dimensions,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -45,16 +44,8 @@ import {
   exploreVoiceSearchService,
   VoiceSearchStatus,
 } from '../services/exploreVoiceSearchService';
-import {
-  MOCK_DESTINATIONS,
-  MOCK_EXPLORE_REELS,
-  getFilteredExploreContent,
-  searchExploreContent,
-} from '../data/mockExploreData';
+import { getFilteredExploreContent, searchExploreContent } from '../data/mockExploreData';
 import { UGCItem } from '../../ugc/types/ugcTypes';
-import { TravelGroup } from '../../groups/types/groupTypes';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CATEGORIES: { label: ExploreCategory; icon: React.ComponentType<{ size: number; color: string }> }[] = [
   { label: 'All', icon: LayoutGrid },
@@ -384,7 +375,9 @@ export default function ExploreFeedScreen() {
 
               <TouchableOpacity
                 style={styles.seeAllTouchArea}
-                onPress={() => navigation.navigate('ReelViewer', { filter: 'all' })}
+                onPress={() =>
+                  navigation.navigate('ExploreCollection', { contentType: 'reels' })
+                }
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="See all Travel Reels"

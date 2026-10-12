@@ -1,7 +1,6 @@
-import { UGCItem } from '../../ugc/types/ugcTypes';
-import { TravelGroup } from '../../groups/types/groupTypes';
-
 export type ExploreCategory = 'All' | 'Adventure' | 'Culture' | 'Food' | 'Beach' | 'Nature';
+
+export type ExploreCollectionType = 'reels' | 'destinations';
 
 export interface PlaceItem {
   id: string;

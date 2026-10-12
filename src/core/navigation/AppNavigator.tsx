@@ -37,6 +37,7 @@ import EventDetailsScreen from '../../features/events/screens/EventDetailsScreen
 import NotificationsScreen from '../../features/notifications/screens/NotificationsScreen';
 import InstagramConnectScreen from '../../features/ugc/screens/InstagramConnectScreen';
 import ExploreFeedScreen from '../../features/explore/screens/ExploreFeedScreen';
+import ExploreCollectionScreen from '../../features/explore/screens/ExploreCollectionScreen';
 import ReelViewerScreen from '../../features/explore/screens/ReelViewerScreen';
 import DestinationDetailsScreen from '../../features/explore/screens/DestinationDetailsScreen';
 import AllDestinationsScreen from '../../features/explore/screens/AllDestinationsScreen';
@@ -111,6 +112,7 @@ export const AppNavigator = () => {
 
       {/* ── Explore ── */}
       <Stack.Screen name="ExploreFeed" component={ExploreFeedScreen} />
+      <Stack.Screen name="ExploreCollection" component={ExploreCollectionScreen} />
       <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
       <Stack.Screen name="ReelViewer" component={ReelViewerScreen} />
       <Stack.Screen name="DestinationDetails" component={DestinationDetailsScreen} />

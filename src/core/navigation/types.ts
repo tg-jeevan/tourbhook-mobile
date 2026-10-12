@@ -1,6 +1,9 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
 import { ImportedTripDraft } from '../../features/imports/types/importTypes';
-import { ExploreCategory } from '../../features/explore/types/exploreTypes';
+import {
+  ExploreCategory,
+  ExploreCollectionType,
+} from '../../features/explore/types/exploreTypes';
 
 export type AuthStackParamList = {
   Splash: undefined;
@@ -93,6 +96,7 @@ export type AppStackParamList = {
   Notifications: undefined;
   InstagramConnect: undefined;
   ExploreFeed: undefined;
+  ExploreCollection: { contentType: ExploreCollectionType };
   AllDestinations: { category?: ExploreCategory } | undefined;
   ReelViewer: {
     reelId?: string;

@@ -40,7 +40,7 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
   });
 
   describe('1. ExploreFeedScreen See All and Card Navigation', () => {
-    it('Travel Reels See All navigates to ReelViewer with filter "all"', () => {
+    it('Travel Reels See All navigates to the complete reels collection', () => {
       let renderer: ReactTestRenderer.ReactTestRenderer;
       act(() => {
         renderer = ReactTestRenderer.create(<ExploreFeedScreen />);
@@ -53,7 +53,9 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
         seeAllReels.props.onPress();
       });
 
-      expect(mockNavigate).toHaveBeenCalledWith('ReelViewer', { filter: 'all' });
+      expect(mockNavigate).toHaveBeenCalledWith('ExploreCollection', {
+        contentType: 'reels',
+      });
     });
 
     it('Popular Destinations See All navigates to AllDestinations', () => {
