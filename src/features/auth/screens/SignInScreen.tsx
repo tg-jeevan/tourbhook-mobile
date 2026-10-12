@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  ScrollView,
   Platform,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
+  ScrollView,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -100,10 +101,29 @@ const SignInScreen = () => {
   const [obscurePassword, setObscurePassword] = useState(true);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  // Responsive layout calculations
-  const heroHeight = Math.max(160, Math.min(screenHeight * 0.24, 210));
-  const bottomIllustrationHeight = Math.max(110, Math.min(screenHeight * 0.18, 160));
+  const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener?.(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener?.(hideEvent, () => {
+      setKeyboardVisible(false);
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+    return () => {
+      showSub?.remove?.();
+      hideSub?.remove?.();
+    };
+  }, []);
+
+  const isSmallScreen = screenHeight < 740;
+
+  // Responsive hero and illustration heights (always rendered behind the form at all times)
+  const heroHeight = Math.max(120, Math.min(screenHeight * 0.22, 180));
+  const bottomIllustrationHeight = Math.max(90, Math.min(screenHeight * 0.16, 140));
 
   const handleSignIn = () => {
     loginWithMock();
@@ -115,8 +135,12 @@ const SignInScreen = () => {
 
   return (
     <View style={styles.root}>
-      {/* ── TOP HERO BACKGROUND ── */}
-      <View style={[styles.heroContainer, { height: heroHeight }]} pointerEvents="none">
+      {/* ── TOP HERO BACKGROUND (Always rendered behind the form) ── */}
+      <View
+        style={[styles.heroContainer, { height: heroHeight }]}
+        pointerEvents="none"
+        testID="signin-hero-background"
+      >
         <Image
           source={require('../../../../assets/images/welcomeHeroBackground.jpg')}
           style={styles.heroImage}
@@ -125,10 +149,11 @@ const SignInScreen = () => {
         <View style={styles.heroGradientOverlay} />
       </View>
 
-      {/* ── BOTTOM TRAVEL ILLUSTRATION ── */}
+      {/* ── BOTTOM TRAVEL ILLUSTRATION (Always rendered behind the form) ── */}
       <View
         style={[styles.bottomIllustrationContainer, { height: bottomIllustrationHeight }]}
         pointerEvents="none"
+        testID="signin-bottom-illustration"
       >
         <Image
           source={require('../../../../assets/images/welcomeTravelIllustration.png')}
@@ -156,27 +181,58 @@ const SignInScreen = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
+            ref={scrollViewRef}
             contentContainerStyle={[
               styles.scrollContent,
-              {
-                paddingTop: Math.max(20, heroHeight - 80),
-                paddingBottom: bottomIllustrationHeight + 24,
-              },
+              !keyboardVisible && styles.scrollContentCentered,
             ]}
+            scrollEnabled={keyboardVisible}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
           >
-            {/* ── MAIN CARD / FORM SHEET ── */}
-            <View style={styles.cardSheet}>
+            <View style={styles.cardContainer}>
+              <View
+                style={[
+                  styles.cardSheet,
+                  (isSmallScreen || keyboardVisible) && styles.cardSheetCompact,
+                ]}
+              >
               {/* Header Title & Subtitle */}
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to continue your journey</Text>
+              <Text
+                style={[
+                  styles.title,
+                  (isSmallScreen || keyboardVisible) && styles.titleCompact,
+                ]}
+              >
+                Welcome Back
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  (isSmallScreen || keyboardVisible) && styles.subtitleCompact,
+                ]}
+              >
+                Sign in to continue your journey
+              </Text>
 
-              <View style={styles.gap20} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap8
+                    : isSmallScreen
+                    ? styles.gap10
+                    : styles.gap16
+                }
+              />
 
               {/* Google Sign In Button */}
               <TouchableOpacity
-                style={styles.googleButton}
+                style={[
+                  styles.googleButton,
+                  (isSmallScreen || keyboardVisible) && styles.googleButtonCompact,
+                ]}
                 onPress={handleGoogleSignIn}
                 activeOpacity={0.85}
               >
@@ -184,7 +240,15 @@ const SignInScreen = () => {
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
               </TouchableOpacity>
 
-              <View style={styles.gap18} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap8
+                    : isSmallScreen
+                    ? styles.gap10
+                    : styles.gap14
+                }
+              />
 
               {/* Divider with "or" */}
               <View style={styles.dividerRow}>
@@ -193,14 +257,30 @@ const SignInScreen = () => {
                 <View style={styles.divider} />
               </View>
 
-              <View style={styles.gap18} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap8
+                    : isSmallScreen
+                    ? styles.gap10
+                    : styles.gap14
+                }
+              />
 
               {/* Email Input Field */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    (isSmallScreen || keyboardVisible) && styles.inputLabelCompact,
+                  ]}
+                >
+                  Email
+                </Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    (isSmallScreen || keyboardVisible) && styles.inputWrapperCompact,
                     emailFocused && styles.inputWrapperFocused,
                   ]}
                 >
@@ -222,14 +302,30 @@ const SignInScreen = () => {
                 </View>
               </View>
 
-              <View style={styles.gap16} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap6
+                    : isSmallScreen
+                    ? styles.gap8
+                    : styles.gap12
+                }
+              />
 
               {/* Password Input Field */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    (isSmallScreen || keyboardVisible) && styles.inputLabelCompact,
+                  ]}
+                >
+                  Password
+                </Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    (isSmallScreen || keyboardVisible) && styles.inputWrapperCompact,
                     passwordFocused && styles.inputWrapperFocused,
                   ]}
                 >
@@ -259,7 +355,7 @@ const SignInScreen = () => {
                 </View>
               </View>
 
-              <View style={styles.gap10} />
+              <View style={styles.gap6} />
 
               {/* Forgot Password Link */}
               <TouchableOpacity
@@ -276,11 +372,22 @@ const SignInScreen = () => {
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
 
-              <View style={styles.gap20} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap8
+                    : isSmallScreen
+                    ? styles.gap10
+                    : styles.gap14
+                }
+              />
 
               {/* Primary CTA - Sign In Button */}
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  (isSmallScreen || keyboardVisible) && styles.primaryButtonCompact,
+                ]}
                 onPress={handleSignIn}
                 activeOpacity={0.85}
               >
@@ -288,7 +395,15 @@ const SignInScreen = () => {
                 <Text style={styles.primaryButtonArrow}>→</Text>
               </TouchableOpacity>
 
-              <View style={styles.gap16} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap6
+                    : isSmallScreen
+                    ? styles.gap8
+                    : styles.gap12
+                }
+              />
 
               {/* Sign Up Navigation Footer */}
               <View style={styles.footerRow}>
@@ -301,9 +416,9 @@ const SignInScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              {__DEV__ && (
+              {__DEV__ && !keyboardVisible && (
                 <>
-                  <View style={styles.gap16} />
+                  <View style={styles.gap10} />
                   <TouchableOpacity
                     style={styles.mockAuthButton}
                     onPress={loginWithMock}
@@ -314,8 +429,9 @@ const SignInScreen = () => {
                 </>
               )}
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
@@ -405,13 +521,21 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }, { translateY: -1.6 }],
   },
   scrollContent: {
-    paddingHorizontal: 20,
     flexGrow: 1,
+    paddingBottom: 24,
+  },
+  scrollContentCentered: {
+    justifyContent: 'center',
+    paddingBottom: 0,
+  },
+  cardContainer: {
+    paddingHorizontal: 20,
+    zIndex: 5,
   },
   cardSheet: {
     backgroundColor: AppColors.surface,
     borderRadius: 24,
-    paddingVertical: 24,
+    paddingVertical: 20,
     paddingHorizontal: 20,
     shadowColor: AppColors.textPrimary,
     shadowOffset: { width: 0, height: 6 },
@@ -421,6 +545,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: AppColors.borderLight,
   },
+  cardSheetCompact: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: '800',
@@ -428,16 +557,24 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
   },
+  titleCompact: {
+    fontSize: 20,
+    letterSpacing: -0.2,
+  },
   subtitle: {
     fontSize: 13.5,
     color: AppColors.textSecondary,
     marginTop: 4,
     fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
   },
+  subtitleCompact: {
+    fontSize: 12,
+    marginTop: 2,
+  },
   googleButton: {
     width: '100%',
-    height: 50,
-    borderRadius: 25,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: AppColors.borderLight,
     backgroundColor: AppColors.surface,
@@ -449,6 +586,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+  },
+  googleButtonCompact: {
+    height: 40,
+    borderRadius: 20,
   },
   googleBadge: {
     width: 24,
@@ -670,7 +811,24 @@ const styles = StyleSheet.create({
     color: AppColors.textSecondary,
     fontFamily: Platform.OS === 'android' ? 'Inter-SemiBold' : undefined,
   },
+  inputLabelCompact: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  inputWrapperCompact: {
+    height: 44,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
+  primaryButtonCompact: {
+    height: 46,
+    borderRadius: 23,
+  },
+  gap6: { height: 6 },
+  gap8: { height: 8 },
   gap10: { height: 10 },
+  gap12: { height: 12 },
+  gap14: { height: 14 },
   gap16: { height: 16 },
   gap18: { height: 18 },
   gap20: { height: 20 },

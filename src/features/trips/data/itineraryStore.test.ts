@@ -95,13 +95,15 @@ describe('itineraryStore', () => {
     expect(retrieved?.dates).toBe('Aug 5 – Aug 7, 2027');
   });
 
-  test('updateItinerary preserves immutable name, destination, and primaryAge', () => {
+  test('updateItinerary renames existing trip in-place while preserving immutable ID, destination, and primaryAge', () => {
+    const initialCount = itineraryStore.getItineraries().length;
     const trip = itineraryStore.getItineraryById('1');
     expect(trip?.title).toBe('Paris Adventure');
     expect(trip?.destination).toBe('Paris, France');
 
     itineraryStore.updateItinerary('1', {
-      title: 'Rome Adventure',
+      title: 'Paris Romantic Getaway',
+      customName: 'Paris Romantic Getaway',
       destination: 'Rome, Italy',
       location: 'Rome, Italy',
       primaryAge: 45,
@@ -109,17 +111,19 @@ describe('itineraryStore', () => {
 
     const updated = itineraryStore.getItineraryById('1');
     expect(updated?.id).toBe('1');
-    expect(updated?.title).toBe('Paris Adventure');
+    expect(updated?.title).toBe('Paris Romantic Getaway');
+    expect(updated?.customName).toBe('Paris Romantic Getaway');
     expect(updated?.destination).toBe('Paris, France');
     expect(updated?.location).toBe('Paris, France');
+    // Total count must not increase (no duplicate created)
+    expect(itineraryStore.getItineraries().length).toBe(initialCount);
   });
 
-  test('updateItinerary preserves immutable name when dates and travelers change', () => {
+  test('updateItinerary preserves existing name when only dates and travelers change', () => {
     const trip = itineraryStore.getItineraryById('2');
     expect(trip?.title).toBe('Tokyo Explorer');
 
     itineraryStore.updateItinerary('2', {
-      title: 'New Tokyo Name',
       dates: 'Oct 10 – Oct 20, 2026',
       travelersCount: 5,
     });
@@ -130,7 +134,7 @@ describe('itineraryStore', () => {
     expect(updated?.travelersCount).toBe(5);
   });
 
-  test('updateItinerary preserves customName when re-generating or refreshing details', () => {
+  test('updateItinerary preserves dates, destination, and activities when only name is updated', () => {
     itineraryStore.addItinerary({
       id: 'trip-custom-bangalore',
       title: 'Bangalore Family Trip',
@@ -146,18 +150,25 @@ describe('itineraryStore', () => {
       theme: 'peach',
     });
 
-    // Attempting to overwrite name during detail regeneration
-    itineraryStore.updateItinerary('trip-custom-bangalore', {
-      title: 'Bangalore Adventure',
-      customName: 'Bangalore Adventure',
-      placesCount: 10,
-      activitiesCount: 20,
+    const initialTotal = itineraryStore.getItineraries().length;
+
+    // Renaming the trip
+    const success = itineraryStore.updateItinerary('trip-custom-bangalore', {
+      title: 'Bangalore Adventure Renamed',
+      customName: 'Bangalore Adventure Renamed',
     });
 
+    expect(success).toBe(true);
     const refreshed = itineraryStore.getItineraryById('trip-custom-bangalore');
-    expect(refreshed?.title).toBe('Bangalore Family Trip');
-    expect(refreshed?.customName).toBe('Bangalore Family Trip');
-    expect(refreshed?.placesCount).toBe(10);
-    expect(refreshed?.activitiesCount).toBe(20);
+    expect(refreshed?.id).toBe('trip-custom-bangalore');
+    expect(refreshed?.title).toBe('Bangalore Adventure Renamed');
+    expect(refreshed?.customName).toBe('Bangalore Adventure Renamed');
+    expect(refreshed?.dates).toBe('Dec 1 – Dec 5, 2026');
+    expect(refreshed?.destination).toBe('Bangalore, India');
+    expect(refreshed?.placesCount).toBe(4);
+    expect(refreshed?.activitiesCount).toBe(8);
+    expect(refreshed?.travelersCount).toBe(3);
+    // Total count remains identical (no duplicate)
+    expect(itineraryStore.getItineraries().length).toBe(initialTotal);
   });
 });

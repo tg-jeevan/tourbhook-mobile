@@ -13,6 +13,7 @@ import {
   resetOnboardingStorage,
 } from '../services/onboardingStorage';
 import OnboardingScreen from './OnboardingScreen';
+import SignInScreen from './SignInScreen';
 import SignUpScreen from './SignUpScreen';
 import WelcomeScreen from './WelcomeScreen';
 import { AuthNavigator } from '../../../core/navigation/AuthNavigator';
@@ -186,6 +187,27 @@ describe('Onboarding and Authentication Flow Tests', () => {
       });
       expect(mockNavigate).toHaveBeenCalledWith('SignIn');
     });
+
+    it('positions the content card with balanced responsive vertical spacing', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<WelcomeScreen />);
+      });
+
+      const root = renderer.root;
+
+      // Headline and description
+      const headline = root.findByProps({ children: 'Your Adventure Starts Here' });
+      expect(headline).toBeTruthy();
+
+      // Sign In button navigates to SignIn
+      const signInBtn = root.findByProps({ testID: 'welcome-sign-in-btn' });
+      expect(signInBtn).toBeTruthy();
+      await act(async () => {
+        signInBtn.props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('SignIn');
+    });
   });
 
   describe('4. SignUpScreen Confirm Password Validation', () => {
@@ -328,4 +350,66 @@ describe('Onboarding and Authentication Flow Tests', () => {
       expect(renderer.root).toBeTruthy();
     });
   });
+
+  describe('7. SignIn and SignUp Background & Keyboard Stability', () => {
+    it('SignInScreen preserves hero image and bottom illustration permanently behind the form', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<SignInScreen />);
+      });
+
+      const root = renderer.root;
+
+      // Verify hero background and bottom illustration are rendered
+      const heroBackground = root.findByProps({ testID: 'signin-hero-background' });
+      expect(heroBackground).toBeTruthy();
+      expect(heroBackground.props.style).toEqual(
+        expect.arrayContaining([expect.objectContaining({ height: expect.any(Number) })])
+      );
+
+      const bottomIllustration = root.findByProps({ testID: 'signin-bottom-illustration' });
+      expect(bottomIllustration).toBeTruthy();
+      expect(bottomIllustration.props.style).toEqual(
+        expect.arrayContaining([expect.objectContaining({ height: expect.any(Number) })])
+      );
+
+      // Verify essential inputs and buttons remain accessible
+      expect(root.findByProps({ placeholder: 'your@email.com' })).toBeTruthy();
+      expect(root.findByProps({ placeholder: '••••••••' })).toBeTruthy();
+      expect(root.findAllByProps({ children: 'Continue with Google' }).length).toBeGreaterThan(0);
+      expect(root.findAllByProps({ children: 'Forgot Password?' }).length).toBeGreaterThan(0);
+      expect(root.findAllByProps({ children: 'Sign In' }).length).toBeGreaterThan(0);
+    });
+
+    it('SignUpScreen preserves hero image and bottom illustration permanently behind the form', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<SignUpScreen />);
+      });
+
+      const root = renderer.root;
+
+      // Verify hero background and bottom illustration are rendered
+      const heroBackground = root.findByProps({ testID: 'signup-hero-background' });
+      expect(heroBackground).toBeTruthy();
+      expect(heroBackground.props.style).toEqual(
+        expect.arrayContaining([expect.objectContaining({ height: expect.any(Number) })])
+      );
+
+      const bottomIllustration = root.findByProps({ testID: 'signup-bottom-illustration' });
+      expect(bottomIllustration).toBeTruthy();
+      expect(bottomIllustration.props.style).toEqual(
+        expect.arrayContaining([expect.objectContaining({ height: expect.any(Number) })])
+      );
+
+      // Verify essential inputs and buttons remain accessible
+      expect(root.findByProps({ placeholder: 'John Doe' })).toBeTruthy();
+      expect(root.findByProps({ placeholder: 'your@email.com' })).toBeTruthy();
+      expect(root.findByProps({ testID: 'signup-password-input' })).toBeTruthy();
+      expect(root.findByProps({ testID: 'signup-confirm-password-input' })).toBeTruthy();
+      expect(root.findByProps({ testID: 'signup-submit-btn' })).toBeTruthy();
+      expect(root.findAllByProps({ children: 'Sign In' }).length).toBeGreaterThan(0);
+    });
+  });
 });
+

@@ -257,6 +257,7 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
 
       const success = itineraryStore.updateItinerary(tripId, {
         title: attemptedNewTitle,
+        customName: attemptedNewTitle,
         dates: updatedDates,
         startDate: 'Sep 12, 2026',
         endDate: 'Sep 18, 2026',
@@ -271,9 +272,9 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
       expect(afterUpdate.length).toBe(initialCount);
 
       const updatedRecord = itineraryStore.getItineraryById(tripId);
-      // Original custom name/title and itinerary ID are preserved and immutable!
       expect(updatedRecord?.id).toBe(tripId);
-      expect(updatedRecord?.title).toBe(originalTitle);
+      expect(updatedRecord?.title).toBe(attemptedNewTitle);
+      expect(updatedRecord?.customName).toBe(attemptedNewTitle);
       expect(updatedRecord?.dates).toBe(updatedDates);
       expect(updatedRecord?.travelStyle).toBe('Relaxed Vacation');
       expect(updatedRecord?.selectedPlaceIds).toEqual(['ai-1', 'ai-2']);
@@ -287,6 +288,7 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
       // Editing an existing trip
       itineraryStore.updateItinerary('2', {
         title: 'Tokyo Explorer Extended',
+        customName: 'Tokyo Explorer Extended',
         placesCount: 8,
       });
 
@@ -294,8 +296,8 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
       const currentList = itineraryStore.getItineraries();
       expect(currentList.length).toBe(FREE_LIMIT);
       expect(currentList.length <= FREE_LIMIT).toBe(true);
-      // And the original name remains Tokyo Explorer
-      expect(itineraryStore.getItineraryById('2')?.title).toBe('Tokyo Explorer');
+      // And the name is updated in-place on the existing trip
+      expect(itineraryStore.getItineraryById('2')?.title).toBe('Tokyo Explorer Extended');
     });
 
     it('attempting to update destination or age does not change the saved values', () => {
@@ -318,7 +320,7 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
       expect(updated?.id).toBe(tripId);
     });
 
-    it('updating dates and traveller counts does not change the itinerary name', () => {
+    it('updating dates and traveller counts does not change the itinerary name when name is omitted', () => {
       const tripId = '2';
       const existing = itineraryStore.getItineraryById(tripId)!;
       const originalTitle = existing.title;
@@ -339,14 +341,13 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
       expect(updated?.id).toBe(tripId);
     });
 
-    it('re-generating itinerary details does not replace or overwrite the name', () => {
+    it('re-generating itinerary details without name does not replace or overwrite the name', () => {
       const tripId = '1';
       const existing = itineraryStore.getItineraryById(tripId)!;
       const originalTitle = existing.title;
 
-      // Simulate AI itinerary regeneration with new activities/places
+      // Simulate AI itinerary regeneration with new activities/places without renaming
       itineraryStore.updateItinerary(tripId, {
-        title: 'New AI Title',
         placesCount: 12,
         activitiesCount: 25,
       });
@@ -437,6 +438,204 @@ describe('Edit Itinerary Flow & Destination Validation', () => {
       const r3 = extractStartAndEndDatesFromRange('Nov 20 - Nov 23, 2026');
       expect(r3.startDate).toBe('Nov 20, 2026');
       expect(r3.endDate).toBe('Nov 23, 2026');
+    });
+  });
+
+  describe('5. Itinerary Editing Bug Fix Verification (Duplicate Prevention & In-Place Rename)', () => {
+    const SAMPLE_TRIP_ID = 'trip-sample-bkk';
+
+    beforeEach(() => {
+      itineraryStore.resetToInitial();
+    });
+
+    it('1. Creating a new itinerary adds exactly one record', () => {
+      const countBefore = itineraryStore.getItineraries().length;
+      const newTrip: ItineraryTrip = {
+        id: SAMPLE_TRIP_ID,
+        title: 'Sample',
+        customName: 'Sample',
+        destination: 'Bangkok, Thailand',
+        location: 'Bangkok, Thailand',
+        dates: 'Oct 15 – Oct 24, 2026',
+        startDate: 'Oct 15, 2026',
+        endDate: 'Oct 24, 2026',
+        status: 'upcoming',
+        placesCount: 3,
+        activitiesCount: 0,
+        travelersCount: 4,
+        imageUri: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365',
+        theme: 'mint',
+      };
+
+      itineraryStore.addItinerary(newTrip);
+
+      const afterAdd = itineraryStore.getItineraries();
+      expect(afterAdd.length).toBe(countBefore + 1);
+
+      const created = itineraryStore.getItineraryById(SAMPLE_TRIP_ID);
+      expect(created).toBeDefined();
+      expect(created?.title).toBe('Sample');
+      expect(created?.customName).toBe('Sample');
+      expect(created?.destination).toBe('Bangkok, Thailand');
+    });
+
+    it('2. Renaming an existing itinerary retains the same ID and total itinerary count without duplicates', () => {
+      const initialCount = itineraryStore.getItineraries().length;
+      const tripToRename = itineraryStore.getItineraryById('1')!;
+      const originalId = tripToRename.id;
+
+      // Rename from 'Paris Adventure' to 'Sample googl'
+      const updated = itineraryStore.updateItinerary(originalId, {
+        title: 'Sample googl',
+        customName: 'Sample googl',
+      });
+
+      expect(updated).toBe(true);
+
+      const currentItineraries = itineraryStore.getItineraries();
+      // Total count MUST remain strictly identical
+      expect(currentItineraries.length).toBe(initialCount);
+
+      // Same ID retained
+      const renamed = itineraryStore.getItineraryById(originalId);
+      expect(renamed?.id).toBe(originalId);
+      expect(renamed?.title).toBe('Sample googl');
+      expect(renamed?.customName).toBe('Sample googl');
+
+      // Only one card matching 'Sample googl'
+      const matches = currentItineraries.filter(
+        (i) => i.title === 'Sample googl' || i.customName === 'Sample googl'
+      );
+      expect(matches).toHaveLength(1);
+      expect(matches[0].id).toBe(originalId);
+    });
+
+    it('3. Editing other fields updates that same record in-place', () => {
+      const tripId = '2';
+      const initialTotal = itineraryStore.getItineraries().length;
+      const initialTrip = itineraryStore.getItineraryById(tripId)!;
+      const initialName = initialTrip.title;
+
+      const success = itineraryStore.updateItinerary(tripId, {
+        travelStyle: 'Budget Friendly',
+        placesCount: 9,
+        travelersCount: 5,
+        selectedPlaceIds: ['p-1', 'p-2'],
+      });
+
+      expect(success).toBe(true);
+      expect(itineraryStore.getItineraries().length).toBe(initialTotal);
+
+      const updated = itineraryStore.getItineraryById(tripId)!;
+      expect(updated.id).toBe(tripId);
+      expect(updated.title).toBe(initialName);
+      expect(updated.travelStyle).toBe('Budget Friendly');
+      expect(updated.placesCount).toBe(9);
+      expect(updated.travelersCount).toBe(5);
+      expect(updated.selectedPlaceIds).toEqual(['p-1', 'p-2']);
+    });
+
+    it('4. Existing dates and customized activities remain unchanged when only the name is edited', () => {
+      const tripId = '1';
+      const initialTrip = itineraryStore.getItineraryById(tripId)!;
+      const originalDates = initialTrip.dates;
+      const originalStartDate = initialTrip.startDate;
+      const originalEndDate = initialTrip.endDate;
+
+      // Add a custom activity/item to Day 1
+      const initialDays = itineraryStore.getItineraryDays(tripId);
+      expect(initialDays.length).toBeGreaterThan(0);
+      const day1Id = initialDays[0].id;
+      const customItemId = 'custom-item-eiffel-sunset';
+      const updatedDaysWithCustomItem = initialDays.map((day, idx) =>
+        idx === 0
+          ? {
+              ...day,
+              items: [
+                ...day.items,
+                {
+                  id: customItemId,
+                  time: '18:00',
+                  title: 'Sunset at Eiffel Tower',
+                  subtitle: 'Sunset views over Paris',
+                  type: 'activity' as const,
+                  location: 'Eiffel Tower',
+                },
+              ],
+            }
+          : day
+      );
+      itineraryStore.setItineraryDays(tripId, updatedDaysWithCustomItem);
+
+      const daysAfterActivity = itineraryStore.getItineraryDays(tripId);
+      const day1AfterActivity = daysAfterActivity.find((d) => d.id === day1Id)!;
+      expect(day1AfterActivity.items.some((a) => a.id === customItemId)).toBe(true);
+
+      // Now rename the itinerary ONLY
+      itineraryStore.updateItinerary(tripId, {
+        title: 'Paris Dream Vacation',
+        customName: 'Paris Dream Vacation',
+      });
+
+      const tripAfterRename = itineraryStore.getItineraryById(tripId)!;
+      expect(tripAfterRename.title).toBe('Paris Dream Vacation');
+      expect(tripAfterRename.dates).toBe(originalDates);
+      expect(tripAfterRename.startDate).toBe(originalStartDate);
+      expect(tripAfterRename.endDate).toBe(originalEndDate);
+
+      // Verify customized activity on Day 1 remains completely intact
+      const daysAfterRename = itineraryStore.getItineraryDays(tripId);
+      const day1AfterRename = daysAfterRename.find((d) => d.id === day1Id)!;
+      expect(day1AfterRename.items.some((a) => a.id === customItemId)).toBe(true);
+    });
+
+    it('5. Reopening My Itineraries does not show a duplicate', () => {
+      // Setup: Add Bangkok "Sample" itinerary
+      const sampleTrip: ItineraryTrip = {
+        id: 'trip-sample-bangkok',
+        title: 'Sample',
+        customName: 'Sample',
+        destination: 'Bangkok, Thailand',
+        location: 'Bangkok, Thailand',
+        dates: 'Oct 15 – Oct 24, 2026',
+        startDate: 'Oct 15, 2026',
+        endDate: 'Oct 24, 2026',
+        status: 'upcoming',
+        placesCount: 3,
+        activitiesCount: 0,
+        travelersCount: 4,
+        imageUri: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365',
+        theme: 'mint',
+      };
+      itineraryStore.addItinerary(sampleTrip);
+      const countWithSample = itineraryStore.getItineraries().length;
+
+      // Edit flow simulates: CheckingPackingScreen save with customTitle 'Sample googl'
+      const existing = itineraryStore.getItineraryById('trip-sample-bangkok');
+      expect(existing).toBeDefined();
+
+      // Ensure updateItinerary is called rather than addItinerary
+      itineraryStore.updateItinerary(existing!.id, {
+        title: 'Sample googl',
+        customName: 'Sample googl',
+        dates: existing!.dates,
+        placesCount: existing!.placesCount,
+        travelersCount: existing!.travelersCount,
+      });
+
+      // Check My Itineraries list
+      const allItineraries = itineraryStore.getItineraries();
+      expect(allItineraries.length).toBe(countWithSample);
+
+      const bangkokTrips = allItineraries.filter((i) => i.destination === 'Bangkok, Thailand');
+      expect(bangkokTrips).toHaveLength(1);
+      expect(bangkokTrips[0].id).toBe('trip-sample-bangkok');
+      expect(bangkokTrips[0].title).toBe('Sample googl');
+      expect(bangkokTrips[0].customName).toBe('Sample googl');
+
+      // The old "Sample" card is updated, not duplicated
+      const oldSampleCards = allItineraries.filter((i) => i.title === 'Sample');
+      expect(oldSampleCards).toHaveLength(0);
     });
   });
 });

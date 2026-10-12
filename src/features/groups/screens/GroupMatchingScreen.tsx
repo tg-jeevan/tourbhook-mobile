@@ -451,6 +451,7 @@ export default function GroupMatchingScreen() {
         style={styles.groupCard}
         activeOpacity={0.9}
         onPress={() => navigation.navigate('GroupDetails', { groupId: group.id })}
+        testID={`matching-group-card-${group.id}`}
       >
         {/* Left Category Icon Panel */}
         {renderCategoryPanel(group)}
@@ -680,6 +681,7 @@ export default function GroupMatchingScreen() {
                 style={styles.loadMoreBtn}
                 onPress={() => setPage((p) => p + 1)}
                 activeOpacity={0.8}
+                testID="load-more-groups-btn"
               >
                 <Text style={styles.loadMoreBtnText}>
                   Load More Groups ({filteredGroups.length - displayedGroups.length} remaining)

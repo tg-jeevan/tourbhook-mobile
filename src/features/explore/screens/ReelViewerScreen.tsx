@@ -48,7 +48,8 @@ type PlatformFilter = 'all' | 'instagram' | 'youtube';
  */
 function getApprovedReels(
   destination?: string,
-  platformFilter: PlatformFilter = 'all'
+  platformFilter: PlatformFilter = 'all',
+  passedReel?: UGCItem
 ): UGCItem[] {
   const fromUGC = filterApprovedDestinationReels(destination, platformFilter);
   const fromExplore = MOCK_EXPLORE_REELS.filter((item) => {
@@ -69,6 +70,10 @@ function getApprovedReels(
       map.set(r.id, r);
     }
   });
+
+  if (passedReel && passedReel.status === 'approved' && !map.has(passedReel.id)) {
+    map.set(passedReel.id, passedReel);
+  }
 
   return Array.from(map.values()).filter((r) => r.status === 'approved');
 }
@@ -94,8 +99,8 @@ export default function ReelViewerScreen() {
 
   // Compute all approved reels for current filter
   const approvedReels = useMemo(() => {
-    return getApprovedReels(destinationParam, platformFilter);
-  }, [destinationParam, platformFilter]);
+    return getApprovedReels(destinationParam, platformFilter, passedReel);
+  }, [destinationParam, platformFilter, passedReel]);
 
   // Determine initial index when first loading or filter changes
   useEffect(() => {
@@ -103,7 +108,11 @@ export default function ReelViewerScreen() {
       const foundIdx = approvedReels.findIndex((r) => r.id === initialReelId);
       if (foundIdx >= 0) {
         setActiveIndex(foundIdx);
-        flatListRef.current?.scrollToIndex({ index: foundIdx, animated: false });
+        try {
+          flatListRef.current?.scrollToIndex({ index: foundIdx, animated: false });
+        } catch {
+          // Handled via onScrollToIndexFailed if needed
+        }
       }
     }
   }, [initialReelId, approvedReels]);
@@ -456,7 +465,15 @@ export default function ReelViewerScreen() {
         <View style={styles.topBarRow}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (typeof navigation.canGoBack === 'function' && navigation.canGoBack()) {
+                navigation.goBack();
+              } else if (typeof navigation.goBack === 'function') {
+                navigation.goBack();
+              } else {
+                navigation.navigate('ExploreFeed');
+              }
+            }}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Go back to Explore"
@@ -535,6 +552,11 @@ export default function ReelViewerScreen() {
           snapToInterval={SCREEN_HEIGHT}
           snapToAlignment="start"
           decelerationRate="fast"
+          onScrollToIndexFailed={(info) => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+            }, 100);
+          }}
           getItemLayout={(_, index) => ({
             length: SCREEN_HEIGHT,
             offset: SCREEN_HEIGHT * index,

@@ -163,7 +163,7 @@ export default function TripDetailsScreen() {
         {/* Modify Itinerary Plan — navigates to PlanTrip in edit mode */}
         <TouchableOpacity
           style={styles.modifyBannerBtn}
-          onPress={() => navigation.navigate('PlanTrip', { tripId, mode: 'edit' })}
+          onPress={() => navigation.navigate('PlanTrip', { tripId, mode: 'edit', isEditing: true })}
           activeOpacity={0.85}
         >
           <View style={[styles.actionIconWrap, { backgroundColor: '#FEF3C7' }]}>

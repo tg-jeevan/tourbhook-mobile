@@ -1,12 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronRight, CheckCircle2 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
-import { AppLogo } from '../../../core/components/AppLogo';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { useLanguagePreference } from '../data/languageStore';
 import { useSubscription } from '../data/subscriptionStore';
@@ -64,9 +63,6 @@ export default function ProfileMenuScreen() {
           <Text style={styles.level} numberOfLines={1}>
             {userLevel}
           </Text>
-
-          {/* Official Tour Bhook Logo (Transparent) */}
-          <AppLogo size="compact" containerStyle={styles.logoWrapper} />
         </View>
 
         <View style={styles.menu}>
@@ -111,7 +107,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '600', color: AppColors.textPrimary },
   placeholder: { width: 44 },
   content: { padding: 24 },
-  profileHeader: { alignItems: 'center', marginBottom: 20 },
+  profileHeader: { alignItems: 'center', marginBottom: 24 },
   avatar: {
     width: 80,
     height: 80,
@@ -146,11 +142,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     paddingHorizontal: 16,
-  },
-  logoWrapper: {
-    marginTop: 10,
-    marginBottom: 4,
-    backgroundColor: 'transparent',
   },
   menu: {
     backgroundColor: AppColors.surface,

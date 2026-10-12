@@ -264,15 +264,16 @@ describe('PlanTripScreen Validation and Flow Integration', () => {
       expect(retrieved?.title).toBe('Bangalore Family Trip');
       expect(retrieved?.customName).toBe('Bangalore Family Trip');
 
-      // Attempting edit cannot overwrite the name or destination
+      // Editing updates the name in-place while keeping destination immutable
       itineraryStore.updateItinerary(tripId, {
         title: 'Bangalore Adventure Changed',
+        customName: 'Bangalore Adventure Changed',
         destination: 'Mysore, India',
       });
 
       const afterEdit = itineraryStore.getItineraryById(tripId);
-      expect(afterEdit?.title).toBe('Bangalore Family Trip');
-      expect(afterEdit?.customName).toBe('Bangalore Family Trip');
+      expect(afterEdit?.title).toBe('Bangalore Adventure Changed');
+      expect(afterEdit?.customName).toBe('Bangalore Adventure Changed');
       expect(afterEdit?.destination).toBe('Bangalore, India');
 
       itineraryStore.deleteItinerary(tripId);

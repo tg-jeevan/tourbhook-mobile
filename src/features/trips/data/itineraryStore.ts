@@ -407,29 +407,47 @@ class ItineraryStore {
     }
     const current = this.itineraries[index];
     // IMMUTABILITY ENFORCEMENT:
-    // Once an itinerary is created, the following fields are permanently immutable:
-    // 1. Itinerary name (title and customName)
-    // 2. Destination (destination, location, and destinationMetadata)
-    // 3. Traveller's age (primaryAge)
-    // 4. Itinerary ID (id)
-    // Ensure edit operations cannot overwrite the original values under any circumstance.
+    // Destination, traveller's age, and itinerary ID are permanently immutable after creation.
+    // Itinerary name (title and customName), dates, travellers, travel style, places, and travel modes can be updated.
     const {
       id: _ignoredId,
-      title: _ignoredTitle,
-      customName: _ignoredCustomName,
       destination: _ignoredDestination,
       location: _ignoredLocation,
       destinationMetadata: _ignoredDestinationMetadata,
       primaryAge: _ignoredPrimaryAge,
+      title: updatedTitleInput,
+      customName: updatedCustomNameInput,
       ...allowedUpdates
     } = updates;
+
+    // Resolve itinerary name updates:
+    // If a new customName or title is provided, update both appropriately.
+    // If neither is provided, preserve existing title and customName.
+    let finalCustomName = current.customName;
+    let finalTitle = current.title;
+
+    if (updatedCustomNameInput !== undefined) {
+      const trimmedCustom = updatedCustomNameInput ? updatedCustomNameInput.trim() : '';
+      finalCustomName = trimmedCustom || undefined;
+      finalTitle =
+        trimmedCustom ||
+        (updatedTitleInput !== undefined && updatedTitleInput.trim()
+          ? updatedTitleInput.trim()
+          : current.title);
+    } else if (updatedTitleInput !== undefined) {
+      const trimmedTitle = updatedTitleInput.trim();
+      if (trimmedTitle) {
+        finalTitle = trimmedTitle;
+        finalCustomName = trimmedTitle;
+      }
+    }
 
     const updatedTrip: ItineraryTrip = {
       ...current,
       ...allowedUpdates,
       id: current.id,
-      title: current.title,
-      customName: current.customName,
+      title: finalTitle,
+      customName: finalCustomName,
       destination: current.destination,
       location: current.location,
       destinationMetadata: current.destinationMetadata,

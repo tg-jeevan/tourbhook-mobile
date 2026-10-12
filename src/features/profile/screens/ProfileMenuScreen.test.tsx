@@ -43,12 +43,12 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: any) => children,
 }));
 
-describe('ProfileMenuScreen — Transparent Logo Redesign', () => {
+describe('ProfileMenuScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renders transparent Tour Bhook logo directly on page background without dark navy pill', () => {
+  it('renders profile header cleanly without any logo image or logo wrapper', () => {
     let renderer: ReactTestRenderer.ReactTestRenderer;
     ReactTestRenderer.act(() => {
       renderer = ReactTestRenderer.create(<ProfileMenuScreen />);
@@ -60,31 +60,14 @@ describe('ProfileMenuScreen — Transparent Logo Redesign', () => {
     expect(root.findAllByProps({ children: 'Mani Test' }).length).toBeGreaterThan(0);
     expect(root.findAllByProps({ children: 'Explorer' }).length).toBeGreaterThan(0);
 
-    // Verify logo image is rendered
-    const logoImage = root.findByProps({ accessibilityLabel: 'Tour Bhook Official Logo' });
-    expect(logoImage).toBeDefined();
-    expect(logoImage.props.resizeMode).toBe('contain');
+    // Verify NO logo image is rendered on the profile menu screen
+    const logoImages = root.findAllByProps({ accessibilityLabel: 'Tour Bhook Official Logo' });
+    expect(logoImages.length).toBe(0);
 
-    // Verify NO container has dark navy background (#10243F) for logo
-    const views = root.findAllByType(View);
-    const darkNavyLogoContainers = views.filter((v) => {
-      const style = Array.isArray(v.props.style)
-        ? Object.assign({}, ...v.props.style.filter(Boolean))
-        : v.props.style;
-      return (
-        style &&
-        (style.backgroundColor === AppColors.textPrimary ||
-          style.backgroundColor === '#10243F') &&
-        v.props.children &&
-        React.Children.toArray(v.props.children).some(
-          (child: any) =>
-            child?.props?.accessibilityLabel === 'Tour Bhook Official Logo' ||
-            child?.type?.name === 'AppLogo'
-        )
-      );
-    });
-
-    expect(darkNavyLogoContainers.length).toBe(0);
+    const appLogos = root.findAll((node) => typeof node.type === 'function' && (node.type as any).name === 'AppLogo');
+    expect(appLogos.length).toBe(0);
+    expect(root.findAllByProps({ testID: 'tourbhook-transparent-logo' }).length).toBe(0);
+    expect(root.findAllByProps({ testID: 'tourbhook-symbol-logo' }).length).toBe(0);
 
     // Verify menu items are present
     expect(root.findAllByProps({ children: 'Connected Instagram Profile' }).length).toBeGreaterThan(0);

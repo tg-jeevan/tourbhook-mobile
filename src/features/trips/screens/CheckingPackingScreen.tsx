@@ -40,9 +40,15 @@ export default function CheckingPackingScreen() {
   const dotAnim3   = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    const isEditMode = Boolean(
+      params?.isEditing === true ||
+      params?.mode === 'edit' ||
+      Boolean(params?.tripId && itineraryStore.getItineraryById(params.tripId))
+    );
+    const existing = params?.tripId ? itineraryStore.getItineraryById(params.tripId) : undefined;
+
     // If this is a newly planned trip or an edited trip, sync with itineraryStore
     if (params?.destination && params.destination !== 'Your Destination') {
-      const existing = itineraryStore.getItineraryById(tripId);
       const formattedLocation = formatDestinationLocation(params.destination);
       const customTitle = params.itineraryName?.trim();
       const finalTitle = generateDefaultItineraryTitle(params.destination, customTitle);
@@ -63,7 +69,29 @@ export default function CheckingPackingScreen() {
           ? 'peach'
           : 'sky';
 
-      if (!existing) {
+      if (isEditMode && (existing || params?.tripId)) {
+        // Edit mode: update existing trip in-place to avoid duplicate itineraries and slot consumption.
+        const targetId = existing ? existing.id : params!.tripId!;
+        itineraryStore.updateItinerary(targetId, {
+          title: customTitle || finalTitle,
+          customName: customTitle || undefined,
+          dates: formattedDates,
+          placesCount,
+          travelersCount,
+          theme: params.travelStyle ? theme : existing?.theme,
+          startDate: effectiveStartDate,
+          endDate: effectiveEndDate,
+          travelerType: params.travelerType,
+          adults: params.adults,
+          kids: params.kids,
+          purpose: params.purpose,
+          medicalInfo: params.medicalInfo,
+          travelStyle: params.travelStyle || existing?.travelStyle,
+          selectedPlaceIds: params.selectedPlaceIds || existing?.selectedPlaceIds,
+          travelModes: params.travelModes || existing?.travelModes,
+        });
+      } else {
+        // Genuine new trip creation
         const initialCustomName = customTitle || undefined;
         const initialTitle = customTitle || finalTitle;
         const newTrip: ItineraryTrip = {
@@ -93,25 +121,6 @@ export default function CheckingPackingScreen() {
           travelModes: params.travelModes,
         };
         itineraryStore.addItinerary(newTrip);
-      } else {
-        // Edit mode: update existing trip in-place to avoid duplicate itineraries and slot consumption.
-        // Itinerary name, destination, and traveller's age are permanently immutable after creation.
-        itineraryStore.updateItinerary(tripId, {
-          dates: formattedDates,
-          placesCount,
-          travelersCount,
-          theme: params.travelStyle ? theme : existing.theme,
-          startDate: effectiveStartDate,
-          endDate: effectiveEndDate,
-          travelerType: params.travelerType,
-          adults: params.adults,
-          kids: params.kids,
-          purpose: params.purpose,
-          medicalInfo: params.medicalInfo,
-          travelStyle: params.travelStyle || existing.travelStyle,
-          selectedPlaceIds: params.selectedPlaceIds || existing.selectedPlaceIds,
-          travelModes: params.travelModes || existing.travelModes,
-        });
       }
     }
 
@@ -149,8 +158,9 @@ export default function CheckingPackingScreen() {
     stagger(dotAnim3, 600).start();
 
     // Auto-navigate to itinerary view after simulated generation delay
+    const targetTripId = (isEditMode && (existing?.id || params?.tripId)) || tripId;
     const timer = setTimeout(() => {
-      navigation.replace('ItineraryView', { tripId });
+      navigation.replace('ItineraryView', { tripId: targetTripId });
     }, 3000);
 
     return () => clearTimeout(timer);

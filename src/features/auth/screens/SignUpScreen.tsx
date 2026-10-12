@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  ScrollView,
   Platform,
+  Keyboard,
   KeyboardAvoidingView,
+  ScrollView,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -119,10 +120,29 @@ export default function SignUpScreen() {
 
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  // Responsive layout calculations
-  const heroHeight = Math.max(160, Math.min(screenHeight * 0.24, 210));
-  const bottomIllustrationHeight = Math.max(110, Math.min(screenHeight * 0.18, 160));
+  const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener?.(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener?.(hideEvent, () => {
+      setKeyboardVisible(false);
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    });
+    return () => {
+      showSub?.remove?.();
+      hideSub?.remove?.();
+    };
+  }, []);
+
+  const isSmallScreen = screenHeight < 740;
+
+  // Responsive hero and illustration heights (always rendered behind the form at all times)
+  const heroHeight = Math.max(110, Math.min(screenHeight * 0.20, 160));
+  const bottomIllustrationHeight = Math.max(80, Math.min(screenHeight * 0.14, 120));
 
   const handlePasswordChange = (val: string) => {
     setPassword(val);
@@ -186,8 +206,12 @@ export default function SignUpScreen() {
 
   return (
     <View style={styles.root}>
-      {/* ── TOP HERO BACKGROUND ── */}
-      <View style={[styles.heroContainer, { height: heroHeight }]} pointerEvents="none">
+      {/* ── TOP HERO BACKGROUND (Always rendered behind the form) ── */}
+      <View
+        style={[styles.heroContainer, { height: heroHeight }]}
+        pointerEvents="none"
+        testID="signup-hero-background"
+      >
         <Image
           source={require('../../../../assets/images/welcomeHeroBackground.jpg')}
           style={styles.heroImage}
@@ -196,10 +220,11 @@ export default function SignUpScreen() {
         <View style={styles.heroGradientOverlay} />
       </View>
 
-      {/* ── BOTTOM TRAVEL ILLUSTRATION ── */}
+      {/* ── BOTTOM TRAVEL ILLUSTRATION (Always rendered behind the form) ── */}
       <View
         style={[styles.bottomIllustrationContainer, { height: bottomIllustrationHeight }]}
         pointerEvents="none"
+        testID="signup-bottom-illustration"
       >
         <Image
           source={require('../../../../assets/images/welcomeTravelIllustration.png')}
@@ -227,30 +252,66 @@ export default function SignUpScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
+            ref={scrollViewRef}
             contentContainerStyle={[
               styles.scrollContent,
-              {
-                paddingTop: Math.max(20, heroHeight - 80),
-                paddingBottom: bottomIllustrationHeight + 24,
-              },
+              !keyboardVisible && styles.scrollContentCentered,
             ]}
+            scrollEnabled={keyboardVisible}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
           >
-            {/* ── MAIN CARD / FORM SHEET ── */}
-            <View style={styles.cardSheet}>
+            <View style={styles.cardContainer}>
+              <View
+                style={[
+                  styles.cardSheet,
+                  (isSmallScreen || keyboardVisible) && styles.cardSheetCompact,
+                ]}
+              >
               {/* Header Title & Subtitle */}
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Sign up to start your journey</Text>
+              <Text
+                style={[
+                  styles.title,
+                  (isSmallScreen || keyboardVisible) && styles.titleCompact,
+                ]}
+              >
+                Create Account
+              </Text>
+              <Text
+                style={[
+                  styles.subtitle,
+                  (isSmallScreen || keyboardVisible) && styles.subtitleCompact,
+                ]}
+              >
+                Sign up to start your journey
+              </Text>
 
-              <View style={styles.gap24} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap6
+                    : isSmallScreen
+                    ? styles.gap10
+                    : styles.gap16
+                }
+              />
 
               {/* Full Name Input Field */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Full Name</Text>
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    (isSmallScreen || keyboardVisible) && styles.inputLabelCompact,
+                  ]}
+                >
+                  Full Name
+                </Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    (isSmallScreen || keyboardVisible) && styles.inputWrapperCompact,
                     nameFocused && styles.inputWrapperFocused,
                   ]}
                 >
@@ -271,14 +332,30 @@ export default function SignUpScreen() {
                 </View>
               </View>
 
-              <View style={styles.gap16} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap4
+                    : isSmallScreen
+                    ? styles.gap6
+                    : styles.gap10
+                }
+              />
 
               {/* Email Input Field */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    (isSmallScreen || keyboardVisible) && styles.inputLabelCompact,
+                  ]}
+                >
+                  Email
+                </Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    (isSmallScreen || keyboardVisible) && styles.inputWrapperCompact,
                     emailFocused && styles.inputWrapperFocused,
                   ]}
                 >
@@ -300,14 +377,30 @@ export default function SignUpScreen() {
                 </View>
               </View>
 
-              <View style={styles.gap16} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap4
+                    : isSmallScreen
+                    ? styles.gap6
+                    : styles.gap10
+                }
+              />
 
               {/* Password Input Field */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    (isSmallScreen || keyboardVisible) && styles.inputLabelCompact,
+                  ]}
+                >
+                  Password
+                </Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    (isSmallScreen || keyboardVisible) && styles.inputWrapperCompact,
                     passwordFocused && styles.inputWrapperFocused,
                     passwordError ? styles.inputWrapperError : null,
                   ]}
@@ -345,14 +438,30 @@ export default function SignUpScreen() {
                 ) : null}
               </View>
 
-              <View style={styles.gap16} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap4
+                    : isSmallScreen
+                    ? styles.gap6
+                    : styles.gap10
+                }
+              />
 
               {/* Confirm Password Input Field */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Confirm Password</Text>
+                <Text
+                  style={[
+                    styles.inputLabel,
+                    (isSmallScreen || keyboardVisible) && styles.inputLabelCompact,
+                  ]}
+                >
+                  Confirm Password
+                </Text>
                 <View
                   style={[
                     styles.inputWrapper,
+                    (isSmallScreen || keyboardVisible) && styles.inputWrapperCompact,
                     confirmPasswordFocused && styles.inputWrapperFocused,
                     confirmPasswordError ? styles.inputWrapperError : null,
                   ]}
@@ -390,11 +499,22 @@ export default function SignUpScreen() {
                 ) : null}
               </View>
 
-              <View style={styles.gap24} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap6
+                    : isSmallScreen
+                    ? styles.gap10
+                    : styles.gap16
+                }
+              />
 
               {/* Primary CTA - Sign Up Button */}
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  (isSmallScreen || keyboardVisible) && styles.primaryButtonCompact,
+                ]}
                 onPress={handleSignUp}
                 testID="signup-submit-btn"
                 activeOpacity={0.85}
@@ -403,7 +523,15 @@ export default function SignUpScreen() {
                 <Text style={styles.primaryButtonArrow}>→</Text>
               </TouchableOpacity>
 
-              <View style={styles.gap16} />
+              <View
+                style={
+                  keyboardVisible
+                    ? styles.gap4
+                    : isSmallScreen
+                    ? styles.gap6
+                    : styles.gap12
+                }
+              />
 
               {/* Sign In Navigation Footer */}
               <View style={styles.footerRow}>
@@ -416,8 +544,9 @@ export default function SignUpScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
@@ -507,13 +636,21 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }, { translateY: -1.6 }],
   },
   scrollContent: {
-    paddingHorizontal: 20,
     flexGrow: 1,
+    paddingBottom: 24,
+  },
+  scrollContentCentered: {
+    justifyContent: 'center',
+    paddingBottom: 0,
+  },
+  cardContainer: {
+    paddingHorizontal: 20,
+    zIndex: 5,
   },
   cardSheet: {
     backgroundColor: AppColors.surface,
     borderRadius: 24,
-    paddingVertical: 24,
+    paddingVertical: 18,
     paddingHorizontal: 20,
     shadowColor: AppColors.textPrimary,
     shadowOffset: { width: 0, height: 6 },
@@ -523,6 +660,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: AppColors.borderLight,
   },
+  cardSheetCompact: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: '800',
@@ -530,11 +672,19 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
   },
+  titleCompact: {
+    fontSize: 20,
+    letterSpacing: -0.2,
+  },
   subtitle: {
     fontSize: 13.5,
     color: AppColors.textSecondary,
     marginTop: 4,
     fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
+  },
+  subtitleCompact: {
+    fontSize: 12,
+    marginTop: 2,
   },
   inputContainer: {
     width: '100%',
@@ -726,6 +876,24 @@ const styles = StyleSheet.create({
     color: AppColors.primary,
     fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
   },
+  inputLabelCompact: {
+    fontSize: 12,
+    marginBottom: 3,
+  },
+  inputWrapperCompact: {
+    height: 42,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
+  primaryButtonCompact: {
+    height: 44,
+    borderRadius: 22,
+  },
+  gap4: { height: 4 },
+  gap6: { height: 6 },
+  gap8: { height: 8 },
+  gap10: { height: 10 },
+  gap12: { height: 12 },
   gap16: { height: 16 },
   gap24: { height: 24 },
 });

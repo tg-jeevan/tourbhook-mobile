@@ -23,7 +23,7 @@ export interface AppLogoProps {
 }
 
 const OFFICIAL_LOGO_TRANSPARENT = require('../../../assets/images/tourBhookOfficialLogoTransparent.png');
-const OFFICIAL_SYMBOL_TRANSPARENT = require('../../../assets/images/appLogoTransparent.png');
+const OFFICIAL_SYMBOL_TRANSPARENT = require('../../../assets/images/tourBhookOfficialLogoSymbol.png');
 
 export const AppLogo: React.FC<AppLogoProps> = ({
   size = 'compact',

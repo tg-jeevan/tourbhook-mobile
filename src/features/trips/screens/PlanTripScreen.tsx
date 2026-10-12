@@ -509,23 +509,19 @@ export default function PlanTripScreen() {
     let hasError = false;
 
     // 1. Itinerary Name validation:
-    // Required on initial creation; permanently immutable when editing existing trip.
-    if (!isEditMode) {
-      const cleanName = itineraryName.trim();
-      if (!cleanName) {
-        setItineraryNameError('Please enter an itinerary name.');
-        Alert.alert('Missing Itinerary Name', 'Please enter a name for your itinerary.');
-        hasError = true;
-      } else if (cleanName.length > 60) {
-        setItineraryNameError('Itinerary name cannot exceed 60 characters.');
-        Alert.alert('Name Too Long', 'Itinerary name cannot exceed 60 characters.');
-        hasError = true;
-      } else {
-        setItineraryNameError(null);
-      }
+    const cleanName = itineraryName.trim();
+    if (!cleanName) {
+      setItineraryNameError('Please enter an itinerary name.');
+      Alert.alert('Missing Itinerary Name', 'Please enter a name for your itinerary.');
+      hasError = true;
+    } else if (cleanName.length > 60) {
+      setItineraryNameError('Itinerary name cannot exceed 60 characters.');
+      Alert.alert('Name Too Long', 'Itinerary name cannot exceed 60 characters.');
+      hasError = true;
+    } else {
+      setItineraryNameError(null);
     }
 
-    // 2. Destination validation:
     // 2. Destination validation:
     let effectiveDestination: DestinationSuggestion | null = selectedDestination;
     if (isEditMode && existingTrip) {
@@ -592,9 +588,7 @@ export default function PlanTripScreen() {
     const finalAdults = normalizeAdultsForTravelerType(travelerType, adults);
     const finalKids = travelerType === 'family' ? kids : 0;
 
-    const effectiveItineraryName = isEditMode
-      ? (existingTrip?.customName || existingTrip?.title || itineraryName).trim()
-      : itineraryName.trim();
+    const effectiveItineraryName = cleanName;
 
     navigation.navigate('TripPreferences', {
       tripId: editTripId,
@@ -666,77 +660,53 @@ export default function PlanTripScreen() {
           {/* ── ITINERARY NAME ───────────────────────────────────────── */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionLabelRow}>
-              {isEditMode ? (
-                <Lock size={15} color={AppColors.primary} />
-              ) : (
-                <Sparkles size={15} color={AppColors.primary} />
-              )}
+              <Sparkles size={15} color={AppColors.primary} />
               <Text style={styles.sectionLabel}>Itinerary Name</Text>
-              {isEditMode ? (
-                <View style={styles.readOnlyBadge}>
-                  <Text style={styles.readOnlyBadgeText}>Read-Only</Text>
-                </View>
-              ) : (
-                <View style={styles.requiredBadge}>
-                  <Text style={styles.requiredBadgeText}>Required</Text>
-                </View>
-              )}
+              <View style={styles.requiredBadge}>
+                <Text style={styles.requiredBadgeText}>Required</Text>
+              </View>
             </View>
 
-            {isEditMode ? (
-              <>
-                <Text style={styles.fieldSupportingText}>
-                  Chosen when this trip was created — it cannot be changed.
-                </Text>
-                <View style={styles.readOnlyInputBox}>
-                  <Text style={styles.readOnlyText} numberOfLines={1}>
-                    {existingTrip?.customName || existingTrip?.title || itineraryName || 'My Itinerary'}
-                  </Text>
-                  <Lock size={15} color={AppColors.textMuted} />
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.fieldSupportingText}>
-                  Choose a name — it cannot be changed later.
-                </Text>
-                <View
-                  style={[
-                    styles.inputRow,
-                    itineraryNameError ? styles.inputRowError : null,
-                  ]}
+            <Text style={styles.fieldSupportingText}>
+              {isEditMode
+                ? 'Update the name of your itinerary.'
+                : 'Give your trip a name to easily identify it in My Itineraries.'}
+            </Text>
+            <View
+              style={[
+                styles.inputRow,
+                itineraryNameError ? styles.inputRowError : null,
+              ]}
+            >
+              <TextInput
+                style={styles.textInput}
+                placeholder="e.g. Bangalore Family Trip"
+                placeholderTextColor={AppColors.textMuted}
+                value={itineraryName}
+                onChangeText={(text) => {
+                  setItineraryName(text);
+                  if (itineraryNameError) {
+                    setItineraryNameError(null);
+                  }
+                }}
+                maxLength={60}
+                accessibilityLabel="Itinerary Name"
+                testID="plan-trip-name-input"
+              />
+              {itineraryName.length > 0 && (
+                <TouchableOpacity
+                  style={styles.inputActionBtn}
+                  onPress={() => setItineraryName('')}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Clear itinerary name"
                 >
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="e.g. Bangalore Family Trip"
-                    placeholderTextColor={AppColors.textMuted}
-                    value={itineraryName}
-                    onChangeText={(text) => {
-                      setItineraryName(text);
-                      if (itineraryNameError) {
-                        setItineraryNameError(null);
-                      }
-                    }}
-                    maxLength={60}
-                    accessibilityLabel="Itinerary Name"
-                    testID="plan-trip-name-input"
-                  />
-                  {itineraryName.length > 0 && (
-                    <TouchableOpacity
-                      style={styles.inputActionBtn}
-                      onPress={() => setItineraryName('')}
-                      activeOpacity={0.7}
-                      accessibilityLabel="Clear itinerary name"
-                    >
-                      <X size={16} color={AppColors.textMuted} />
-                    </TouchableOpacity>
-                  )}
-                </View>
-                {itineraryNameError ? (
-                  <Text style={styles.inlineErrorText}>{itineraryNameError}</Text>
-                ) : null}
-              </>
-            )}
+                  <X size={16} color={AppColors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {itineraryNameError ? (
+              <Text style={styles.inlineErrorText}>{itineraryNameError}</Text>
+            ) : null}
           </View>
 
           {/* ── DESTINATION ──────────────────────────────────────────── */}

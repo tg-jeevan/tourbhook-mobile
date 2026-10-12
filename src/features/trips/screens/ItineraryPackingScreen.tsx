@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -227,8 +228,66 @@ export default function ItineraryPackingScreen() {
     setEditingActivity(null);
   };
 
+  /* ── PACKING LIST SCROLL & KEYBOARD HANDLING ────────────────────────── */
+  const packingScrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+  const categoryPositions = useRef<Record<string, number>>({});
+  const activeInputInfo = useRef<{ categoryId: string; relativeY?: number } | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  const scrollToActiveInput = (
+    info = activeInputInfo.current,
+    _kbHeight = keyboardHeight,
+  ) => {
+    if (!info || !packingScrollRef.current) return;
+    const catY = categoryPositions.current[info.categoryId];
+    if (typeof catY !== 'number') return;
+    const rowOffset = typeof info.relativeY === 'number' ? info.relativeY : 120;
+    const targetY = catY + rowOffset;
+    // Leave margin above keyboard so category header and input field are visible
+    const desiredScrollY = Math.max(0, targetY - 140);
+    packingScrollRef.current.scrollTo({ y: desiredScrollY, animated: true });
+  };
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const height = e.endCoordinates?.height || 280;
+      setKeyboardHeight(height);
+      if (activeInputInfo.current) {
+        setTimeout(() => {
+          scrollToActiveInput(activeInputInfo.current, height);
+        }, Platform.OS === 'android' ? 60 : 0);
+      }
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+      activeInputInfo.current = null;
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const handleFocusInput = (categoryId: string, relativeY?: number) => {
+    activeInputInfo.current = { categoryId, relativeY };
+    scrollToActiveInput({ categoryId, relativeY });
+  };
+
+  const handleBlurInput = () => {
+    activeInputInfo.current = null;
+  };
+
   /* ── ITEM HANDLERS ─────────────────────────────────────────────────── */
-  const handleOpenAddItem = (categoryId: string) => {
+  const handleOpenAddItem = (categoryId: string, itemName?: string) => {
+    if (itemName && itemName.trim()) {
+      addPackingItem(categoryId, itemName.trim());
+      return;
+    }
     const targetCat = categories.find((c) => c.id === categoryId) || null;
     setAddItemCategory(targetCat);
     setNewItemName('');
@@ -508,67 +567,88 @@ export default function ItineraryPackingScreen() {
 
       {/* ── TAB 2: PACKING LIST ────────────────────────────────────── */}
       {activeTab === 'packing' && (
-        <ScrollView
-          contentContainerStyle={styles.packingScrollContent}
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          style={styles.flexOne}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          {/* Packing Hero Banner */}
-          <View style={styles.packingHero}>
-            <View style={styles.packingHeroTextCol}>
-              <Text style={styles.packingHeroTitle}>Packing List</Text>
-              <Text style={styles.packingHeroSubtitle}>
-                Get ready for a hassle-free trip with{'\n'}customizable checklists & tracking.
-              </Text>
-            </View>
-            <PackingHeroIllustration />
-          </View>
-
-          {/* ── COMPLETION & PROGRESS BANNER (REPLACES OLD AI BANNER) ── */}
-          <PackingProgressBanner
-            totalItems={progress.totalItems}
-            packedItems={progress.packedItems}
-            percentage={progress.percentage}
-            motivationalMessage={progress.motivationalMessage}
-          />
-
-          {/* ── CATEGORY CARDS ───────────────────────────────────────── */}
-          {categories.map((category) => {
-            const categoryItems = items.filter((i) => i.categoryId === category.id);
-            return (
-              <PackingCategoryCard
-                key={category.id}
-                category={category}
-                items={categoryItems}
-                onToggleItem={togglePackingItem}
-                onAddItem={handleOpenAddItem}
-                onItemMenuPress={(item) => setSelectedItemForMenu(item)}
-                onCategoryMenuPress={(cat) => setSelectedCategoryForMenu(cat)}
-              />
-            );
-          })}
-
-          {/* ── ADD CUSTOM CATEGORY BUTTON ───────────────────────────── */}
-          <TouchableOpacity
-            style={styles.addCategoryCardBtn}
-            onPress={() => {
-              setNewCategoryName('');
-              setNewCategoryIcon('general');
-              setCategoryFormError(null);
-              setIsAddCategoryVisible(true);
-            }}
-            activeOpacity={0.8}
+          <ScrollView
+            ref={packingScrollRef}
+            contentContainerStyle={[
+              styles.packingScrollContent,
+              {
+                paddingBottom: keyboardHeight > 0 ? keyboardHeight + 80 : 110,
+              },
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <View style={styles.addCategoryIconCircle}>
-              <Plus size={18} color={AppColors.primary} strokeWidth={2.5} />
+            {/* Packing Hero Banner */}
+            <View style={styles.packingHero}>
+              <View style={styles.packingHeroTextCol}>
+                <Text style={styles.packingHeroTitle}>Packing List</Text>
+                <Text style={styles.packingHeroSubtitle}>
+                  Get ready for a hassle-free trip with{'\n'}customizable checklists & tracking.
+                </Text>
+              </View>
+              <PackingHeroIllustration />
             </View>
-            <View style={styles.addCategoryTextCol}>
-              <Text style={styles.addCategoryTitle}>+ Add Custom Category</Text>
-              <Text style={styles.addCategorySubtitle}>
-                Medicines, Baby Essentials, Hiking Gear, Documents...
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </ScrollView>
+
+            {/* ── COMPLETION & PROGRESS BANNER (REPLACES OLD AI BANNER) ── */}
+            <PackingProgressBanner
+              totalItems={progress.totalItems}
+              packedItems={progress.packedItems}
+              percentage={progress.percentage}
+              motivationalMessage={progress.motivationalMessage}
+            />
+
+            {/* ── CATEGORY CARDS ───────────────────────────────────────── */}
+            {categories.map((category) => {
+              const categoryItems = items.filter((i) => i.categoryId === category.id);
+              return (
+                <View
+                  key={category.id}
+                  onLayout={(e) => {
+                    categoryPositions.current[category.id] = e.nativeEvent.layout.y;
+                  }}
+                >
+                  <PackingCategoryCard
+                    category={category}
+                    items={categoryItems}
+                    onToggleItem={togglePackingItem}
+                    onAddItem={handleOpenAddItem}
+                    onSaveNewItem={(catId, name) => addPackingItem(catId, name)}
+                    onFocusInput={handleFocusInput}
+                    onBlurInput={handleBlurInput}
+                    onItemMenuPress={(item) => setSelectedItemForMenu(item)}
+                    onCategoryMenuPress={(cat) => setSelectedCategoryForMenu(cat)}
+                  />
+                </View>
+              );
+            })}
+
+            {/* ── ADD CUSTOM CATEGORY BUTTON ───────────────────────────── */}
+            <TouchableOpacity
+              style={styles.addCategoryCardBtn}
+              onPress={() => {
+                setNewCategoryName('');
+                setNewCategoryIcon('general');
+                setCategoryFormError(null);
+                setIsAddCategoryVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <View style={styles.addCategoryIconCircle}>
+                <Plus size={18} color={AppColors.primary} strokeWidth={2.5} />
+              </View>
+              <View style={styles.addCategoryTextCol}>
+                <Text style={styles.addCategoryTitle}>+ Add Custom Category</Text>
+                <Text style={styles.addCategorySubtitle}>
+                  Medicines, Baby Essentials, Hiking Gear, Documents...
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
       )}
 
       {/* ── MODAL 1: ADD ITEM MODAL ─────────────────────────────────── */}
@@ -579,7 +659,7 @@ export default function ItineraryPackingScreen() {
         onRequestClose={() => setAddItemCategory(null)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalBackdrop}
         >
           <View style={styles.modalSheetCard}>
@@ -697,7 +777,7 @@ export default function ItineraryPackingScreen() {
         onRequestClose={() => setEditingItem(null)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalBackdrop}
         >
           <View style={styles.modalSheetCard}>
@@ -778,7 +858,7 @@ export default function ItineraryPackingScreen() {
         onRequestClose={() => setIsAddCategoryVisible(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalBackdrop}
         >
           <View style={styles.modalSheetCard}>
@@ -929,7 +1009,7 @@ export default function ItineraryPackingScreen() {
         onRequestClose={() => setRenamingCategory(null)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalBackdrop}
         >
           <View style={styles.modalSheetCard}>

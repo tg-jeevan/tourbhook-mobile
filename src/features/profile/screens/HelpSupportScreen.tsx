@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Linking,
   Alert,
+  Clipboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -44,6 +45,12 @@ export function getEmailUrl(userName?: string): string {
   return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
+export function getWebmailUrl(userName?: string): string {
+  const subject = SUPPORT_EMAIL_SUBJECT;
+  const body = getEmailBody(userName);
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 export function getWhatsAppUrls(userName?: string): { directUrl: string; webUrl: string } {
   const message = getWhatsAppMessage(userName);
   const encoded = encodeURIComponent(message);
@@ -53,32 +60,83 @@ export function getWhatsAppUrls(userName?: string): { directUrl: string; webUrl:
   };
 }
 
+export function copyToClipboard(text: string): boolean {
+  try {
+    if (Clipboard && typeof Clipboard.setString === 'function') {
+      Clipboard.setString(text);
+      return true;
+    }
+  } catch (e) {
+    console.warn('Failed to copy to clipboard', e);
+  }
+  return false;
+}
+
 export default function HelpSupportScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
 
   const handleEmailSupport = async () => {
     const emailUrl = getEmailUrl(user?.name);
+    const webmailUrl = getWebmailUrl(user?.name);
+    const body = getEmailBody(user?.name);
+
+    // 1. Try checking if mailto can be opened
     try {
       const canOpen = await Linking.canOpenURL(emailUrl);
       if (canOpen) {
         await Linking.openURL(emailUrl);
-      } else {
-        Alert.alert(
-          'Unable to Open Email',
-          `No compatible email application was found. Please write directly to ${SUPPORT_EMAIL}.`
-        );
+        return;
       }
     } catch {
-      Alert.alert(
-        'Unable to Open Email',
-        `No compatible email application was found. Please write directly to ${SUPPORT_EMAIL}.`
-      );
+      // Continue to direct open attempt
     }
+
+    // 2. Try direct open in case canOpenURL returned a false negative
+    try {
+      await Linking.openURL(emailUrl);
+      return;
+    } catch {
+      // Direct open failed
+    }
+
+    // 3. Fallback when email app is unavailable: provide actionable copy & webmail options
+    Alert.alert(
+      'Unable to Open Email',
+      `No compatible email application was found. You can open webmail or copy the support details to compose manually.`,
+      [
+        {
+          text: 'Open Webmail',
+          onPress: async () => {
+            try {
+              await Linking.openURL(webmailUrl);
+            } catch {
+              copyToClipboard(SUPPORT_EMAIL);
+              Alert.alert('Support Email', `Please write directly to ${SUPPORT_EMAIL}.`);
+            }
+          },
+        },
+        {
+          text: 'Copy Email & Message',
+          onPress: () => {
+            const details = `To: ${SUPPORT_EMAIL}\nSubject: ${SUPPORT_EMAIL_SUBJECT}\n\n${body}`;
+            copyToClipboard(details);
+            Alert.alert('Copied to Clipboard', 'Support email details copied to clipboard.');
+          },
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
   };
 
   const handleWhatsAppSupport = async () => {
     const { directUrl, webUrl } = getWhatsAppUrls(user?.name);
+    const message = getWhatsAppMessage(user?.name);
+
+    // 1. Prefer installed WhatsApp application (whatsapp://)
     try {
       const canOpenDirect = await Linking.canOpenURL(directUrl);
       if (canOpenDirect) {
@@ -86,24 +144,72 @@ export default function HelpSupportScreen() {
           await Linking.openURL(directUrl);
           return;
         } catch {
-          // Fallback to web link if direct open fails
+          // If direct open throws, proceed to web fallback
         }
       }
+    } catch {
+      // Continue
+    }
+
+    // 2. Allow WhatsApp Business or official web fallback (wa.me)
+    try {
       const canOpenWeb = await Linking.canOpenURL(webUrl);
       if (canOpenWeb) {
-        await Linking.openURL(webUrl);
-        return;
+        try {
+          await Linking.openURL(webUrl);
+          return;
+        } catch {
+          // If web open throws, proceed to direct attempts
+        }
       }
-      Alert.alert(
-        'Unable to Open WhatsApp',
-        `WhatsApp could not be opened. Please message our team at ${SUPPORT_PHONE_DISPLAY}.`
-      );
     } catch {
-      Alert.alert(
-        'Unable to Open WhatsApp',
-        `WhatsApp could not be opened. Please message our team at ${SUPPORT_PHONE_DISPLAY}.`
-      );
+      // Continue
     }
+
+    // 3. Try direct openURL attempts in case canOpenURL had false negative
+    try {
+      await Linking.openURL(directUrl);
+      return;
+    } catch {
+      // Continue
+    }
+
+    try {
+      await Linking.openURL(webUrl);
+      return;
+    } catch {
+      // Web open failed
+    }
+
+    // 4. WhatsApp cannot be opened: provide working Open in Browser or Copy Message fallback
+    Alert.alert(
+      'Unable to Open WhatsApp',
+      `WhatsApp could not be opened. Please message our team at ${SUPPORT_PHONE_DISPLAY} or choose an option below.`,
+      [
+        {
+          text: 'Open in Browser',
+          onPress: async () => {
+            try {
+              await Linking.openURL(webUrl);
+            } catch {
+              copyToClipboard(message);
+              Alert.alert('Support WhatsApp', `Please message our team at ${SUPPORT_PHONE_DISPLAY}.`);
+            }
+          },
+        },
+        {
+          text: 'Copy Message',
+          onPress: () => {
+            copyToClipboard(message);
+            Alert.alert('Copied to Clipboard', 'Message copied to clipboard.');
+          },
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ]
+    );
   };
 
   return (

@@ -6,13 +6,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { AuthStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
-import { AppLogo } from '../../../core/components/AppLogo';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type WelcomeScreenNavProp = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 
@@ -21,19 +24,39 @@ const WelcomeScreen = () => {
 
   return (
     <View style={styles.root}>
-      <StatusBar hidden={true} barStyle="dark-content" />
+      <StatusBar barStyle="dark-content" />
 
-      {/* ── TOP HERO BACKGROUND (Mediterranean / Santorini Coast) ── */}
+      {/* ── TOP HERO BACKGROUND (Santorini Coastal Image with Curved Wave Transition) ── */}
       <View style={styles.heroContainer} pointerEvents="none">
         <Image
           source={require('../../../../assets/images/welcomeHeroBackground.jpg')}
           style={styles.heroImage}
           resizeMode="cover"
         />
-        <View style={styles.heroGradientOverlay} />
+
+        {/* Curved Organic Wave Transition into Lower Section */}
+        <View style={styles.waveContainer}>
+          <Svg
+            viewBox="0 0 375 70"
+            style={styles.waveSvg}
+            preserveAspectRatio="none"
+          >
+            {/* Subtle blue accent under-wave matching reference */}
+            <Path
+              d="M0,28 C110,66 230,70 375,20 L375,70 L0,70 Z"
+              fill="#D4E6F2"
+              opacity={0.8}
+            />
+            {/* Main curved white/sand wave */}
+            <Path
+              d="M0,18 C110,54 230,58 375,10 L375,70 L0,70 Z"
+              fill="#FAF8F5"
+            />
+          </Svg>
+        </View>
       </View>
 
-      {/* ── BOTTOM TRAVEL ILLUSTRATION (Landmark Silhouettes) ── */}
+      {/* ── BOTTOM TRAVEL ILLUSTRATION (Subtle Light-Blue Skyline & Airplanes) ── */}
       <View style={styles.bottomIllustrationContainer} pointerEvents="none">
         <Image
           source={require('../../../../assets/images/welcomeTravelIllustration.png')}
@@ -44,25 +67,29 @@ const WelcomeScreen = () => {
 
       {/* ── FOREGROUND CONTENT ── */}
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        {/* ── TOP BRAND & WELCOME HEADER ── */}
+        {/* ── TOP BRAND HEADER (TB Symbol + Tagline + Welcome + Accent Bar) ── */}
         <View style={styles.headerSection}>
-          {/* Official Tour Bhook Logo (Transparent) */}
-          <AppLogo
-            size="header"
-            containerStyle={styles.logoContainer}
+          <Image
+            source={require('../../../../assets/images/tourBhookOfficialLogoSymbol.png')}
+            style={styles.logoSymbol}
+            resizeMode="contain"
+            accessibilityRole="image"
             accessibilityLabel="Tour Bhook Official Logo"
+            testID="tourbhook-symbol-logo"
           />
 
-          <View style={styles.headerTextGroup}>
-            <Text style={styles.welcomeSubtitle}>DISCOVER • PLAN • TRAVEL</Text>
-            <Text style={styles.welcomeHeading}>Welcome</Text>
-          </View>
+          <Text style={styles.tagline}>DISCOVER • PLAN • TRAVEL</Text>
+
+          <Text style={styles.welcomeHeading}>Welcome</Text>
+
+          {/* Teal accent underline under "We" */}
+          <View style={styles.welcomeAccentBar} />
         </View>
 
-        {/* Balanced Vertical Spacer */}
-        <View style={styles.flexSpacer} />
+        {/* Flexible spacer between top header and lower card */}
+        <View style={styles.topFlexSpacer} />
 
-        {/* ── CENTRAL ADVENTURE CARD ── */}
+        {/* ── LOWER CONTENT CARD (Your Adventure Starts Here) ── */}
         <View style={styles.cardContainer}>
           <View style={styles.actionCard}>
             <Text style={styles.headline}>Your Adventure Starts Here</Text>
@@ -70,20 +97,15 @@ const WelcomeScreen = () => {
               Discover top places, plan your perfect route, and travel easily & stress-free.
             </Text>
 
-            <View style={styles.gap20} />
-
-            {/* Primary CTA - Ocean Teal Pill */}
+            {/* Primary CTA - Teal Pill Button */}
             <TouchableOpacity
               style={styles.primaryButton}
               activeOpacity={0.85}
               onPress={() => navigation.navigate('SignIn')}
               testID="welcome-get-started-btn"
             >
-              <Text style={styles.primaryButtonText}>Get Started</Text>
-              <Text style={styles.primaryButtonArrow}>→</Text>
+              <Text style={styles.primaryButtonText}>Get Started →</Text>
             </TouchableOpacity>
-
-            <View style={styles.gap14} />
 
             {/* Secondary Action - Sign In */}
             <TouchableOpacity
@@ -99,6 +121,9 @@ const WelcomeScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Responsive bottom spacer balancing the card centrally in lower section */}
+        <View style={styles.bottomFlexSpacer} />
       </SafeAreaView>
     </View>
   );
@@ -114,27 +139,30 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: '46%',
+    height: Math.round(SCREEN_HEIGHT * 0.58),
     overflow: 'hidden',
   },
   heroImage: {
     width: '100%',
     height: '100%',
   },
-  heroGradientOverlay: {
+  waveContainer: {
     position: 'absolute',
-    top: 0,
+    bottom: -1,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(250, 248, 245, 0.15)',
+    height: 68,
+  },
+  waveSvg: {
+    width: '100%',
+    height: '100%',
   },
   bottomIllustrationContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 140,
+    height: Math.round(SCREEN_HEIGHT * 0.28),
     justifyContent: 'flex-end',
   },
   bottomIllustrationImage: {
@@ -144,83 +172,86 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    justifyContent: 'space-between',
   },
   headerSection: {
-    paddingTop: 12,
-    paddingHorizontal: 22,
+    paddingTop: 16,
+    paddingHorizontal: 24,
   },
-  logoContainer: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'transparent',
-    marginBottom: 12,
+  logoSymbol: {
+    width: 48,
+    height: 48,
   },
-  headerTextGroup: {
-    marginTop: 2,
-  },
-  welcomeSubtitle: {
+  tagline: {
     fontSize: 11,
     fontWeight: '800',
-    color: AppColors.primary,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
+    color: '#0F2644',
+    letterSpacing: 2,
+    marginTop: 10,
     marginBottom: 4,
   },
   welcomeHeading: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: AppColors.textPrimary,
-    lineHeight: 38,
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#0D233E',
+    lineHeight: 42,
     letterSpacing: -0.6,
   },
-  flexSpacer: {
-    flex: 1,
+  welcomeAccentBar: {
+    width: 44,
+    height: 4.5,
+    borderRadius: 2.5,
+    backgroundColor: '#007B99',
+    marginTop: 6,
+  },
+  topFlexSpacer: {
+    flex: 3.4,
     minHeight: 20,
   },
   cardContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 28,
+  },
+  bottomFlexSpacer: {
+    flex: 1,
+    minHeight: 36,
   },
   actionCard: {
     width: '100%',
-    backgroundColor: AppColors.surface,
-    borderRadius: 24,
-    paddingVertical: 22,
-    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 26,
+    paddingVertical: 24,
+    paddingHorizontal: 22,
     alignItems: 'center',
-    shadowColor: AppColors.textPrimary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#EAE5DC',
+    shadowColor: '#0A2540',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.09,
+    shadowRadius: 18,
+    elevation: 6,
   },
   headline: {
-    fontSize: 21,
+    fontSize: 22,
     fontWeight: '800',
-    color: AppColors.textPrimary,
+    color: '#0D233E',
     textAlign: 'center',
     letterSpacing: -0.3,
   },
   description: {
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: '400',
-    color: AppColors.textSecondary,
-    lineHeight: 19.5,
+    color: '#627D98',
+    lineHeight: 21,
     textAlign: 'center',
-    marginTop: 6,
-    paddingHorizontal: 6,
+    marginTop: 8,
+    paddingHorizontal: 8,
   },
   primaryButton: {
     width: '100%',
     height: 52,
     borderRadius: 26,
-    backgroundColor: AppColors.primary,
-    flexDirection: 'row',
+    backgroundColor: '#007B99',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: AppColors.primary,
+    marginTop: 20,
+    shadowColor: '#007B99',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.28,
     shadowRadius: 8,
@@ -229,32 +260,21 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: AppColors.textOnPrimary,
+    color: '#FFFFFF',
     letterSpacing: 0.2,
   },
-  primaryButtonArrow: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: AppColors.textOnPrimary,
-    marginLeft: 8,
-  },
   secondaryLink: {
+    marginTop: 16,
     paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
   secondaryPromptText: {
     fontSize: 13.5,
-    color: AppColors.textSecondary,
+    color: '#627D98',
   },
   secondaryActionText: {
     fontWeight: '700',
-    color: AppColors.primary,
-  },
-  gap14: {
-    height: 14,
-  },
-  gap20: {
-    height: 20,
+    color: '#007B99',
   },
 });
 

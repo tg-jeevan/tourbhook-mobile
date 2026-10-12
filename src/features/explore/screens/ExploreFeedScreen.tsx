@@ -604,7 +604,7 @@ export default function ExploreFeedScreen() {
           </View>
 
           <View style={styles.groupsVerticalList}>
-            {groups.map((group) => {
+            {groups.slice(0, 5).map((group) => {
               const isJoined = joinedGroupIds.includes(group.id);
               const isAdventure =
                 group.categoryLabel === 'ADVENTURE' ||

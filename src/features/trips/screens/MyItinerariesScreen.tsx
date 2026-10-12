@@ -151,7 +151,7 @@ export default function MyItinerariesScreen() {
 
   const handleEditItinerary = (item: ItineraryTrip) => {
     setShowActionModal(false);
-    navigation.navigate('PlanTrip', { tripId: item.id, mode: 'edit' });
+    navigation.navigate('PlanTrip', { tripId: item.id, mode: 'edit', isEditing: true });
   };
 
   const handleShare = async (item: ItineraryTrip) => {

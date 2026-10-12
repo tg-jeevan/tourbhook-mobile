@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  TextInput,
 } from 'react-native';
 import {
   Briefcase,
@@ -20,6 +21,7 @@ import {
   Check,
   Plus,
   MoreVertical,
+  X,
 } from 'lucide-react-native';
 import {
   PackingCategoryRecord,
@@ -41,10 +43,13 @@ export interface PackingCategoryCardProps {
   iconType?: CategoryIconType;
   items: PackingItemRecord[];
   onToggleItem: (id: string) => void;
-  onAddItem?: (categoryId: string) => void;
+  onAddItem?: (categoryId: string, itemName?: string) => void;
+  onSaveNewItem?: (categoryId: string, itemName: string) => void;
   onItemMenuPress?: (item: PackingItemRecord) => void;
   onCategoryMenuPress?: (category: PackingCategoryRecord) => void;
   defaultExpanded?: boolean;
+  onFocusInput?: (categoryId: string, yOffset?: number) => void;
+  onBlurInput?: () => void;
 }
 
 export const PackingCategoryCard: React.FC<PackingCategoryCardProps> = ({
@@ -55,11 +60,18 @@ export const PackingCategoryCard: React.FC<PackingCategoryCardProps> = ({
   items,
   onToggleItem,
   onAddItem,
+  onSaveNewItem,
   onItemMenuPress,
   onCategoryMenuPress,
   defaultExpanded = true,
+  onFocusInput,
+  onBlurInput,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const [isAddingInline, setIsAddingInline] = useState(false);
+  const [newItemText, setNewItemText] = useState('');
+  const [inlineRowY, setInlineRowY] = useState(0);
+  const inputRef = useRef<React.ElementRef<typeof TextInput>>(null);
 
   const effectiveTitle = category ? category.name : title || 'Category';
   const effectiveSubtitle = category ? category.subtitle || '' : subtitle || '';
@@ -73,6 +85,41 @@ export const PackingCategoryCard: React.FC<PackingCategoryCardProps> = ({
   const toggleExpand = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpanded((prev) => !prev);
+  };
+
+  const handleStartInlineAdd = () => {
+    if (!expanded) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setExpanded(true);
+    }
+    setIsAddingInline(true);
+    onFocusInput?.(categoryId, inlineRowY);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 50);
+  };
+
+  const handleSaveInline = () => {
+    const trimmed = newItemText.trim();
+    if (!trimmed) {
+      setIsAddingInline(false);
+      onBlurInput?.();
+      return;
+    }
+    if (onSaveNewItem) {
+      onSaveNewItem(categoryId, trimmed);
+    } else if (onAddItem) {
+      onAddItem(categoryId, trimmed);
+    }
+    setNewItemText('');
+    setIsAddingInline(false);
+    onBlurInput?.();
+  };
+
+  const handleCancelInline = () => {
+    setNewItemText('');
+    setIsAddingInline(false);
+    onBlurInput?.();
   };
 
   const getCategoryIcon = (type: CategoryIconType) => {
@@ -133,15 +180,16 @@ export const PackingCategoryCard: React.FC<PackingCategoryCardProps> = ({
 
         {/* Right Actions: Header Add, Counter, Custom Menu, Chevron */}
         <View style={styles.headerRightWrap}>
-          {onAddItem && (
+          {(onAddItem || onSaveNewItem) && (
             <TouchableOpacity
               style={styles.headerAddBtn}
               onPress={(e) => {
                 e.stopPropagation();
-                onAddItem(categoryId);
+                handleStartInlineAdd();
               }}
               activeOpacity={0.75}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              testID={`header-add-btn-${categoryId}`}
             >
               <Plus size={13} color={AppColors.primary} strokeWidth={2.6} />
               <Text style={styles.headerAddBtnText}>Add</Text>
@@ -244,7 +292,7 @@ export const PackingCategoryCard: React.FC<PackingCategoryCardProps> = ({
             );
           })}
 
-          {items.length === 0 && (
+          {items.length === 0 && !isAddingInline && (
             <View style={styles.emptyItemsNotice}>
               <Text style={styles.emptyItemsNoticeText}>
                 No items yet in this category.
@@ -252,16 +300,79 @@ export const PackingCategoryCard: React.FC<PackingCategoryCardProps> = ({
             </View>
           )}
 
-          {/* + Add Item Row */}
-          {onAddItem && (
-            <TouchableOpacity
-              style={styles.addItemRow}
-              onPress={() => onAddItem(categoryId)}
-              activeOpacity={0.75}
+          {/* Inline Add Item Row OR + Add Item Button */}
+          {isAddingInline ? (
+            <View
+              style={styles.inlineInputRow}
+              onLayout={(e) => {
+                const y = e.nativeEvent.layout.y;
+                setInlineRowY(y);
+                onFocusInput?.(categoryId, y);
+              }}
+              testID={`inline-add-row-${categoryId}`}
             >
-              <Plus size={15} color={AppColors.primary} strokeWidth={2.5} />
-              <Text style={styles.addItemRowText}>+ Add Item</Text>
-            </TouchableOpacity>
+              <View style={styles.inlineInputLeading}>
+                <Plus size={15} color={AppColors.primary} strokeWidth={2.5} />
+              </View>
+
+              <TextInput
+                ref={inputRef}
+                style={styles.inlineTextInput}
+                placeholder={`Add ${effectiveTitle === 'Essentials' ? 'essential ' : ''}item...`}
+                placeholderTextColor={AppColors.textMuted}
+                value={newItemText}
+                onChangeText={setNewItemText}
+                autoFocus={true}
+                returnKeyType="done"
+                onSubmitEditing={handleSaveInline}
+                onFocus={() => {
+                  onFocusInput?.(categoryId, inlineRowY);
+                }}
+                testID={`inline-add-input-${categoryId}`}
+              />
+
+              <View style={styles.inlineActionButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.inlineSaveBtn,
+                    !newItemText.trim() && styles.inlineSaveBtnDisabled,
+                  ]}
+                  onPress={handleSaveInline}
+                  disabled={!newItemText.trim()}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  testID={`inline-add-save-${categoryId}`}
+                >
+                  <Check
+                    size={15}
+                    color={newItemText.trim() ? AppColors.white : AppColors.textMuted}
+                    strokeWidth={2.8}
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.inlineCancelBtn}
+                  onPress={handleCancelInline}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  testID={`inline-add-cancel-${categoryId}`}
+                >
+                  <X size={15} color={AppColors.textSecondary} strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            (onAddItem || onSaveNewItem) && (
+              <TouchableOpacity
+                style={styles.addItemRow}
+                onPress={handleStartInlineAdd}
+                activeOpacity={0.75}
+                testID={`add-item-btn-${categoryId}`}
+              >
+                <Plus size={15} color={AppColors.primary} strokeWidth={2.5} />
+                <Text style={styles.addItemRowText}>+ Add Item</Text>
+              </TouchableOpacity>
+            )
           )}
         </View>
       )}
@@ -461,5 +572,61 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: AppColors.primary,
+  },
+
+  /* Inline add input row */
+  inlineInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF7F2',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: AppColors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: 2,
+    minHeight: 46,
+  },
+  inlineInputLeading: {
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  inlineTextInput: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: AppColors.textPrimary,
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+  },
+  inlineActionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 6,
+  },
+  inlineSaveBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: AppColors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inlineSaveBtnDisabled: {
+    backgroundColor: '#CBD5E1',
+  },
+  inlineCancelBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#F1ECE4',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

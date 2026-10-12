@@ -225,8 +225,7 @@ export default function TripSummaryScreen() {
                 icon={<Sparkles size={18} color="#7C3AED" />}
                 label="Itinerary Name"
                 value={itineraryName}
-                onEdit={isEditMode ? undefined : goBackToStep1}
-                readOnlyBadge={isEditMode ? 'Permanent' : undefined}
+                onEdit={goBackToStep1}
               />
               <View style={styles.divider} />
             </>

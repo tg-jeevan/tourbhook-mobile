@@ -3,8 +3,10 @@ import ReactTestRenderer, { act } from 'react-test-renderer';
 import ExploreFeedScreen from './ExploreFeedScreen';
 import AllDestinationsScreen from './AllDestinationsScreen';
 import ReelViewerScreen from './ReelViewerScreen';
+import GroupMatchingScreen from '../../groups/screens/GroupMatchingScreen';
 import { MOCK_DESTINATIONS } from '../data/mockExploreData';
 import { MOCK_UGC_ITEMS } from '../../ugc/data/mockUGCData';
+import { getMockTravelGroups } from '../../groups/types/groupTypes';
 
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
@@ -133,6 +135,27 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
       expect(mockNavigate).toHaveBeenCalledWith('GroupDetails', {
         groupId: expect.any(String),
       });
+    });
+
+    it('Suggested Travel Groups preview displays at most 5 groups while data has more', () => {
+      let renderer: ReactTestRenderer.ReactTestRenderer;
+      act(() => {
+        renderer = ReactTestRenderer.create(<ExploreFeedScreen />);
+      });
+
+      const uniquePreviewGroupIds = new Set(
+        renderer!.root
+          .findAll(
+            (node) =>
+              typeof node.props.testID === 'string' &&
+              node.props.testID.startsWith('group-card-')
+          )
+          .map((n) => n.props.testID)
+      );
+
+      const totalPublicGroups = getMockTravelGroups();
+      expect(totalPublicGroups.length).toBeGreaterThan(5);
+      expect(uniquePreviewGroupIds.size).toBe(5);
     });
   });
 
@@ -303,6 +326,19 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
       });
     });
 
+    it('supports vertically swipeable reels feed with paging', () => {
+      let renderer: ReactTestRenderer.ReactTestRenderer;
+      act(() => {
+        renderer = ReactTestRenderer.create(<ReelViewerScreen />);
+      });
+
+      const feed = renderer!.root.findByProps({ testID: 'approved-reels-feed' });
+      expect(feed.props.pagingEnabled).toBe(true);
+      expect(feed.props.snapToAlignment).toBe('start');
+      expect(feed.props.decelerationRate).toBe('fast');
+      expect(feed.props.data.length).toBeGreaterThan(1);
+    });
+
     it('back button navigates back to Explore', () => {
       let renderer: ReactTestRenderer.ReactTestRenderer;
       act(() => {
@@ -315,6 +351,58 @@ describe('Explore Section See All Navigation and Collection Screens', () => {
       });
 
       expect(mockGoBack).toHaveBeenCalled();
+    });
+  });
+
+  describe('4. GroupMatchingScreen (Complete Groups Screen)', () => {
+    it('renders full public groups without the 5-item preview restriction and supports pagination', () => {
+      let renderer: ReactTestRenderer.ReactTestRenderer;
+      act(() => {
+        renderer = ReactTestRenderer.create(<GroupMatchingScreen />);
+      });
+
+      // Advance timers by 500ms for useGroupMatches load timer (400ms)
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      const totalPublicGroups = getMockTravelGroups();
+      expect(totalPublicGroups.length).toBeGreaterThan(5);
+
+      const matchingCards = renderer!.root.findAll(
+        (node) =>
+          typeof node.props.testID === 'string' &&
+          node.props.testID.startsWith('matching-group-card-')
+      );
+      expect(matchingCards.length).toBeGreaterThan(0);
+
+      // Verify load more button exists when total groups exceed initial page size
+      let loadMoreBtns = renderer!.root.findAll(
+        (node) => node.props.testID === 'load-more-groups-btn'
+      );
+      expect(loadMoreBtns.length).toBeGreaterThan(0);
+
+      // Trigger pagination until all public groups are displayed
+      while (loadMoreBtns.length > 0) {
+        act(() => {
+          loadMoreBtns[0].props.onPress();
+        });
+        loadMoreBtns = renderer!.root.findAll(
+          (node) => node.props.testID === 'load-more-groups-btn'
+        );
+      }
+
+      const updatedUniqueCards = new Set(
+        renderer!.root
+          .findAll(
+            (node) =>
+              typeof node.props.testID === 'string' &&
+              node.props.testID.startsWith('matching-group-card-')
+          )
+          .map((n) => n.props.testID)
+      );
+      // All groups are accessible on the full screen
+      expect(updatedUniqueCards.size).toBe(totalPublicGroups.length);
     });
   });
 });

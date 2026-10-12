@@ -1,6 +1,11 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
-import { Linking, Alert } from 'react-native';
+import { Linking, Alert, Clipboard } from 'react-native';
+declare const require: any;
+declare const __dirname: string;
+
+const fs = require('fs');
+const path = require('path');
 import HelpSupportScreen, {
   SUPPORT_EMAIL,
   SUPPORT_PHONE_RAW,
@@ -9,7 +14,9 @@ import HelpSupportScreen, {
   getEmailBody,
   getWhatsAppMessage,
   getEmailUrl,
+  getWebmailUrl,
   getWhatsAppUrls,
+  copyToClipboard,
 } from './HelpSupportScreen';
 
 const mockNavigate = jest.fn();
@@ -50,7 +57,7 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
     jest.restoreAllMocks();
   });
 
-  describe('1. Pure URL and Message formatting helpers', () => {
+  describe('1. Pure URL, Message formatting and Clipboard helpers', () => {
     it('uses correct support email and subject', () => {
       expect(SUPPORT_EMAIL).toBe('hello.tourbhook@gmail.com');
       expect(SUPPORT_EMAIL_SUBJECT).toBe('Tourbhook App Support');
@@ -80,6 +87,13 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
       expect(url).toContain(encodeURIComponent('Heyy, I am Aarav Sharma.'));
     });
 
+    it('correctly constructs webmail compose URL', () => {
+      const webmailUrl = getWebmailUrl('Aarav Sharma');
+      expect(webmailUrl.startsWith(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(SUPPORT_EMAIL)}`)).toBe(true);
+      expect(webmailUrl).toContain(`su=${encodeURIComponent('Tourbhook App Support')}`);
+      expect(webmailUrl).toContain(encodeURIComponent('Heyy, I am Aarav Sharma.'));
+    });
+
     it('uses correct international WhatsApp number without plus in URL', () => {
       expect(SUPPORT_PHONE_RAW).toBe('919986474527');
       expect(SUPPORT_PHONE_DISPLAY).toBe('+91 99864 74527');
@@ -97,6 +111,13 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
     it('falls back to [Your Name] in WhatsApp message when user name is missing', () => {
       const msg = getWhatsAppMessage(undefined);
       expect(msg).toBe('Heyy, I am [Your Name]. I need your assistance with the Tourbhook Application.');
+    });
+
+    it('copies text to clipboard safely', () => {
+      const copySpy = jest.spyOn(Clipboard, 'setString');
+      const res = copyToClipboard('Test copy text');
+      expect(res).toBe(true);
+      expect(copySpy).toHaveBeenCalledWith('Test copy text');
     });
   });
 
@@ -147,9 +168,9 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
       expect(Alert.alert).not.toHaveBeenCalled();
     });
 
-    it('shows helpful error message when device has no email app available', async () => {
+    it('provides actionable fallback (webmail & copy) when device has no email app available', async () => {
       jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(false as never);
-      jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+      jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('No email app') as never);
 
       let renderer: ReactTestRenderer.ReactTestRenderer;
       ReactTestRenderer.act(() => {
@@ -164,8 +185,31 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
 
       expect(Alert.alert).toHaveBeenCalledWith(
         'Unable to Open Email',
-        expect.stringContaining('hello.tourbhook@gmail.com')
+        expect.stringContaining('No compatible email application was found'),
+        expect.arrayContaining([
+          expect.objectContaining({ text: 'Open Webmail' }),
+          expect.objectContaining({ text: 'Copy Email & Message' }),
+          expect.objectContaining({ text: 'Cancel' }),
+        ])
       );
+
+      // Verify Open Webmail action opens webmail compose page
+      const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+      const buttons = alertCall[2];
+      const webmailButton = buttons.find((b: any) => b.text === 'Open Webmail');
+      const openURLSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+      await ReactTestRenderer.act(async () => {
+        await webmailButton.onPress();
+      });
+      expect(openURLSpy).toHaveBeenCalledWith(expect.stringContaining('mail.google.com/mail'));
+
+      // Verify Copy Email & Message copies to clipboard
+      const copyButton = buttons.find((b: any) => b.text === 'Copy Email & Message');
+      const clipboardSpy = jest.spyOn(Clipboard, 'setString');
+      await ReactTestRenderer.act(async () => {
+        await copyButton.onPress();
+      });
+      expect(clipboardSpy).toHaveBeenCalledWith(expect.stringContaining('hello.tourbhook@gmail.com'));
     });
 
     it('prefers direct WhatsApp URL when available', async () => {
@@ -215,8 +259,9 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
       expect(Alert.alert).not.toHaveBeenCalled();
     });
 
-    it('shows helpful alert when neither direct nor web WhatsApp can be opened', async () => {
+    it('provides actionable fallback (Open in Browser & Copy Message) when WhatsApp cannot be opened', async () => {
       jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(false as never);
+      jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('Cannot open WhatsApp') as never);
 
       let renderer: ReactTestRenderer.ReactTestRenderer;
       ReactTestRenderer.act(() => {
@@ -231,8 +276,31 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
 
       expect(Alert.alert).toHaveBeenCalledWith(
         'Unable to Open WhatsApp',
-        expect.stringContaining('+91 99864 74527')
+        expect.stringContaining('+91 99864 74527'),
+        expect.arrayContaining([
+          expect.objectContaining({ text: 'Open in Browser' }),
+          expect.objectContaining({ text: 'Copy Message' }),
+          expect.objectContaining({ text: 'Cancel' }),
+        ])
       );
+
+      // Verify Open in Browser button
+      const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
+      const buttons = alertCall[2];
+      const browserButton = buttons.find((b: any) => b.text === 'Open in Browser');
+      const openURLSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+      await ReactTestRenderer.act(async () => {
+        await browserButton.onPress();
+      });
+      expect(openURLSpy).toHaveBeenCalledWith(expect.stringContaining('https://wa.me/919986474527'));
+
+      // Verify Copy Message button
+      const copyButton = buttons.find((b: any) => b.text === 'Copy Message');
+      const clipboardSpy = jest.spyOn(Clipboard, 'setString');
+      await ReactTestRenderer.act(async () => {
+        await copyButton.onPress();
+      });
+      expect(clipboardSpy).toHaveBeenCalledWith(expect.stringContaining('Heyy, I am Aarav Sharma.'));
     });
 
     it('navigates back when close button or back button is pressed', () => {
@@ -250,4 +318,19 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
       expect(mockGoBack).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('3. AndroidManifest package queries for Android 11+ visibility', () => {
+    it('declares queries for mailto, whatsapp, and web schemes in AndroidManifest.xml', () => {
+      const manifestPath = path.resolve(__dirname, '../../../../android/app/src/main/AndroidManifest.xml');
+      const content = fs.readFileSync(manifestPath, 'utf8');
+
+      expect(content).toContain('<queries>');
+      expect(content).toContain('android:scheme="mailto"');
+      expect(content).toContain('android:name="com.whatsapp"');
+      expect(content).toContain('android:name="com.whatsapp.w4b"');
+      expect(content).toContain('android:scheme="whatsapp"');
+      expect(content).toContain('android:scheme="https"');
+    });
+  });
 });
+
