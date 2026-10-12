@@ -13,6 +13,7 @@ import { ArrowRight, Check } from 'lucide-react-native';
 import { AppStackParamList, TravelMode } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
 import { TripFlowProgressHeader } from '../components/TripFlowProgressHeader';
+import { itineraryStore } from '../data/itineraryStore';
 
 // ── Travel mode options ──────────────────────────────────────────────────────
 interface TravelModeOption {
@@ -73,7 +74,18 @@ export default function TravelModeScreen() {
   const route = useRoute<RouteProp<AppStackParamList, 'TravelMode'>>();
   const tripParams = route.params;
 
-  const [selectedModes, setSelectedModes] = useState<Set<TravelMode>>(new Set());
+  const [selectedModes, setSelectedModes] = useState<Set<TravelMode>>(() => {
+    if (tripParams?.travelModes && tripParams.travelModes.length > 0) {
+      return new Set(tripParams.travelModes);
+    }
+    if (tripParams?.tripId) {
+      const existing = itineraryStore.getItineraryById(tripParams.tripId);
+      if (existing?.travelModes && existing.travelModes.length > 0) {
+        return new Set(existing.travelModes);
+      }
+    }
+    return new Set();
+  });
 
   const toggleMode = (mode: TravelMode) => {
     setSelectedModes((prev) => {

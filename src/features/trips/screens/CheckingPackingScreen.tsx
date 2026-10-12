@@ -40,45 +40,78 @@ export default function CheckingPackingScreen() {
   const dotAnim3   = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // If this is a newly planned trip, add it to the itineraryStore source of truth
+    // If this is a newly planned trip or an edited trip, sync with itineraryStore
     if (params?.destination && params.destination !== 'Your Destination') {
       const existing = itineraryStore.getItineraryById(tripId);
-      if (!existing) {
-        const formattedLocation = formatDestinationLocation(params.destination);
-        const customTitle = params.itineraryName?.trim();
-        const finalTitle = generateDefaultItineraryTitle(params.destination, customTitle);
-        const formattedDates = formatDateRange(params.startDate, params.endDate);
-        const destImage = getDestinationImage(params.destination);
-        const placesCount = params.selectedPlaceIds ? params.selectedPlaceIds.length : 0;
-        const activitiesCount = 0;
-        const travelersCount = calculateTravelerCount(
-          params.travelerType,
-          params.adults,
-          params.kids
-        );
+      const formattedLocation = formatDestinationLocation(params.destination);
+      const customTitle = params.itineraryName?.trim();
+      const finalTitle = generateDefaultItineraryTitle(params.destination, customTitle);
+      const effectiveStartDate = params.startDate || existing?.startDate;
+      const effectiveEndDate = params.endDate || existing?.endDate;
+      const formattedDates = formatDateRange(effectiveStartDate, effectiveEndDate);
+      const destImage = getDestinationImage(params.destination);
+      const placesCount = params.selectedPlaceIds ? params.selectedPlaceIds.length : (existing?.placesCount ?? 0);
+      const travelersCount = calculateTravelerCount(
+        params.travelerType,
+        params.adults,
+        params.kids
+      );
+      const theme =
+        params.travelStyle === 'Budget Friendly'
+          ? 'mint'
+          : params.travelStyle === 'Fast Travel'
+          ? 'peach'
+          : 'sky';
 
+      if (!existing) {
+        const initialCustomName = customTitle || undefined;
+        const initialTitle = customTitle || finalTitle;
         const newTrip: ItineraryTrip = {
           id: tripId,
-          title: finalTitle,
-          customName: customTitle || undefined,
+          title: initialTitle,
+          customName: initialCustomName,
           destination: formattedLocation,
           location: formattedLocation,
           dates: formattedDates,
-          startDate: params.startDate,
-          endDate: params.endDate,
           status: 'upcoming',
           placesCount,
-          activitiesCount,
+          activitiesCount: 0,
           travelersCount,
           imageUri: destImage,
-          theme:
-            params.travelStyle === 'Budget Friendly'
-              ? 'mint'
-              : params.travelStyle === 'Fast Travel'
-              ? 'peach'
-              : 'sky',
+          theme,
+          startDate: effectiveStartDate,
+          endDate: effectiveEndDate,
+          travelerType: params.travelerType,
+          adults: params.adults,
+          kids: params.kids,
+          purpose: params.purpose,
+          destinationMetadata: params.destinationMetadata,
+          primaryAge: params.primaryAge,
+          medicalInfo: params.medicalInfo,
+          travelStyle: params.travelStyle,
+          selectedPlaceIds: params.selectedPlaceIds,
+          travelModes: params.travelModes,
         };
         itineraryStore.addItinerary(newTrip);
+      } else {
+        // Edit mode: update existing trip in-place to avoid duplicate itineraries and slot consumption.
+        // Itinerary name, destination, and traveller's age are permanently immutable after creation.
+        itineraryStore.updateItinerary(tripId, {
+          dates: formattedDates,
+          placesCount,
+          travelersCount,
+          theme: params.travelStyle ? theme : existing.theme,
+          startDate: effectiveStartDate,
+          endDate: effectiveEndDate,
+          travelerType: params.travelerType,
+          adults: params.adults,
+          kids: params.kids,
+          purpose: params.purpose,
+          medicalInfo: params.medicalInfo,
+          travelStyle: params.travelStyle || existing.travelStyle,
+          selectedPlaceIds: params.selectedPlaceIds || existing.selectedPlaceIds,
+          travelModes: params.travelModes || existing.travelModes,
+        });
       }
     }
 

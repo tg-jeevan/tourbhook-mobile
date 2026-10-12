@@ -4,8 +4,10 @@
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-        <!-- Translucent status bar so full-screen screens (e.g. Welcome) can bleed under it -->
-        <item name="android:windowTranslucentStatus">true</item>
+        <!-- Full-screen immersive layout: hide the system status bar at startup -->
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
         <!-- Pure white navigation bar blending with bottom tab surface -->
         <item name="android:navigationBarColor">#FFFFFF</item>
         <item name="android:windowLightNavigationBar">true</item>

@@ -135,7 +135,10 @@ export function formatDateRange(startDateStr?: string, endDateStr?: string): str
         const p1 = startDateStr.slice(0, delimiterMatch.index).trim();
         const p2 = startDateStr.slice(delimiterMatch.index + delimiterMatch[0].length).trim();
         if (p1 && p2) {
-          return formatDateRange(p1, p2);
+          const yearMatch = p2.match(/\b(20\d{2})\b/);
+          const effectiveP1 =
+            yearMatch && !p1.match(/\b(20\d{2})\b/) ? `${p1}, ${yearMatch[1]}` : p1;
+          return formatDateRange(effectiveP1, p2);
         }
       }
     }
@@ -287,7 +290,7 @@ export function generateDefaultItineraryTitle(
 /**
  * Calculates traveler count consistently based on configuration:
  * - Solo: 1
- * - Couple: 2
+ * - Couple: positive multiple of 2 (>= 2 and even)
  * - Family: adults + kids
  * - Group: adults + kids
  */
@@ -297,9 +300,11 @@ export function calculateTravelerCount(
   kids?: number
 ): number {
   if (travelerType === 'solo') return 1;
-  if (travelerType === 'couple') return 2;
   const adultCount = typeof adults === 'number' && adults >= 1 ? adults : 1;
   const kidCount = typeof kids === 'number' && kids >= 0 ? kids : 0;
+  if (travelerType === 'couple') {
+    return adultCount >= 2 && adultCount % 2 === 0 ? adultCount : 2;
+  }
   return adultCount + kidCount;
 }
 
@@ -344,4 +349,39 @@ export function getDestinationImage(destination?: string): string {
 
   // Curated neutral travel scenic fallback
   return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&auto=format&fit=crop&q=80';
+}
+
+/**
+ * Extracts and reconstructs start date and end date strings from a saved date range string
+ * like "Sep 12 – Sep 17, 2026" or "2026-10-05 – 2026-10-12".
+ */
+export function extractStartAndEndDatesFromRange(rangeStr?: string): {
+  startDate: string;
+  endDate: string;
+} {
+  if (!rangeStr || typeof rangeStr !== 'string') {
+    return { startDate: '', endDate: '' };
+  }
+  const clean = rangeStr.trim();
+  if (!clean) {
+    return { startDate: '', endDate: '' };
+  }
+
+  const delimiterMatch = clean.match(/\s*[–—]\s*|\s+-\s+/);
+  if (!delimiterMatch || delimiterMatch.index === undefined) {
+    return { startDate: clean, endDate: '' };
+  }
+
+  const p1 = clean.slice(0, delimiterMatch.index).trim();
+  const p2 = clean.slice(delimiterMatch.index + delimiterMatch[0].length).trim();
+
+  // If p1 does not include a 4-digit year but p2 does, append p2's year to p1
+  const yearMatch = p2.match(/\b(20\d{2})\b/);
+  let start = p1;
+  let end = p2;
+  if (yearMatch && !p1.match(/\b(20\d{2})\b/)) {
+    start = `${p1}, ${yearMatch[1]}`;
+  }
+
+  return { startDate: start, endDate: end };
 }

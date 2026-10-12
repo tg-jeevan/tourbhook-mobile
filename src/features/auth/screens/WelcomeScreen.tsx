@@ -5,41 +5,36 @@ import {
   Image,
   StyleSheet,
   TouchableOpacity,
-  Platform,
-  useWindowDimensions,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { AuthStackParamList } from '../../../core/navigation/types';
 import { AppColors } from '../../../core/theme/colors';
+import { AppLogo } from '../../../core/components/AppLogo';
 
 type WelcomeScreenNavProp = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 
 const WelcomeScreen = () => {
   const navigation = useNavigation<WelcomeScreenNavProp>();
-  const { height: screenHeight } = useWindowDimensions();
-
-  // Responsive layout calculations
-  const heroHeight = Math.max(300, Math.min(screenHeight * 0.48, 420));
-  const bottomIllustrationHeight = Math.max(130, Math.min(screenHeight * 0.22, 190));
 
   return (
     <View style={styles.root}>
+      <StatusBar hidden={true} barStyle="dark-content" />
+
       {/* ── TOP HERO BACKGROUND (Mediterranean / Santorini Coast) ── */}
-      <View style={[styles.heroContainer, { height: heroHeight }]} pointerEvents="none">
+      <View style={styles.heroContainer} pointerEvents="none">
         <Image
           source={require('../../../../assets/images/welcomeHeroBackground.jpg')}
           style={styles.heroImage}
           resizeMode="cover"
         />
+        <View style={styles.heroGradientOverlay} />
       </View>
 
       {/* ── BOTTOM TRAVEL ILLUSTRATION (Landmark Silhouettes) ── */}
-      <View
-        style={[styles.bottomIllustrationContainer, { height: bottomIllustrationHeight }]}
-        pointerEvents="none"
-      >
+      <View style={styles.bottomIllustrationContainer} pointerEvents="none">
         <Image
           source={require('../../../../assets/images/welcomeTravelIllustration.png')}
           style={styles.bottomIllustrationImage}
@@ -48,68 +43,63 @@ const WelcomeScreen = () => {
       </View>
 
       {/* ── FOREGROUND CONTENT ── */}
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         {/* ── TOP BRAND & WELCOME HEADER ── */}
         <View style={styles.headerSection}>
-          <View style={styles.brandBadge}>
-            <Image
-              source={require('../../../../assets/images/appLogoTransparent.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.brandName}>Tourbhook</Text>
-          </View>
+          {/* Official Tour Bhook Logo (Transparent) */}
+          <AppLogo
+            size="header"
+            containerStyle={styles.logoContainer}
+            accessibilityLabel="Tour Bhook Official Logo"
+          />
 
           <View style={styles.headerTextGroup}>
             <Text style={styles.welcomeSubtitle}>DISCOVER • PLAN • TRAVEL</Text>
             <Text style={styles.welcomeHeading}>Welcome</Text>
           </View>
         </View>
-      </SafeAreaView>
 
-      {/* ── MIDDLE CONTENT AREA (Vertically Centered between Hero & Bottom Illustration) ── */}
-      <View
-        style={[
-          styles.middleArea,
-          {
-            top: heroHeight,
-            bottom: bottomIllustrationHeight,
-          },
-        ]}
-      >
-        <View style={styles.actionCard}>
-          <Text style={styles.headline}>Your Adventure Starts Here</Text>
-          <Text style={styles.description}>
-            Discover top places, plan your perfect route, and travel easily & stress-free.
-          </Text>
+        {/* Balanced Vertical Spacer */}
+        <View style={styles.flexSpacer} />
 
-          <View style={styles.gap20} />
-
-          {/* Primary CTA - Ocean Teal Pill */}
-          <TouchableOpacity
-            style={styles.primaryButton}
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate('SignIn')}
-          >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
-            <Text style={styles.primaryButtonArrow}>→</Text>
-          </TouchableOpacity>
-
-          <View style={styles.gap14} />
-
-          {/* Secondary Action - Sign In */}
-          <TouchableOpacity
-            style={styles.secondaryLink}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('SignIn')}
-          >
-            <Text style={styles.secondaryPromptText}>
-              Already have an account?{' '}
-              <Text style={styles.secondaryActionText}>Sign In</Text>
+        {/* ── CENTRAL ADVENTURE CARD ── */}
+        <View style={styles.cardContainer}>
+          <View style={styles.actionCard}>
+            <Text style={styles.headline}>Your Adventure Starts Here</Text>
+            <Text style={styles.description}>
+              Discover top places, plan your perfect route, and travel easily & stress-free.
             </Text>
-          </TouchableOpacity>
+
+            <View style={styles.gap20} />
+
+            {/* Primary CTA - Ocean Teal Pill */}
+            <TouchableOpacity
+              style={styles.primaryButton}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('SignIn')}
+              testID="welcome-get-started-btn"
+            >
+              <Text style={styles.primaryButtonText}>Get Started</Text>
+              <Text style={styles.primaryButtonArrow}>→</Text>
+            </TouchableOpacity>
+
+            <View style={styles.gap14} />
+
+            {/* Secondary Action - Sign In */}
+            <TouchableOpacity
+              style={styles.secondaryLink}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('SignIn')}
+              testID="welcome-sign-in-btn"
+            >
+              <Text style={styles.secondaryPromptText}>
+                Already have an account?{' '}
+                <Text style={styles.secondaryActionText}>Sign In</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 };
@@ -117,90 +107,79 @@ const WelcomeScreen = () => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: AppColors.surface,
+    backgroundColor: '#FAF8F5',
   },
   heroContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
+    height: '46%',
     overflow: 'hidden',
   },
   heroImage: {
     width: '100%',
     height: '100%',
   },
+  heroGradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(250, 248, 245, 0.15)',
+  },
   bottomIllustrationContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    height: 140,
     justifyContent: 'flex-end',
   },
   bottomIllustrationImage: {
     width: '100%',
     height: '100%',
+    opacity: 0.9,
   },
   safeArea: {
     flex: 1,
+    justifyContent: 'space-between',
   },
   headerSection: {
-    paddingTop: Platform.OS === 'android' ? 10 : 6,
-    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingHorizontal: 22,
   },
-  brandBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  logoContainer: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.90)',
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    shadowColor: AppColors.textPrimary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-    marginBottom: 10,
-  },
-  logo: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-  },
-  brandName: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: AppColors.textPrimary,
-    letterSpacing: -0.2,
-    fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
+    backgroundColor: 'transparent',
+    marginBottom: 12,
   },
   headerTextGroup: {
     marginTop: 2,
   },
   welcomeSubtitle: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
     color: AppColors.primary,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    marginBottom: 2,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
+    marginBottom: 4,
   },
   welcomeHeading: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '900',
     color: AppColors.textPrimary,
-    lineHeight: 34,
-    letterSpacing: -0.5,
-    fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
+    lineHeight: 38,
+    letterSpacing: -0.6,
   },
-  middleArea: {
-    position: 'absolute',
-    left: 20,
-    right: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+  flexSpacer: {
+    flex: 1,
+    minHeight: 20,
+  },
+  cardContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 28,
   },
   actionCard: {
     width: '100%',
@@ -211,11 +190,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: AppColors.textPrimary,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 5,
     borderWidth: 1,
-    borderColor: AppColors.borderLight,
+    borderColor: '#EAE5DC',
   },
   headline: {
     fontSize: 21,
@@ -223,7 +202,6 @@ const styles = StyleSheet.create({
     color: AppColors.textPrimary,
     textAlign: 'center',
     letterSpacing: -0.3,
-    fontFamily: Platform.OS === 'android' ? 'Inter-ExtraBold' : undefined,
   },
   description: {
     fontSize: 13.5,
@@ -233,7 +211,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     paddingHorizontal: 6,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
   },
   primaryButton: {
     width: '100%',
@@ -254,7 +231,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: AppColors.textOnPrimary,
     letterSpacing: 0.2,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
   },
   primaryButtonArrow: {
     fontSize: 18,
@@ -269,12 +245,10 @@ const styles = StyleSheet.create({
   secondaryPromptText: {
     fontSize: 13.5,
     color: AppColors.textSecondary,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Regular' : undefined,
   },
   secondaryActionText: {
     fontWeight: '700',
     color: AppColors.primary,
-    fontFamily: Platform.OS === 'android' ? 'Inter-Bold' : undefined,
   },
   gap14: {
     height: 14,

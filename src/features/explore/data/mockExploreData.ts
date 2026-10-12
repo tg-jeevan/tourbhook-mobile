@@ -300,7 +300,7 @@ export const MOCK_EXPLORE_REELS: (UGCItem & { category: 'adventure' | 'culture' 
     },
   },
   {
-    id: 'ugc-tokyo-1',
+    id: 'ugc-tokyo-food-1',
     destination: 'Tokyo, Japan',
     platform: 'instagram',
     url: 'https://www.instagram.com/reel/TokyoStreetFood2026',

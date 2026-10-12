@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronRight, CheckCircle2 } from 'lucide-react-native';
 import { AppStackParamList } from '../../../core/navigation/types';
 import { BackButton } from '../../../core/components/BackButton';
+import { AppLogo } from '../../../core/components/AppLogo';
 import { useAuth } from '../../../core/auth/AuthContext';
 import { useLanguagePreference } from '../data/languageStore';
 import { useSubscription } from '../data/subscriptionStore';
@@ -64,15 +65,8 @@ export default function ProfileMenuScreen() {
             {userLevel}
           </Text>
 
-          {/* Official Tour Bhook Logo Badge */}
-          <View style={styles.logoBadge}>
-            <Image
-              source={require('../../../../assets/images/tourBhookOfficialLogoTransparent.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-              accessibilityLabel="Tour Bhook Official Logo"
-            />
-          </View>
+          {/* Official Tour Bhook Logo (Transparent) */}
+          <AppLogo size="compact" containerStyle={styles.logoWrapper} />
         </View>
 
         <View style={styles.menu}>
@@ -153,18 +147,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 16,
   },
-  logoBadge: {
-    marginTop: 12,
-    backgroundColor: AppColors.textPrimary, // #10243F Deep Navy
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoImage: {
-    width: 104,
-    height: 24,
+  logoWrapper: {
+    marginTop: 10,
+    marginBottom: 4,
+    backgroundColor: 'transparent',
   },
   menu: {
     backgroundColor: AppColors.surface,

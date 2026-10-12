@@ -22,6 +22,8 @@ export const RootNavigator = () => {
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
+          orientation: 'portrait',
+          statusBarHidden: true,
           navigationBarColor: AppColors.surface,
         }}
       >

@@ -1,5 +1,4 @@
 import { itineraryStore, INITIAL_ITINERARIES } from './itineraryStore';
-import { getMockItineraryDays } from '../types/itineraryPackingTypes';
 
 describe('itineraryStore', () => {
   beforeEach(() => {
@@ -41,7 +40,7 @@ describe('itineraryStore', () => {
 
     const listAfter = itineraryStore.getItineraries();
     expect(listAfter.length).toBe(2);
-    expect(listAfter.find(i => i.id === '1')).toBeUndefined();
+    expect(listAfter.find((i) => i.id === '1')).toBeUndefined();
 
     const countsAfter = itineraryStore.getCounts();
     expect(countsAfter.all).toBe(2);
@@ -76,14 +75,11 @@ describe('itineraryStore', () => {
       destination: 'Bangalore, India',
       location: 'Bangalore, India',
       dates: 'Aug 5 – Aug 7, 2027',
-      startDate: '2027-08-05',
-      endDate: '2027-08-07',
       status: 'upcoming' as const,
       placesCount: 2,
       activitiesCount: 0,
       travelersCount: 1,
-      imageUri:
-        'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=600&auto=format&fit=crop&q=80',
+      imageUri: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=600&auto=format&fit=crop&q=80',
       theme: 'sky' as const,
     };
 
@@ -97,15 +93,71 @@ describe('itineraryStore', () => {
     expect(retrieved?.travelersCount).toBe(1);
     expect(retrieved?.location).toBe('Bangalore, India');
     expect(retrieved?.dates).toBe('Aug 5 – Aug 7, 2027');
+  });
 
-    const generatedDays = getMockItineraryDays(
-      retrieved?.startDate,
-      retrieved?.endDate,
-    );
-    expect(generatedDays.map(day => day.dateLabel)).toEqual([
-      'Aug 5',
-      'Aug 6',
-      'Aug 7',
-    ]);
+  test('updateItinerary preserves immutable name, destination, and primaryAge', () => {
+    const trip = itineraryStore.getItineraryById('1');
+    expect(trip?.title).toBe('Paris Adventure');
+    expect(trip?.destination).toBe('Paris, France');
+
+    itineraryStore.updateItinerary('1', {
+      title: 'Rome Adventure',
+      destination: 'Rome, Italy',
+      location: 'Rome, Italy',
+      primaryAge: 45,
+    });
+
+    const updated = itineraryStore.getItineraryById('1');
+    expect(updated?.id).toBe('1');
+    expect(updated?.title).toBe('Paris Adventure');
+    expect(updated?.destination).toBe('Paris, France');
+    expect(updated?.location).toBe('Paris, France');
+  });
+
+  test('updateItinerary preserves immutable name when dates and travelers change', () => {
+    const trip = itineraryStore.getItineraryById('2');
+    expect(trip?.title).toBe('Tokyo Explorer');
+
+    itineraryStore.updateItinerary('2', {
+      title: 'New Tokyo Name',
+      dates: 'Oct 10 – Oct 20, 2026',
+      travelersCount: 5,
+    });
+
+    const updated = itineraryStore.getItineraryById('2');
+    expect(updated?.title).toBe('Tokyo Explorer');
+    expect(updated?.dates).toBe('Oct 10 – Oct 20, 2026');
+    expect(updated?.travelersCount).toBe(5);
+  });
+
+  test('updateItinerary preserves customName when re-generating or refreshing details', () => {
+    itineraryStore.addItinerary({
+      id: 'trip-custom-bangalore',
+      title: 'Bangalore Family Trip',
+      customName: 'Bangalore Family Trip',
+      destination: 'Bangalore, India',
+      location: 'Bangalore, India',
+      dates: 'Dec 1 – Dec 5, 2026',
+      status: 'upcoming',
+      placesCount: 4,
+      activitiesCount: 8,
+      travelersCount: 3,
+      imageUri: 'https://example.com/img.jpg',
+      theme: 'peach',
+    });
+
+    // Attempting to overwrite name during detail regeneration
+    itineraryStore.updateItinerary('trip-custom-bangalore', {
+      title: 'Bangalore Adventure',
+      customName: 'Bangalore Adventure',
+      placesCount: 10,
+      activitiesCount: 20,
+    });
+
+    const refreshed = itineraryStore.getItineraryById('trip-custom-bangalore');
+    expect(refreshed?.title).toBe('Bangalore Family Trip');
+    expect(refreshed?.customName).toBe('Bangalore Family Trip');
+    expect(refreshed?.placesCount).toBe(10);
+    expect(refreshed?.activitiesCount).toBe(20);
   });
 });

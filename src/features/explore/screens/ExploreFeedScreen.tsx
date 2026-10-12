@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,14 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   Search,
-  SlidersHorizontal,
+  Mic,
   Bell,
   Play,
   Heart,
@@ -40,9 +41,10 @@ import { AppColors } from '../../../core/theme/colors';
 import { BottomNavBar } from '../../../core/components/BottomNavBar';
 import { ExploreCategory, DestinationItem } from '../types/exploreTypes';
 import {
-  getFilteredExploreContent,
-  searchExploreContent,
-} from '../data/mockExploreData';
+  exploreVoiceSearchService,
+  VoiceSearchStatus,
+} from '../services/exploreVoiceSearchService';
+import { getFilteredExploreContent, searchExploreContent } from '../data/mockExploreData';
 import { UGCItem } from '../../ugc/types/ugcTypes';
 
 const CATEGORIES: { label: ExploreCategory; icon: React.ComponentType<{ size: number; color: string }> }[] = [
@@ -62,6 +64,54 @@ export default function ExploreFeedScreen() {
   const [savedReelIds, setSavedReelIds] = useState<string[]>([]);
   const [likedReelIds, setLikedReelIds] = useState<string[]>([]);
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>([]);
+  const [voiceStatus, setVoiceStatus] = useState<VoiceSearchStatus>('idle');
+  const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = exploreVoiceSearchService.subscribe((event) => {
+      setVoiceStatus(event.status);
+
+      if (event.status === 'recognized' && event.query) {
+        setSearchQuery(event.query);
+        setVoiceNotice(null);
+      } else if (event.status === 'permission_denied') {
+        setVoiceNotice(event.errorMessage || 'Microphone permission denied.');
+        Alert.alert(
+          'Microphone Permission Needed',
+          'Please enable microphone access in device settings to use voice search.'
+        );
+      } else if (event.status === 'unavailable') {
+        setVoiceNotice(
+          event.errorMessage ||
+            'Speech recognition engine is unavailable on this device.'
+        );
+      } else if (event.status === 'no_speech') {
+        setVoiceNotice(
+          event.errorMessage || 'No speech detected. Tap microphone to try again.'
+        );
+      } else if (event.status === 'error') {
+        setVoiceNotice(
+          event.errorMessage || 'Speech recognition failed. Please try again.'
+        );
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      exploreVoiceSearchService.stopListening();
+    };
+  }, []);
+
+  const isListening = voiceStatus === 'listening';
+
+  const handleVoiceSearchPress = async () => {
+    if (isListening) {
+      exploreVoiceSearchService.stopListening();
+      return;
+    }
+    setVoiceNotice(null);
+    await exploreVoiceSearchService.startListening();
+  };
 
   // Filtered content according to active category
   const { destinations, reels, groups } = useMemo(
@@ -166,20 +216,72 @@ export default function ExploreFeedScreen() {
             onChangeText={setSearchQuery}
             autoCorrect={false}
           />
-          {searchQuery.length > 0 ? (
+          {searchQuery.length > 0 && (
             <TouchableOpacity
               onPress={() => setSearchQuery('')}
               style={styles.searchClearBtn}
               activeOpacity={0.7}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
             >
               <X size={16} color={AppColors.textMuted} />
             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.filterSliderBtn} activeOpacity={0.7}>
-              <SlidersHorizontal size={18} color={AppColors.textPrimary} />
-            </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={[
+              styles.voiceSearchBtn,
+              isListening && styles.voiceSearchBtnListening,
+            ]}
+            onPress={handleVoiceSearchPress}
+            activeOpacity={0.7}
+            accessibilityLabel="Voice search"
+            accessibilityRole="button"
+          >
+            <Mic
+              size={18}
+              color={isListening ? AppColors.white : AppColors.primary}
+            />
+          </TouchableOpacity>
         </View>
+
+        {/* ── VOICE SEARCH STATUS / LISTENING FEEDBACK ─────────────── */}
+        {isListening && (
+          <View style={styles.voiceListeningBanner}>
+            <View style={styles.voicePulseDot} />
+            <Text style={styles.voiceListeningText}>Listening... Speak destinations or places</Text>
+            <TouchableOpacity
+              onPress={() => exploreVoiceSearchService.stopListening()}
+              style={styles.voiceCancelBtn}
+              accessibilityLabel="Stop voice search"
+            >
+              <X size={14} color={AppColors.white} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {voiceNotice && !isListening && (
+          <View style={styles.voiceNoticeBanner}>
+            <Text style={styles.voiceNoticeText} numberOfLines={2}>
+              {voiceNotice}
+            </Text>
+            {voiceStatus === 'unavailable' && (
+              <TouchableOpacity
+                onPress={() => exploreVoiceSearchService.startListening({ sampleQuery: 'Paris' })}
+                style={styles.voiceDemoBtn}
+                accessibilityLabel="Test sample voice search"
+              >
+                <Text style={styles.voiceDemoBtnText}>Try "Paris"</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={() => setVoiceNotice(null)}
+              style={styles.voiceNoticeCloseBtn}
+              accessibilityLabel="Dismiss voice notice"
+            >
+              <X size={14} color={AppColors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* ── SEARCH RESULTS DROPDOWN (IF QUERYING) ─────────────────── */}
         {searchQuery.trim().length > 0 && (
@@ -272,10 +374,15 @@ export default function ExploreFeedScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                style={styles.seeAllTouchArea}
                 onPress={() =>
                   navigation.navigate('ExploreCollection', { contentType: 'reels' })
                 }
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="See all Travel Reels"
+                testID="see-all-travel-reels"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Text style={styles.seeAllText}>See all →</Text>
               </TouchableOpacity>
@@ -420,10 +527,13 @@ export default function ExploreFeedScreen() {
             </View>
 
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('ExploreCollection', { contentType: 'destinations' })
-              }
+              style={styles.seeAllTouchArea}
+              onPress={() => navigation.navigate('AllDestinations')}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="See all Popular Destinations"
+              testID="see-all-popular-destinations"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={styles.seeAllText}>See all →</Text>
             </TouchableOpacity>
@@ -440,6 +550,7 @@ export default function ExploreFeedScreen() {
                 style={styles.destinationCard}
                 activeOpacity={0.9}
                 onPress={() => handleDestinationPress(dest)}
+                testID={`destination-card-${dest.id}`}
               >
                 <Image source={{ uri: dest.imageUri }} style={styles.destImage} />
                 <View style={styles.destGradientOverlay} />
@@ -473,8 +584,13 @@ export default function ExploreFeedScreen() {
             </View>
 
             <TouchableOpacity
+              style={styles.seeAllTouchArea}
               onPress={() => navigation.navigate('GroupMatching')}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="See all Suggested Travel Groups"
+              testID="see-all-suggested-groups"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={styles.seeAllText}>See all →</Text>
             </TouchableOpacity>
@@ -493,7 +609,8 @@ export default function ExploreFeedScreen() {
                   key={group.id}
                   style={styles.groupCard}
                   activeOpacity={0.9}
-                  onPress={() => navigation.navigate('GroupMatching')}
+                  onPress={() => navigation.navigate('GroupDetails', { groupId: group.id })}
+                  testID={`group-card-${group.id}`}
                 >
                   {/* Left Category Panel */}
                   <View
@@ -669,8 +786,79 @@ const styles = StyleSheet.create({
   searchClearBtn: {
     padding: 6,
   },
-  filterSliderBtn: {
-    padding: 6,
+  voiceSearchBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 4,
+    backgroundColor: '#F0F9FF',
+  },
+  voiceSearchBtnListening: {
+    backgroundColor: AppColors.primary,
+    shadowColor: AppColors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  voiceListeningBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 14,
+    marginBottom: 14,
+    gap: 8,
+  },
+  voicePulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4ADE80',
+  },
+  voiceListeningText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '700',
+    color: AppColors.white,
+  },
+  voiceCancelBtn: {
+    padding: 4,
+  },
+  voiceNoticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 14,
+    marginBottom: 14,
+    gap: 8,
+  },
+  voiceNoticeText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#92400E',
+    fontWeight: '600',
+  },
+  voiceDemoBtn: {
+    backgroundColor: AppColors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  voiceDemoBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: AppColors.white,
+  },
+  voiceNoticeCloseBtn: {
+    padding: 4,
   },
 
   /* ── SEARCH RESULTS ─────────────────────────────────────────────── */
@@ -797,6 +985,11 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: AppColors.textPrimary,
     letterSpacing: -0.3,
+  },
+  seeAllTouchArea: {
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderRadius: 8,
   },
   seeAllText: {
     fontSize: 12,

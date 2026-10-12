@@ -24,6 +24,8 @@ import PrivacyPolicyScreen from '../../features/profile/screens/PrivacyPolicyScr
 import TermsScreen from '../../features/profile/screens/TermsScreen';
 import UGCPostingScreen from '../../features/ugc/screens/UGCPostingScreen';
 import GroupMatchingScreen from '../../features/groups/screens/GroupMatchingScreen';
+import CreateGroupScreen from '../../features/groups/screens/CreateGroupScreen';
+import EditGroupScreen from '../../features/groups/screens/EditGroupScreen';
 import GroupDetailsScreen from '../../features/groups/screens/GroupDetailsScreen';
 import GroupChatScreen from '../../features/groups/screens/GroupChatScreen';
 import GroupInfoScreen from '../../features/groups/screens/GroupInfoScreen';
@@ -38,6 +40,7 @@ import ExploreFeedScreen from '../../features/explore/screens/ExploreFeedScreen'
 import ExploreCollectionScreen from '../../features/explore/screens/ExploreCollectionScreen';
 import ReelViewerScreen from '../../features/explore/screens/ReelViewerScreen';
 import DestinationDetailsScreen from '../../features/explore/screens/DestinationDetailsScreen';
+import AllDestinationsScreen from '../../features/explore/screens/AllDestinationsScreen';
 import { AppColors } from '../theme/colors';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -48,6 +51,8 @@ export const AppNavigator = () => {
       initialRouteName="MyItineraries"
       screenOptions={{
         headerShown: false,
+        orientation: 'portrait',
+        statusBarHidden: true,
         navigationBarColor: AppColors.surface,
       }}
     >
@@ -87,6 +92,8 @@ export const AppNavigator = () => {
       <Stack.Screen name="UGCPosting" component={UGCPostingScreen} />
       <Stack.Screen name="InstagramConnect" component={InstagramConnectScreen} />
       <Stack.Screen name="GroupMatching" component={GroupMatchingScreen} />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+      <Stack.Screen name="EditGroup" component={EditGroupScreen} />
       <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
       <Stack.Screen name="GroupChat" component={GroupChatScreen} />
       <Stack.Screen name="GroupInfo" component={GroupInfoScreen} />
@@ -106,6 +113,7 @@ export const AppNavigator = () => {
       {/* ── Explore ── */}
       <Stack.Screen name="ExploreFeed" component={ExploreFeedScreen} />
       <Stack.Screen name="ExploreCollection" component={ExploreCollectionScreen} />
+      <Stack.Screen name="AllDestinations" component={AllDestinationsScreen} />
       <Stack.Screen name="ReelViewer" component={ReelViewerScreen} />
       <Stack.Screen name="DestinationDetails" component={DestinationDetailsScreen} />
     </Stack.Navigator>

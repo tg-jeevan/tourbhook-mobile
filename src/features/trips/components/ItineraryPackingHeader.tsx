@@ -9,12 +9,16 @@ interface ItineraryPackingHeaderProps {
   activeTab: ItineraryPackingTab;
   onSelectTab: (tab: ItineraryPackingTab) => void;
   onClose: () => void;
+  title?: string;
+  subtitle?: string;
 }
 
 export const ItineraryPackingHeader: React.FC<ItineraryPackingHeaderProps> = ({
   activeTab,
   onSelectTab,
   onClose,
+  title,
+  subtitle,
 }) => {
   return (
     <View style={styles.container}>
@@ -29,7 +33,16 @@ export const ItineraryPackingHeader: React.FC<ItineraryPackingHeaderProps> = ({
           <X size={22} color={AppColors.textPrimary} strokeWidth={2.2} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>My Itinerary</Text>
+        <View style={styles.titleWrap}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {title || 'My Itinerary'}
+          </Text>
+          {subtitle ? (
+            <Text style={styles.headerSubtitle} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
 
         <View style={styles.placeholder} />
       </View>
@@ -37,6 +50,7 @@ export const ItineraryPackingHeader: React.FC<ItineraryPackingHeaderProps> = ({
       {/* Tabs Row */}
       <View style={styles.tabsRow}>
         <TouchableOpacity
+          testID="tab-itinerary-btn"
           style={styles.tabItem}
           onPress={() => onSelectTab('itinerary')}
           activeOpacity={0.8}
@@ -53,6 +67,7 @@ export const ItineraryPackingHeader: React.FC<ItineraryPackingHeaderProps> = ({
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="tab-packing-btn"
           style={styles.tabItem}
           onPress={() => onSelectTab('packing')}
           activeOpacity={0.8}
@@ -93,11 +108,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  titleWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    maxWidth: '70%',
+  },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800',
     color: AppColors.textPrimary,
     letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textMuted,
+    marginTop: 1,
   },
   placeholder: {
     width: 38,
