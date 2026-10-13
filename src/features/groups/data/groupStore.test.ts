@@ -31,6 +31,31 @@ describe('GroupStore & Mock Chat Experience', () => {
       groupStore.leaveGroup('group-paris');
       expect(listener).toHaveBeenCalledTimes(1);
     });
+
+    it('counts created and joined groups separately', () => {
+      const created = groupStore.createGroup({
+        name: 'Private Weekend Crew',
+        visibility: 'private',
+        requiresKyc: true,
+      });
+      groupStore.joinGroup('group-paris');
+
+      expect(groupStore.getCreatedGroupCount()).toBe(1);
+      expect(groupStore.getJoinedGroupCount()).toBe(1);
+      expect(groupStore.isGroupJoined(created.id)).toBe(true);
+    });
+
+    it('keeps private groups out of discovery unless the user owns or joined them', () => {
+      const privateGroup = groupStore
+        .getGroups()
+        .find(group => group.visibility === 'private' && !group.isOwnedByCurrentUser);
+
+      expect(privateGroup).toBeDefined();
+      expect(groupStore.getDiscoverableGroups().some(group => group.id === privateGroup?.id)).toBe(false);
+
+      groupStore.joinGroup(privateGroup!.id);
+      expect(groupStore.getDiscoverableGroups().some(group => group.id === privateGroup?.id)).toBe(true);
+    });
   });
 
   describe('chat messages', () => {

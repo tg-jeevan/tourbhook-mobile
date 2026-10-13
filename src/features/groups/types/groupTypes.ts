@@ -1,4 +1,5 @@
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+export type GroupVisibility = 'public' | 'private';
 
 export interface GroupMember {
   id: string;
@@ -41,13 +42,17 @@ export interface TravelGroup {
   tags: string[];
   categories: string[];
   notificationsEnabled?: boolean;
+  visibility?: GroupVisibility;
+  requiresKyc?: boolean;
+  inviteUrl?: string;
+  isOwnedByCurrentUser?: boolean;
 }
 
 export const CATEGORY_FILTERS = ['All', 'Adventure', 'Culture', 'Food', 'Beach'] as const;
 export type CategoryFilter = (typeof CATEGORY_FILTERS)[number];
 
 export function getMockTravelGroups(): TravelGroup[] {
-  return [
+  const groups: TravelGroup[] = [
     {
       id: 'group-paris',
       name: 'Paris Explorers 🇫🇷',
@@ -271,4 +276,12 @@ export function getMockTravelGroups(): TravelGroup[] {
       notificationsEnabled: true,
     },
   ];
+
+  return groups.map(group => ({
+    ...group,
+    visibility: group.id === 'group-12' ? 'private' : 'public',
+    requiresKyc: group.id === 'group-paris' || group.id === 'group-8',
+    inviteUrl: `https://tourbhook.app/join/${group.id}`,
+    isOwnedByCurrentUser: false,
+  }));
 }

@@ -1,6 +1,6 @@
 import { DestinationItem, ExploreCategory } from '../types/exploreTypes';
 import { UGCItem } from '../../ugc/types/ugcTypes';
-import { getMockTravelGroups, TravelGroup } from '../../groups/types/groupTypes';
+import { getMockTravelGroups } from '../../groups/types/groupTypes';
 
 export const MOCK_DESTINATIONS: DestinationItem[] = [
   {
@@ -452,22 +452,24 @@ export const searchExploreContent = (query: string) => {
   });
 
   // Match Groups
-  getMockTravelGroups().forEach((g) => {
-    if (
-      g.name.toLowerCase().includes(q) ||
-      g.description?.toLowerCase().includes(q) ||
-      g.tags.some((t) => t.toLowerCase().includes(q))
-    ) {
-      results.push({
-        type: 'group',
-        id: g.id,
-        title: g.name,
-        subtitle: `Travel Group • ${g.memberCount}/${g.maxMembers} members`,
-        category: g.categoryLabel,
-        payload: g,
-      });
-    }
-  });
+  getMockTravelGroups()
+    .filter((g) => g.visibility !== 'private')
+    .forEach((g) => {
+      if (
+        g.name.toLowerCase().includes(q) ||
+        g.description?.toLowerCase().includes(q) ||
+        g.tags.some((t) => t.toLowerCase().includes(q))
+      ) {
+        results.push({
+          type: 'group',
+          id: g.id,
+          title: g.name,
+          subtitle: `Travel Group • ${g.memberCount}/${g.maxMembers} members`,
+          category: g.categoryLabel,
+          payload: g,
+        });
+      }
+    });
 
   return results;
 };

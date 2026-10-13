@@ -1,5 +1,5 @@
 import { groupStore } from './groupStore';
-import { CATEGORY_FILTERS, TravelGroup } from '../types/groupTypes';
+import { TravelGroup } from '../types/groupTypes';
 
 describe('Group Feature: Creation, Search, Pagination & Sharing', () => {
   beforeEach(() => {
@@ -36,6 +36,9 @@ describe('Group Feature: Creation, Search, Pagination & Sharing', () => {
       expect(newGroup.categories).toContain('culture');
       expect(newGroup.memberCount).toBe(1);
       expect(newGroup.maxMembers).toBe(6);
+      expect(newGroup.visibility).toBe('public');
+      expect(newGroup.requiresKyc).toBe(false);
+      expect(newGroup.inviteUrl).toContain(newGroup.id);
 
       // Verify creator is marked as joined
       expect(groupStore.isGroupJoined(newGroup.id)).toBe(true);
@@ -80,6 +83,24 @@ describe('Group Feature: Creation, Search, Pagination & Sharing', () => {
       // Verify retrieval from store matches persisted categories
       const fetched = groupStore.getGroupById(newGroup.id);
       expect(fetched?.categories).toEqual(['adventure', 'hiking', 'photography']);
+    });
+
+    test('stores public/private and KYC access settings', () => {
+      const newGroup = groupStore.createGroup({
+        name: 'Verified Private Travelers',
+        visibility: 'private',
+        requiresKyc: true,
+      });
+
+      expect(newGroup.visibility).toBe('private');
+      expect(newGroup.requiresKyc).toBe(true);
+
+      const updated = groupStore.updateGroup(newGroup.id, {
+        visibility: 'public',
+        requiresKyc: false,
+      });
+      expect(updated.visibility).toBe('public');
+      expect(updated.requiresKyc).toBe(false);
     });
 
     test('updates an existing group with modified categories and fields', () => {

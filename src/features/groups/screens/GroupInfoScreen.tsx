@@ -27,6 +27,7 @@ import { FeedbackToast } from '../../../core/components/FeedbackToast';
 import { AppColors } from '../../../core/theme/colors';
 import { useGroupState } from '../data/groupStore';
 import { GroupMember } from '../types/groupTypes';
+import { GroupAccessBadges } from '../components/GroupAccessBadges';
 
 export default function GroupInfoScreen() {
   const navigation =
@@ -90,6 +91,7 @@ export default function GroupInfoScreen() {
             </Text>
           </View>
           <Text style={styles.groupName}>{group?.name || 'Paris Explorers 🇫🇷'}</Text>
+          {group ? <GroupAccessBadges group={group} /> : null}
           <View style={styles.badgeRow}>
             <View style={styles.categoryPillsRow}>
               {(group?.categories && group.categories.length > 0
@@ -218,12 +220,14 @@ export default function GroupInfoScreen() {
         </View>
 
         {/* Community Verification Notice */}
-        <View style={styles.noticeCard}>
-          <ShieldCheck size={18} color={AppColors.primary} />
-          <Text style={styles.noticeText}>
-            All members in this group are verified Tourbhook travelers.
-          </Text>
-        </View>
+        {group?.requiresKyc ? (
+          <View style={styles.noticeCard}>
+            <ShieldCheck size={18} color={AppColors.primary} />
+            <Text style={styles.noticeText}>
+              All members in this group are verified Tourbhook travelers.
+            </Text>
+          </View>
+        ) : null}
 
         {/* Leave Group Button */}
         <TouchableOpacity

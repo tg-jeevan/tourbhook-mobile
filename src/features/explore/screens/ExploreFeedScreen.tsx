@@ -46,6 +46,17 @@ import {
 } from '../services/exploreVoiceSearchService';
 import { getFilteredExploreContent, searchExploreContent } from '../data/mockExploreData';
 import { UGCItem } from '../../ugc/types/ugcTypes';
+import { TravelGroup } from '../../groups/types/groupTypes';
+import { useAuth } from '../../../core/auth/AuthContext';
+import { useSubscription } from '../../profile/data/subscriptionStore';
+import { groupStore, useGroupState } from '../../groups/data/groupStore';
+import { GroupAccessBadges } from '../../groups/components/GroupAccessBadges';
+import { GroupAccessGateModal } from '../../groups/components/GroupAccessGateModal';
+import {
+  GroupAccessBlockReason,
+  getJoinGroupBlockReason,
+  getPublicGroupPreview,
+} from '../../groups/utils/groupAccess';
 
 const CATEGORIES: { label: ExploreCategory; icon: React.ComponentType<{ size: number; color: string }> }[] = [
   { label: 'All', icon: LayoutGrid },
@@ -63,9 +74,13 @@ export default function ExploreFeedScreen() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [savedReelIds, setSavedReelIds] = useState<string[]>([]);
   const [likedReelIds, setLikedReelIds] = useState<string[]>([]);
-  const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>([]);
   const [voiceStatus, setVoiceStatus] = useState<VoiceSearchStatus>('idle');
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
+  const [accessBlockReason, setAccessBlockReason] =
+    useState<GroupAccessBlockReason | null>(null);
+  const { user } = useAuth();
+  const { plan } = useSubscription();
+  const { joinedGroupCount } = useGroupState();
 
   useEffect(() => {
     const unsubscribe = exploreVoiceSearchService.subscribe((event) => {
@@ -137,10 +152,26 @@ export default function ExploreFeedScreen() {
     );
   };
 
-  const handleToggleJoinGroup = (groupId: string) => {
-    setJoinedGroupIds((prev) =>
-      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
-    );
+  const handleJoinGroup = (group: TravelGroup) => {
+    const isAlreadyJoined = groupStore.isGroupJoined(group.id);
+    if (isAlreadyJoined) {
+      navigation.navigate('GroupChat', { groupId: group.id });
+      return;
+    }
+
+    const reason = getJoinGroupBlockReason({
+      group,
+      isVerified: user?.isVerified === true,
+      isAlreadyJoined,
+      joinedCount: joinedGroupCount,
+      plan,
+    });
+    if (reason) {
+      setAccessBlockReason(reason);
+      return;
+    }
+
+    groupStore.joinGroup(group.id);
   };
 
   const handleReelPress = (reel: UGCItem) => {
@@ -597,8 +628,8 @@ export default function ExploreFeedScreen() {
           </View>
 
           <View style={styles.groupsVerticalList}>
-            {groups.slice(0, 5).map((group) => {
-              const isJoined = joinedGroupIds.includes(group.id);
+            {getPublicGroupPreview(groups).map((group) => {
+              const isJoined = groupStore.isGroupJoined(group.id);
               const isAdventure =
                 group.categoryLabel === 'ADVENTURE' ||
                 group.tags.some((t) => t.toLowerCase() === 'adventure') ||
@@ -634,6 +665,7 @@ export default function ExploreFeedScreen() {
                     <Text style={styles.groupCardDesc} numberOfLines={2}>
                       {group.description}
                     </Text>
+                    <GroupAccessBadges group={group} />
 
                     {/* Member Avatars & Count */}
                     <View style={styles.groupMembersRow}>
@@ -669,7 +701,10 @@ export default function ExploreFeedScreen() {
                   {/* Right Join Button */}
                   <TouchableOpacity
                     style={[styles.groupJoinBtn, isJoined && styles.groupJoinedBtn]}
-                    onPress={() => handleToggleJoinGroup(group.id)}
+                    onPress={event => {
+                      event.stopPropagation();
+                      handleJoinGroup(group);
+                    }}
                     activeOpacity={0.85}
                   >
                     {isJoined ? (
@@ -690,6 +725,17 @@ export default function ExploreFeedScreen() {
 
       {/* ── BOTTOM NAVIGATION ────────────────────────────────────── */}
       <BottomNavBar active="explore" />
+      <GroupAccessGateModal
+        reason={accessBlockReason}
+        plan={plan}
+        onClose={() => setAccessBlockReason(null)}
+        onPrimaryAction={reason => {
+          setAccessBlockReason(null);
+          if (reason === 'join_limit_reached' && plan === 'free') {
+            navigation.navigate('UpgradePlan');
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
