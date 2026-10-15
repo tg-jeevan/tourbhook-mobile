@@ -138,14 +138,54 @@ describe('HelpSupportScreen — Email & WhatsApp Integration', () => {
 
       // Email Card
       expect(root.findAllByProps({ children: 'Email Support' }).length).toBeGreaterThan(0);
-      expect(root.findAllByProps({ children: 'hello.tourbhook@gmail.com' }).length).toBeGreaterThan(0);
       expect(root.findAllByProps({ children: 'Send Email' }).length).toBeGreaterThan(0);
+      expect(root.findAllByProps({ children: 'Need help with Tourbhook? Send our team a message.' }).length).toBeGreaterThan(0);
 
       // Live Chat Card
       expect(root.findAllByProps({ children: 'Live Chat' }).length).toBeGreaterThan(0);
       expect(root.findAllByProps({ children: 'Chat with us on WhatsApp Business' }).length).toBeGreaterThan(0);
-      expect(root.findAllByProps({ children: '+91 99864 74527' }).length).toBeGreaterThan(0);
       expect(root.findAllByProps({ children: 'Chat on WhatsApp' }).length).toBeGreaterThan(0);
+
+      // Contact details must NOT be visible anywhere on the screen
+      expect(root.findAllByProps({ children: 'hello.tourbhook@gmail.com' }).length).toBe(0);
+      expect(root.findAllByProps({ children: '+91 99864 74527' }).length).toBe(0);
+      expect(root.findAllByProps({ children: '919986474527' }).length).toBe(0);
+    });
+
+    it('does not display any contact details in visible text but constructs expected redirect URLs', async () => {
+      jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true as never);
+      const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+
+      let renderer: ReactTestRenderer.ReactTestRenderer;
+      ReactTestRenderer.act(() => {
+        renderer = ReactTestRenderer.create(<HelpSupportScreen />);
+      });
+      const root = renderer!.root;
+
+      // Verify no rendered text contains raw contact info, asterisks, or masked details
+      const allTextNodes = root.findAll((node) => typeof node.props.children === 'string');
+      const renderedStrings = allTextNodes.map((n) => n.props.children as string);
+      expect(renderedStrings.some((s) => s.includes('hello.tourbhook@gmail.com'))).toBe(false);
+      expect(renderedStrings.some((s) => s.includes('99864'))).toBe(false);
+      expect(renderedStrings.some((s) => s.includes('***'))).toBe(false);
+
+      // Verify Send Email button/card opens expected email URL with prefilled user data
+      const emailCard = root.findByProps({ testID: 'email-support-card' });
+      await ReactTestRenderer.act(async () => {
+        await emailCard.props.onPress();
+      });
+      expect(openSpy).toHaveBeenCalledWith(
+        expect.stringContaining('mailto:hello.tourbhook@gmail.com?subject=Tourbhook%20App%20Support&body=Heyy%2C%20I%20am%20Aarav%20Sharma')
+      );
+
+      // Verify Chat on WhatsApp button/card opens expected WhatsApp conversation URL
+      const whatsappCard = root.findByProps({ testID: 'whatsapp-support-card' });
+      await ReactTestRenderer.act(async () => {
+        await whatsappCard.props.onPress();
+      });
+      expect(openSpy).toHaveBeenCalledWith(
+        expect.stringContaining('whatsapp://send?phone=919986474527&text=Heyy%2C%20I%20am%20Aarav%20Sharma')
+      );
     });
 
     it('launches email client when Email Support card is pressed and app is available', async () => {

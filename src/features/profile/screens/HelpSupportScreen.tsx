@@ -17,7 +17,6 @@ import {
   ChevronRight,
   X,
   Clock,
-  Phone,
   Send,
 } from 'lucide-react-native';
 import { BackButton } from '../../../core/components/BackButton';
@@ -249,7 +248,7 @@ export default function HelpSupportScreen() {
           onPress={handleEmailSupport}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={`Email Support: ${SUPPORT_EMAIL}. Send our team a message.`}
+          accessibilityLabel="Email Support. Send our team a message."
           testID="email-support-card"
         >
           <View style={styles.cardHeaderRow}>
@@ -258,7 +257,6 @@ export default function HelpSupportScreen() {
             </View>
             <View style={styles.cardTitleCol}>
               <Text style={styles.cardTitle}>Email Support</Text>
-              <Text style={styles.cardSubtitle}>{SUPPORT_EMAIL}</Text>
             </View>
             <ChevronRight size={20} color={AppColors.textMuted} />
           </View>
@@ -281,10 +279,10 @@ export default function HelpSupportScreen() {
           onPress={handleWhatsAppSupport}
           activeOpacity={0.85}
           accessibilityRole="button"
-          accessibilityLabel={`Live Chat: Chat with us on WhatsApp Business at ${SUPPORT_PHONE_DISPLAY}.`}
+          accessibilityLabel="Live Chat: Chat with us on WhatsApp Business."
           testID="whatsapp-support-card"
         >
-          <View style={styles.cardHeaderRow}>
+          <View style={[styles.cardHeaderRow, styles.chatCardHeaderRow]}>
             <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
               <MessageCircle size={22} color="#16A34A" strokeWidth={2.2} />
             </View>
@@ -293,11 +291,6 @@ export default function HelpSupportScreen() {
               <Text style={styles.cardSubtitle}>Chat with us on WhatsApp Business</Text>
             </View>
             <ChevronRight size={20} color={AppColors.textMuted} />
-          </View>
-
-          <View style={styles.phoneBadgeRow}>
-            <Phone size={13} color="#16A34A" />
-            <Text style={styles.phoneBadgeText}>{SUPPORT_PHONE_DISPLAY}</Text>
           </View>
 
           <View style={styles.actionBtnRow}>
@@ -418,36 +411,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: AppColors.textPrimary,
-    marginBottom: 2,
   },
   cardSubtitle: {
     fontSize: 12,
     fontWeight: '600',
     color: AppColors.textMuted,
+    marginTop: 2,
+  },
+  chatCardHeaderRow: {
+    marginBottom: 16,
   },
   cardDescription: {
     fontSize: 13,
     color: AppColors.textSecondary,
     lineHeight: 18,
     marginBottom: 14,
-  },
-  phoneBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F0FDF4',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    marginBottom: 14,
-  },
-  phoneBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#15803D',
   },
   actionBtnRow: {
     flexDirection: 'row',

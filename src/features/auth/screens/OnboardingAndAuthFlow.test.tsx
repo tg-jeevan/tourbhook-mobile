@@ -16,6 +16,9 @@ import OnboardingScreen from './OnboardingScreen';
 import SignInScreen from './SignInScreen';
 import SignUpScreen from './SignUpScreen';
 import WelcomeScreen from './WelcomeScreen';
+import ForgotPasswordScreen from './ForgotPasswordScreen';
+import OTPVerificationScreen from './OTPVerificationScreen';
+import ResetPasswordScreen from './ResetPasswordScreen';
 import { AuthNavigator } from '../../../core/navigation/AuthNavigator';
 
 const mockNavigate = jest.fn();
@@ -30,6 +33,9 @@ jest.mock('@react-navigation/native', () => {
       navigate: mockNavigate,
       replace: mockReplace,
       goBack: mockGoBack,
+    }),
+    useRoute: () => ({
+      params: { email: 'test@example.com', otp: '1234' },
     }),
   };
 });
@@ -180,12 +186,12 @@ describe('Onboarding and Authentication Flow Tests', () => {
       const logoImage = root.findByProps({ accessibilityLabel: 'Tour Bhook Official Logo' });
       expect(logoImage).toBeTruthy();
 
-      // Get Started button navigates to SignIn
+      // Get Started button navigates to SignUp
       const getStartedBtn = root.findByProps({ testID: 'welcome-get-started-btn' });
       await act(async () => {
         getStartedBtn.props.onPress();
       });
-      expect(mockNavigate).toHaveBeenCalledWith('SignIn');
+      expect(mockNavigate).toHaveBeenCalledWith('SignUp');
     });
 
     it('positions the content card with balanced responsive vertical spacing', async () => {
@@ -207,6 +213,22 @@ describe('Onboarding and Authentication Flow Tests', () => {
         signInBtn.props.onPress();
       });
       expect(mockNavigate).toHaveBeenCalledWith('SignIn');
+    });
+
+    it('renders the official DPIIT Startup India logo with transparency and proportional sizing', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<WelcomeScreen />);
+      });
+
+      const root = renderer.root;
+      const dpiitLogo = root.findByProps({ testID: 'dpiit-startup-india-logo' });
+      expect(dpiitLogo).toBeTruthy();
+      expect(dpiitLogo.props.resizeMode).toBe('contain');
+      expect(dpiitLogo.props.source).toEqual(
+        require('../../../../assets/images/dpiit-startup-india.png')
+      );
+      expect(dpiitLogo.props.accessibilityLabel).toBe('DPIIT Startup India Logo');
     });
   });
 
@@ -409,6 +431,142 @@ describe('Onboarding and Authentication Flow Tests', () => {
       expect(root.findByProps({ testID: 'signup-confirm-password-input' })).toBeTruthy();
       expect(root.findByProps({ testID: 'signup-submit-btn' })).toBeTruthy();
       expect(root.findAllByProps({ children: 'Sign In' }).length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('8. Authentication Inter-Screen Navigation Flow', () => {
+    const getParentWithOnPress = (node: any) => {
+      let curr = node;
+      while (curr) {
+        if (curr.props && typeof curr.props.onPress === 'function') {
+          return curr;
+        }
+        curr = curr.parent;
+      }
+      throw new Error('No ancestor with onPress found');
+    };
+
+    it('Welcome → Get Started navigates to SignUp and Welcome → Sign In navigates to SignIn', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<WelcomeScreen />);
+      });
+      const root = renderer.root;
+
+      const getStartedBtn = root.findByProps({ testID: 'welcome-get-started-btn' });
+      await act(async () => {
+        getStartedBtn.props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('SignUp');
+
+      mockNavigate.mockClear();
+      const signInBtn = root.findByProps({ testID: 'welcome-sign-in-btn' });
+      await act(async () => {
+        signInBtn.props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('SignIn');
+    });
+
+    it('SignIn → Sign Up footer link navigates to SignUp', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<SignInScreen />);
+      });
+      const root = renderer.root;
+
+      const signUpText = root.findByProps({ children: 'Sign Up' });
+      await act(async () => {
+        getParentWithOnPress(signUpText).props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('SignUp');
+    });
+
+    it('SignIn → Forgot Password link navigates to ForgotPassword', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<SignInScreen />);
+      });
+      const root = renderer.root;
+
+      const forgotPasswordText = root.findByProps({ children: 'Forgot Password?' });
+      await act(async () => {
+        getParentWithOnPress(forgotPasswordText).props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword');
+    });
+
+    it('SignUp → Sign In footer link navigates to SignIn', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<SignUpScreen />);
+      });
+      const root = renderer.root;
+
+      const signInText = root.findByProps({ children: 'Sign In' });
+      await act(async () => {
+        getParentWithOnPress(signInText).props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('SignIn');
+    });
+
+    it('ForgotPassword → Send Reset Link navigates to OTPVerification', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<ForgotPasswordScreen />);
+      });
+      const root = renderer.root;
+
+      const sendText = root.findByProps({ children: 'Send Reset Link' });
+      await act(async () => {
+        getParentWithOnPress(sendText).props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+        'OTPVerification',
+        expect.objectContaining({ email: expect.any(String) })
+      );
+    });
+
+    it('OTPVerification → Verify navigates to ResetPassword', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<OTPVerificationScreen />);
+      });
+      const root = renderer.root;
+
+      const verifyText = root.findByProps({ children: 'Verify' });
+      await act(async () => {
+        getParentWithOnPress(verifyText).props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+        'ResetPassword',
+        expect.objectContaining({ email: expect.any(String), otp: expect.any(String) })
+      );
+    });
+
+    it('ResetPassword → Reset Password navigates to SignIn', async () => {
+      let renderer!: ReactTestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = ReactTestRenderer.create(<ResetPasswordScreen />);
+      });
+      const root = renderer.root;
+
+      // Find the button (distinguished from header title)
+      const matchingTexts = root.findAllByProps({ children: 'Reset Password' });
+      const buttonNode = matchingTexts
+        .map((node) => {
+          try {
+            return getParentWithOnPress(node);
+          } catch {
+            return null;
+          }
+        })
+        .find(Boolean);
+
+      expect(buttonNode).toBeTruthy();
+      await act(async () => {
+        buttonNode.props.onPress();
+      });
+      expect(mockNavigate).toHaveBeenCalledWith('SignIn');
     });
   });
 });

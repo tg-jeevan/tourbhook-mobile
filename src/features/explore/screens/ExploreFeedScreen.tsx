@@ -356,6 +356,7 @@ export default function ExploreFeedScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.horizontalScrollOuter}
           contentContainerStyle={styles.categoriesRow}
         >
           {CATEGORIES.map((cat) => {
@@ -423,6 +424,7 @@ export default function ExploreFeedScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.horizontalScrollOuter}
             contentContainerStyle={styles.reelsScrollRow}
           >
             {reels.map((reel) => {
@@ -573,6 +575,7 @@ export default function ExploreFeedScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.horizontalScrollOuter}
             contentContainerStyle={styles.destinationsScrollRow}
           >
             {destinations.map((dest) => (
@@ -587,12 +590,14 @@ export default function ExploreFeedScreen() {
                 <View style={styles.destGradientOverlay} />
 
                 <View style={styles.destBottomContent}>
-                  <Text style={styles.destNameText} numberOfLines={1}>
-                    {dest.name}
-                  </Text>
-                  <Text style={styles.destCountryText} numberOfLines={1}>
-                    {dest.country}
-                  </Text>
+                  <View style={styles.destTextGroup}>
+                    <Text style={styles.destNameText} numberOfLines={1}>
+                      {dest.name}
+                    </Text>
+                    <Text style={styles.destCountryText} numberOfLines={1}>
+                      {dest.country}
+                    </Text>
+                  </View>
 
                   <View style={styles.destReelsBadge}>
                     <Calendar size={10} color={AppColors.primary} />
@@ -747,7 +752,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: 32,
+  },
+  horizontalScrollOuter: {
+    marginHorizontal: -20,
   },
 
   /* ── HEADER ─────────────────────────────────────────────────────── */
@@ -973,6 +981,7 @@ const styles = StyleSheet.create({
   categoriesRow: {
     flexDirection: 'row',
     gap: 8,
+    paddingHorizontal: 20,
     paddingBottom: 20,
   },
   categoryChip: {
@@ -1004,9 +1013,9 @@ const styles = StyleSheet.create({
     color: AppColors.white,
   },
 
-  /* ── SECTION COMMONS ────────────────────────────────────────────── */
+  /* ── SECTION COMMONS ────────────────────────────────────── */
   sectionWrap: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -1033,9 +1042,11 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   seeAllTouchArea: {
-    paddingVertical: 6,
-    paddingHorizontal: 6,
-    borderRadius: 8,
+    paddingVertical: 4,
+    paddingLeft: 6,
+    paddingRight: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   seeAllText: {
     fontSize: 12,
@@ -1072,7 +1083,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EAE5DC',
     padding: 14,
-    marginTop: 14,
+    marginTop: 18,
     shadowColor: AppColors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -1122,6 +1133,7 @@ const styles = StyleSheet.create({
   reelsScrollRow: {
     flexDirection: 'row',
     gap: 12,
+    paddingHorizontal: 20,
   },
   reelCard: {
     width: 170,
@@ -1160,6 +1172,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+    zIndex: 5,
   },
   durationText: {
     fontSize: 10,
@@ -1168,15 +1181,16 @@ const styles = StyleSheet.create({
   },
   reelActionCol: {
     position: 'absolute',
-    top: 100,
+    top: 80,
     right: 8,
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     zIndex: 5,
   },
   reelActionBtn: {
     alignItems: 'center',
     gap: 2,
+    padding: 2,
   },
   reelActionCount: {
     fontSize: 10,
@@ -1192,6 +1206,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 12,
+    paddingRight: 42,
     paddingTop: 24,
     backgroundColor: 'rgba(5, 11, 20, 0.65)',
   },
@@ -1238,6 +1253,7 @@ const styles = StyleSheet.create({
   destinationsScrollRow: {
     flexDirection: 'row',
     gap: 12,
+    paddingHorizontal: 20,
   },
   destinationCard: {
     width: 140,
@@ -1272,6 +1288,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
+  destTextGroup: {
+    justifyContent: 'flex-start',
+  },
   destNameText: {
     fontSize: 14,
     fontWeight: '800',
@@ -1280,7 +1299,7 @@ const styles = StyleSheet.create({
   destCountryText: {
     fontSize: 11,
     color: AppColors.textMuted,
-    marginTop: 1,
+    marginTop: 2,
   },
   destReelsBadge: {
     flexDirection: 'row',
@@ -1291,7 +1310,6 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
     alignSelf: 'flex-start',
-    marginTop: 4,
   },
   destReelsCountText: {
     fontSize: 10,
@@ -1318,8 +1336,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   groupCategoryPanel: {
-    width: 60,
-    height: 60,
+    width: 56,
+    height: 56,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1327,7 +1345,8 @@ const styles = StyleSheet.create({
   },
   groupCenterInfo: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 10,
+    justifyContent: 'center',
   },
   groupCardName: {
     fontSize: 14,
@@ -1339,11 +1358,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: AppColors.textMuted,
     lineHeight: 15,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   groupMembersRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 5,
   },
   groupAvatarStack: {
     flexDirection: 'row',
@@ -1373,6 +1393,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
+    minWidth: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   groupJoinBtnText: {
     fontSize: 12,

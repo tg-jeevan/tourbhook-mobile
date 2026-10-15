@@ -91,6 +91,18 @@ const WelcomeScreen = () => {
 
         {/* ── LOWER CONTENT CARD (Your Adventure Starts Here) ── */}
         <View style={styles.cardContainer}>
+          {/* DPIIT / Startup India Official Logo */}
+          <View style={styles.startupIndiaContainer}>
+            <Image
+              source={require('../../../../assets/images/dpiit-startup-india.png')}
+              style={styles.startupIndiaLogo}
+              resizeMode="contain"
+              accessibilityRole="image"
+              accessibilityLabel="DPIIT Startup India Logo"
+              testID="dpiit-startup-india-logo"
+            />
+          </View>
+
           <View style={styles.actionCard}>
             <Text style={styles.headline}>Your Adventure Starts Here</Text>
             <Text style={styles.description}>
@@ -101,7 +113,7 @@ const WelcomeScreen = () => {
             <TouchableOpacity
               style={styles.primaryButton}
               activeOpacity={0.85}
-              onPress={() => navigation.navigate('SignIn')}
+              onPress={() => navigation.navigate('SignUp')}
               testID="welcome-get-started-btn"
             >
               <Text style={styles.primaryButtonText}>Get Started →</Text>
@@ -209,6 +221,15 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     paddingHorizontal: 20,
+  },
+  startupIndiaContainer: {
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+    marginLeft: 2,
+  },
+  startupIndiaLogo: {
+    width: 100,
+    height: 34,
   },
   bottomFlexSpacer: {
     flex: 1,

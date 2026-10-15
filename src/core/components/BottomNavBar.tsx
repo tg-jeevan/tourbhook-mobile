@@ -52,24 +52,40 @@ export function BottomNavBar({ active }: BottomNavBarProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+    <View
+      testID="bottom-nav-bar"
+      style={[styles.container, { paddingBottom: Math.max(insets.bottom, 10) }]}
+    >
       {TABS.map(tab => {
         const isActive = tab.key === active;
         return (
           <TouchableOpacity
             key={tab.key}
+            testID={`tab-${tab.key}`}
             style={styles.item}
             activeOpacity={0.7}
             onPress={() => tab.onPress(navigation)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
+            accessibilityLabel={tab.label}
           >
-            {isActive ? (
-              <View style={styles.activeIconCircle}>
-                <tab.Icon size={18} color={AppColors.textOnPrimary} strokeWidth={2.25} />
-              </View>
-            ) : (
-              <tab.Icon size={20} color={AppColors.textMuted} strokeWidth={1.75} />
-            )}
-            <Text style={[styles.label, isActive && styles.labelActive]}>{tab.label}</Text>
+            <View testID={`icon-container-${tab.key}`} style={styles.iconContainer}>
+              {isActive ? (
+                <View style={styles.activeIconCircle}>
+                  <tab.Icon size={18} color={AppColors.textOnPrimary} strokeWidth={2.25} />
+                </View>
+              ) : (
+                <View style={styles.inactiveIconSlot}>
+                  <tab.Icon size={20} color={AppColors.textMuted} strokeWidth={1.75} />
+                </View>
+              )}
+            </View>
+            <Text
+              style={[styles.label, isActive && styles.labelActive]}
+              numberOfLines={1}
+            >
+              {tab.label}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -80,12 +96,24 @@ export function BottomNavBar({ active }: BottomNavBarProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: AppColors.borderLight,
-    paddingTop: 10,
+    paddingTop: 8,
     backgroundColor: AppColors.surface,
   },
-  item: { flex: 1, alignItems: 'center', gap: 2 },
+  item: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
   activeIconCircle: {
     width: 32,
     height: 32,
@@ -93,8 +121,21 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 2,
   },
-  label: { fontSize: 11, color: AppColors.textMuted },
-  labelActive: { color: AppColors.primary, fontWeight: '700' },
+  inactiveIconSlot: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 11,
+    color: AppColors.textMuted,
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
+  labelActive: {
+    color: AppColors.primary,
+    fontWeight: '700',
+  },
 });
