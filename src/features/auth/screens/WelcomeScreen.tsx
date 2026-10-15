@@ -91,14 +91,14 @@ const WelcomeScreen = () => {
 
         {/* ── LOWER CONTENT CARD (Your Adventure Starts Here) ── */}
         <View style={styles.cardContainer}>
-          {/* DPIIT / Startup India Official Logo */}
+          {/* Startup India Official Logo */}
           <View style={styles.startupIndiaContainer}>
             <Image
-              source={require('../../../../assets/images/dpiit-startup-india.png')}
+              source={require('../../../../assets/images/startup-india-logo.png')}
               style={styles.startupIndiaLogo}
               resizeMode="contain"
               accessibilityRole="image"
-              accessibilityLabel="DPIIT Startup India Logo"
+              accessibilityLabel="Startup India Logo"
               testID="dpiit-startup-india-logo"
             />
           </View>
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   startupIndiaLogo: {
     width: 100,
-    height: 34,
+    height: 40,
   },
   bottomFlexSpacer: {
     flex: 1,

@@ -215,7 +215,7 @@ describe('Onboarding and Authentication Flow Tests', () => {
       expect(mockNavigate).toHaveBeenCalledWith('SignIn');
     });
 
-    it('renders the official DPIIT Startup India logo with transparency and proportional sizing', async () => {
+    it('renders the official Startup India logo with transparency and proportional sizing', async () => {
       let renderer!: ReactTestRenderer.ReactTestRenderer;
       await act(async () => {
         renderer = ReactTestRenderer.create(<WelcomeScreen />);
@@ -226,9 +226,9 @@ describe('Onboarding and Authentication Flow Tests', () => {
       expect(dpiitLogo).toBeTruthy();
       expect(dpiitLogo.props.resizeMode).toBe('contain');
       expect(dpiitLogo.props.source).toEqual(
-        require('../../../../assets/images/dpiit-startup-india.png')
+        require('../../../../assets/images/startup-india-logo.png')
       );
-      expect(dpiitLogo.props.accessibilityLabel).toBe('DPIIT Startup India Logo');
+      expect(dpiitLogo.props.accessibilityLabel).toBe('Startup India Logo');
     });
   });
 
