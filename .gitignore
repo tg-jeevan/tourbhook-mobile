@@ -73,3 +73,40 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Local environment & secrets (preserving any committed .env.example if created)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Editor directories & workspaces
+.vscode/
+*.code-workspace
+
+# Windows & OS desktop metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# TypeScript & Linter caches
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# Node / Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Metro & React Native compiler caches
+.metro/
+.react-native-tsc/
+
+# Standalone Android binary packages (debug/release outputs)
+*.apk
+*.aab
+
